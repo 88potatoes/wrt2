@@ -124,5 +124,5 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticroot")
 
 from decouple import config
 
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config('DJANGO_SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
