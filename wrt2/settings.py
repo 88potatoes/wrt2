@@ -39,6 +39,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware'
 ]
 
 ROOT_URLCONF = "wrt2.urls"
@@ -114,13 +115,11 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-STATIC_ROOT = os.path.join(BASE_DIR, "staticroot")
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Your app's static files
-]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 from decouple import config
 
 SECRET_KEY = config('DJANGO_SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', '').split(',')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
