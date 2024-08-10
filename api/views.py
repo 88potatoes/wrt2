@@ -1,3 +1,4 @@
-from django.shortcuts import render
+from django.http import HttpResponse
 
-# Create your views here.
+def scrape(request):
+    return HttpResponse("{\"name\": \"amanda chao\"}")
