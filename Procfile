@@ -1,1 +1,1 @@
-web: gunicorn wrt2.wsgi --logfile -
+web: gunicorn wrt2.wsgi
