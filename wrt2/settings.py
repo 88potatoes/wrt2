@@ -117,10 +117,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-from decouple import config, RepositoryEnv, Config
-
-DOTENV_PATH = '.env'
-config = Config(RepositoryEnv(DOTENV_PATH))
+from decouple import config
 
 SECRET_KEY = config('DJANGO_SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
