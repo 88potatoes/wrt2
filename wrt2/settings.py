@@ -124,7 +124,7 @@ config = Config(RepositoryEnv(DOTENV_PATH))
 
 SECRET_KEY = config('DJANGO_SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config.repository.data['DJANGO_ALLOWED_HOSTS'].split(',')
+ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS").split(',')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 import sentry_sdk
