@@ -12,7 +12,7 @@
             <div class="navbar-start">
                 <a href="/" class="navbar-item">Home</a>
                 <a href="/about" class="navbar-item">About Us</a>
-                <a href="/search" class="navbar-item">Search</a>
+                <a href="/search" class="navbar-item" style="color: #58a1ef; font-weight: bold;">Search</a>
             </div>
             <div class="navbar-end">
                 {% if user.is_authenticated %}
@@ -26,7 +26,33 @@
 
     <section class="section">
         <div class="container">
-            <h1 class="title">Search</h1>
+            <h1 class="title has-text-centered">Search</h1>
+            <div class="columns is-centered">
+                <div class="column is-8">
+                    <form action="{% url 'search' %}" method="POST">
+                        {% csrf_token %}
+                        <div class="field">
+                            <label class="label">Search Term</label>
+                            <div class="control">
+                                <input class="input" type="text" name="searchterm" placeholder="Enter your search term...">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Website Range</label>
+                            <div class="control">
+                                <input class="input" type="text" name="websites" placeholder="Enter a URL defining the search range..." required>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <div class="control">
+                                <button class="button is-link" type="submit">Search</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </section>
 </body>
