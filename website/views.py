@@ -18,10 +18,11 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+        next_url = request.POST.get('next', '/')
+        if next_url == '':
+            next_url = '/'  
 
         user = authenticate(request, username=username, password=password)
-
-        next_url = request.POST.get('next', '/')
 
         if user is not None:
             login(request, user)

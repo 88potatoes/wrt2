@@ -92,6 +92,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+SESSION_COOKIE_NAME = 'sessionid'  # Default cookie name
+SESSION_COOKIE_AGE = 10800  # 3 hours
+SESSION_COOKIE_SECURE = True 
+SESSION_COOKIE_HTTPONLY = True 
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True 
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
