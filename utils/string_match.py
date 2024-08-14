@@ -46,6 +46,7 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
             continue
 
         soup = BeautifulSoup(page.text, 'html.parser')
+        
         # see if queried text is on webpage
         if search(soup, search_text) and start_link not in queried_webpages:
             queried_webpages.append(start_link)
@@ -91,8 +92,8 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                 soup = BeautifulSoup(page.text, 'html.parser')
 
                 # see if queried text is on webpage
-                if search(soup, search_text) and link not in queried_webpages:
-                    queried_webpages.append(link)
+                if search(soup, search_text) and start_link not in queried_webpages:
+                    queried_webpages.append(start_link)
                 
                 # mark the item as visited, i.e., add to visited list, remove from to_visit
                 visited[link] = True
@@ -147,7 +148,17 @@ def search(soup, search_text):
     # text is converted to explicit tokens 
     tokens = soup.split()
 
-    tokens = " ".join(tokens)
-    if search_text.lower() in tokens:
-        return True
-    return False
+    res = False
+    search_text = search_text.lower()
+    search = search_text.split()
+    search_text_len = len(search)
+
+    for j in range(len(tokens) - search_text_len + 1):
+        if tokens[j] == search[0]:
+            for i in range(1, search_text_len):
+                if tokens[j + i] != search[i]:
+                    break
+            else:
+                res = True
+                return res
+    return res
