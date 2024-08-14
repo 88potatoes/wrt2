@@ -24,7 +24,6 @@ def scrape(starting_links: List[str], json_filename: str, search_text):
     to_visit = []
     broken_links = []
     queried_webpages = []
-    
     output = {}
 
     # search for base urls
@@ -45,7 +44,9 @@ def scrape(starting_links: List[str], json_filename: str, search_text):
         except requests.exceptions.RequestException as request_exception:
             broken_links.append(start_link)
             continue
+
         soup = BeautifulSoup(page.text, 'html.parser')
+        # see if queried text is on webpage
         if search(soup, search_text) and start_link not in queried_webpages:
             queried_webpages.append(start_link)
         
@@ -86,13 +87,14 @@ def scrape(starting_links: List[str], json_filename: str, search_text):
                     broken_links.append(link)
                     continue
                 
-                # Scraping code 
+                # scraping code 
                 soup = BeautifulSoup(page.text, 'html.parser')
 
+                # see if queried text is on webpage
                 if search(soup, search_text) and link not in queried_webpages:
                     queried_webpages.append(link)
                 
-                # Mark the item as visited, i.e., add to visited list, remove from to_visit
+                # mark the item as visited, i.e., add to visited list, remove from to_visit
                 visited[link] = True
                 
                 links = soup.findAll('a')

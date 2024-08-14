@@ -32,7 +32,7 @@ def crawl(starting_links: List[str], json_filename: str):
         robots_url = base + robots_item
         robot_page = requests.get(robots_url)
         robot_rules = process_robots(robot_page.text)
-    
+
         try:
             page = requests.get(start_link)
             # catch broken links
@@ -65,7 +65,6 @@ def crawl(starting_links: List[str], json_filename: str):
                 continue
             to_visit.append(potential_link)
         visited[start_link] = True    
-    
 
         # crawling
         while to_visit:
@@ -82,10 +81,10 @@ def crawl(starting_links: List[str], json_filename: str):
                     broken_links.append(link)
                     continue
                 
-                # Scraping code 
+                # scraping code 
                 soup = BeautifulSoup(page.text, 'html.parser')
                 
-                # Mark the item as visited, i.e., add to visited list, remove from to_visit
+                # mark the item as visited, i.e., add to visited list, remove from to_visit
                 visited[link] = True
                 
                 links = soup.findAll('a')
