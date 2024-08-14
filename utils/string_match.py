@@ -1,7 +1,7 @@
 
 import pandas as pd
 import json
-from typing import Dict, List
+from typing import List
 
 import requests
 from .robots import process_robots, check_link_ok
@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 SAFE_PAGE_LIMIT = 5
 
 
-def scrape(starting_links: List[str], json_filename: str, search_text):
+def scrape(starting_links: List[str], json_filename: str, search_text) -> List[str]:
     """ Crawl each starting link and find websites that matches the query 
     string. All links crawled stored in JSON file"""
 

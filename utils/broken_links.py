@@ -1,6 +1,6 @@
 import pandas as pd
 import json
-from typing import Dict, List
+from typing import List
 
 import requests
 from .robots import process_robots, check_link_ok
@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 SAFE_PAGE_LIMIT = 5
 
 
-def crawl(starting_links: List[str], json_filename: str):
+def crawl(starting_links: List[str], json_filename: str) -> List[str]:
     """ Crawl each url in the starting_link list, and output
     the broken links. All links crawled stored in JSON file"""
 
