@@ -145,17 +145,7 @@ def search(soup, search_text):
     # text is converted to explicit tokens 
     tokens = soup.split()
 
-    res = False
-    search_text = search_text.lower()
-    search = search_text.split()
-    search_text_len = len(search)
-
-    for j in range(len(tokens) - search_text_len + 1):
-        if tokens[j] == search[0]:
-            for i in range(1, search_text_len):
-                if tokens[j + i] != search[i]:
-                    break
-            else:
-                res = True
-                return res
-    return res
+    tokens = " ".join(tokens)
+    if search_text.lower() in tokens:
+        return True
+    return False
