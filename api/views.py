@@ -10,7 +10,7 @@ from rest_framework.decorators import api_view
 @api_view(["POST"])
 def search_broken_links(request):
     starting_links = request.data.get('starting_links', [])
-    json_filename = request.data.get('json_filename')
+    json_filename = request.data.get('json_filename', "")
 
     if not starting_links:
         return Response("Starting link required", status=400)
@@ -22,7 +22,7 @@ def search_broken_links(request):
 @api_view(["POST"])
 def search_text_string(request):
     starting_links = request.data.get('starting_links', [])
-    json_filename = request.data.get('json_filename', 'output.json')
+    json_filename = request.data.get('json_filename', "")
     search_text = request.data.get('search_text', "")
 
     if not starting_links:
