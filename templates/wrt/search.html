@@ -16,7 +16,7 @@
             </div>
             <div class="navbar-end">
                 {% if user.is_authenticated %}
-                    <a href="/logout" class="navbar-item">Logout</a>
+                    <a href="#" id="logoutLink" class="navbar-item">Logout</a>
                 {% else %}
                     <a href="/login" class="navbar-item">Login</a>
                 {% endif %}
@@ -24,36 +24,152 @@
         </div>
     </nav>
 
-    <section class="section">
-        <div class="container">
-            <h1 class="title has-text-centered">Search</h1>
-            <div class="columns is-centered">
-                <div class="column is-8">
-                    <form action="{% url 'search' %}" method="POST">
-                        {% csrf_token %}
-                        <div class="field">
-                            <label class="label">Search Term</label>
-                            <div class="control">
-                                <input class="input" type="text" name="searchterm" placeholder="Enter your search term...">
-                            </div>
-                        </div>
+    <div class="tabs is-centered">
+        <ul>
+            <li class="is-active"><a onclick="showTab('searchTermTab')">Search Term</a></li>
+            <li><a onclick="showTab('brokenLinksTab')">Broken Links</a></li>
+        </ul>
+    </div>
+      
+    <div id="searchTermTab" class="tab-content">
+        <div class="columns is-centered">
+            <div class="column is-8">
+                <form action="{% url 'search_term' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="search_term_form">
 
-                        <div class="field">
-                            <label class="label">Website Range</label>
-                            <div class="control">
-                                <input class="input" type="text" name="websites" placeholder="Enter a URL defining the search range..." required>
-                            </div>
+                    <div class="field">
+                        <label class="label">Search Term</label>
+                        <div class="control">
+                            <input class="input" type="text" name="search_text" placeholder="Enter your search term...">
                         </div>
+                    </div>
 
-                        <div class="field">
-                            <div class="control">
-                                <button class="button is-link" type="submit">Search</button>
-                            </div>
+                    <div class="field">
+                        <label class="label">Website Range</label>
+                        <div class="control">
+                            <input class="input" type="text" name="starting_links" placeholder="Enter a URL defining the search range..." required>
                         </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">JSON Filename</label>
+                        <div class="control">
+                            <input class="input" type="text" name="json_filename" placeholder="Enter the output JSON filename..." required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <button class="button is-link" type="submit">Search</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
-    </section>
+    </div>
+      
+    <div id="brokenLinksTab" class="tab-content" style="display:none;">
+        <div class="columns is-centered">
+            <div class="column is-8">
+                <form action="{% url 'broken_links' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="search_term_form">
+
+                    <div class="field">
+                        <label class="label">Website Range</label>
+                        <div class="control">
+                            <input class="input" type="text" name="starting_links" placeholder="Enter a URL defining the search range..." required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">JSON Filename</label>
+                        <div class="control">
+                            <input class="input" type="text" name="json_filename" placeholder="Enter the output JSON filename..." required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <button class="button is-link" type="submit">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabId) {
+            var tabContents = document.getElementsByClassName("tab-content");
+            for (var i = 0; i < tabContents.length; i++) {
+                tabContents[i].style.display = "none";
+            }
+            document.getElementById(tabId).style.display = "block";
+            var tabLinks = document.querySelectorAll(".tabs ul li");
+            tabLinks.forEach(function(link) {
+            link.classList.remove("is-active");
+            });
+            event.currentTarget.parentNode.classList.add("is-active");
+        }
+    </script>
+
+    <script>
+        document.querySelectorAll('form').forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();  
+
+                const formData = new FormData(form);
+                const searchText = formData.get('search_text'); 
+                const startingLinks = formData.get('starting_links');
+                const jsonFilename = formData.get('json_filename');
+
+                let endpoint = form.getAttribute('action');
+                let requestData = { starting_links: startingLinks, json_filename: jsonFilename };
+                
+                if (searchText) {
+                    requestData.search_text = searchText;
+                }
+
+                fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(requestData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message); 
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    </script>
+
+    <script>
+        document.getElementById('logoutLink').addEventListener('click', function(event) {
+            event.preventDefault();  // Prevent the default link behavior
+
+            fetch("{% url 'api_logout' %}", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    // Redirect to the homepage or login page after logout
+                    window.location.href = "/";
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+
 </body>
 </html>

@@ -15,23 +15,6 @@ def login_view(request):
     print("Login view called")
     error = None
 
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        next_url = request.POST.get('next', '/')
-        if next_url == '':
-            next_url = '/'  
-
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None:
-            login(request, user)
-            print("User logged in successfully")
-            return redirect(next_url)
-        else:
-            print("User flopped log in")
-            error = "Invalid username or password"
-
     return render(request, 'wrt/login.html', {'error': error})
 
 def search(request):
@@ -39,14 +22,10 @@ def search(request):
     
     if not request.user.is_authenticated:
         print("User not logged in")
-        return redirect('/login/')
+        return redirect('/login')
     
     if not request.user.is_superuser:
         print("User is not a superuser")
         return redirect('/')
     
     return render(request, 'wrt/search.html')
-
-def logout_view(request):
-    logout(request)
-    return redirect('/')
