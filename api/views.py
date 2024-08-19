@@ -39,8 +39,8 @@ def api_logout(request):
 # Search Text String API
 @api_view(["POST"])
 def search_text_string(request):
-    print("Request method:", request.method)
     serializer = SearchTermSerializer(data=request.data)
+    print("Request method:", request.method)
 
     if serializer.is_valid():
         search_text = serializer.validated_data['search_text']
@@ -50,6 +50,7 @@ def search_text_string(request):
         result = scrape(starting_links, json_filename, search_text)
         return Response(result, status=status.HTTP_200_OK)
     else:
+        print("Serializer errors 1:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Broken Links API
@@ -57,6 +58,7 @@ def search_text_string(request):
 def search_broken_links(request):
     print("Request data:", request.data)
     serializer = BrokenLinksSerializer(data=request.data)
+    print("Request method:", request.method)
 
     if serializer.is_valid():
         starting_links = serializer.validated_data['starting_links']
@@ -65,4 +67,5 @@ def search_broken_links(request):
         result = crawl(starting_links, json_filename)
         return Response(result, status=status.HTTP_200_OK)
     else:
+        print("Serializer errors 2:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
