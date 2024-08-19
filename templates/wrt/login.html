@@ -26,7 +26,7 @@
             <h1 class="title has-text-centered">Login</h1>
             <div class="columns is-centered">
                 <div class="column is-4">
-                    <form action="{% url 'login' %}" method="POST">
+                    <form id="loginForm" action="{% url 'login' %}" method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.GET.next }}">
 
@@ -58,6 +58,34 @@
             </div>
         </div>
     </section>
+
+    <script>
+        // Handle the form submission using AJAX
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();  
+
+            const username = document.querySelector('input[name="username"]').value;
+            const password = document.querySelector('input[name="password"]').value;
+
+            fetch("{% url 'api_login' %}", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    window.location.href = "{{ request.GET.next|default_if_none:'/' }}";
+                } else if (data.error) {
+                    document.getElementById('errorMessage').textContent = data.error;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
 
 </body>
 </html>
