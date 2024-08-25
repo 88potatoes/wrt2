@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
 </head>
+
 <body>
     <nav class="navbar">
         <div class="navbar-menu">
@@ -15,11 +17,11 @@
                 <a href="/search" class="navbar-item" style="color: #58a1ef; font-weight: bold;">Search</a>
             </div>
             <div class="navbar-end">
-                {% if user.is_authenticated %}
-                    <a href="#" id="logoutLink" class="navbar-item">Logout</a>
-                {% else %}
-                    <a href="/login" class="navbar-item">Login</a>
-                {% endif %}
+                <!-- {% if user.is_authenticated %} -->
+                <a href="#" id="logoutLink" class="navbar-item">Logout</a>
+                <!-- {% else %} -->
+                <a href="/login" class="navbar-item">Login</a>
+                <!-- {% endif %} -->
             </div>
         </div>
     </nav>
@@ -30,7 +32,7 @@
             <li><a onclick="showTab('brokenLinksTab')">Broken Links</a></li>
         </ul>
     </div>
-      
+
     <div id="searchTermTab" class="tab-content">
         <div class="columns is-centered">
             <div class="column is-8">
@@ -48,14 +50,16 @@
                     <div class="field">
                         <label class="label">Website Range</label>
                         <div class="control">
-                            <input class="input" type="text" name="starting_links" placeholder="Enter a URL defining the search range..." required>
+                            <input class="input" type="text" name="starting_links"
+                                placeholder="Enter a URL defining the search range..." required>
                         </div>
                     </div>
 
                     <div class="field">
                         <label class="label">JSON Filename</label>
                         <div class="control">
-                            <input class="input" type="text" name="json_filename" placeholder="Enter the output JSON filename..." required>
+                            <input class="input" type="text" name="json_filename"
+                                placeholder="Enter the output JSON filename..." required>
                         </div>
                     </div>
 
@@ -68,25 +72,28 @@
             </div>
         </div>
     </div>
-      
+
     <div id="brokenLinksTab" class="tab-content" style="display:none;">
         <div class="columns is-centered">
             <div class="column is-8">
-                <form action="{% url 'broken_links' %}" method="POST">
+                <form id="crawlForm">
+                    <!-- CSRF token for Django -->
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="search_term_form">
 
                     <div class="field">
                         <label class="label">Website Range</label>
                         <div class="control">
-                            <input class="input" type="text" name="starting_links" placeholder="Enter a URL defining the search range..." required>
+                            <input class="input" type="text" name="starting_links"
+                                placeholder="Enter a URL defining the search range..." required>
                         </div>
                     </div>
 
                     <div class="field">
                         <label class="label">JSON Filename</label>
                         <div class="control">
-                            <input class="input" type="text" name="json_filename" placeholder="Enter the output JSON filename..." required>
+                            <input class="input" type="text" name="json_filename"
+                                placeholder="Enter the output JSON filename..." required>
                         </div>
                     </div>
 
@@ -99,7 +106,7 @@
             </div>
         </div>
     </div>
-    
+
     <script>
         function showTab(tabId) {
             var tabContents = document.getElementsByClassName("tab-content");
@@ -108,26 +115,26 @@
             }
             document.getElementById(tabId).style.display = "block";
             var tabLinks = document.querySelectorAll(".tabs ul li");
-            tabLinks.forEach(function(link) {
-            link.classList.remove("is-active");
+            tabLinks.forEach(function (link) {
+                link.classList.remove("is-active");
             });
             event.currentTarget.parentNode.classList.add("is-active");
         }
     </script>
 
     <script>
-        document.querySelectorAll('form').forEach(function(form) {
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();  
+        document.querySelectorAll('form').forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
 
                 const formData = new FormData(form);
-                const searchText = formData.get('search_text'); 
+                const searchText = formData.get('search_text');
                 const startingLinks = formData.get('starting_links');
                 const jsonFilename = formData.get('json_filename');
 
                 let endpoint = form.getAttribute('action');
                 let requestData = { starting_links: startingLinks, json_filename: jsonFilename };
-                
+
                 if (searchText) {
                     requestData.search_text = searchText;
                 }
@@ -140,17 +147,17 @@
                     },
                     body: JSON.stringify(requestData)
                 })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message); 
-                })
-                .catch(error => console.error('Error:', error));
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                    })
+                    .catch(error => console.error('Error:', error));
             });
         });
     </script>
 
     <script>
-        document.getElementById('logoutLink').addEventListener('click', function(event) {
+        document.getElementById('logoutLink').addEventListener('click', function (event) {
             event.preventDefault();  // Prevent the default link behavior
 
             fetch("{% url 'api_logout' %}", {
@@ -160,16 +167,52 @@
                     'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    // Redirect to the homepage or login page after logout
-                    window.location.href = "/";
-                }
-            })
-            .catch(error => console.error('Error:', error));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        // Redirect to the homepage or login page after logout
+                        window.location.href = "/";
+                    }
+                })
+                .catch(error => console.error('Error:', error));
         });
     </script>
 
+    <script>
+        document.getElementById('crawlForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const startingLinks = formData.get('starting_links');
+            const jsonFilename = formData.get('json_filename');
+            console.log("HI");
+
+            let endpoint = "{% url 'crawl' %}";
+
+            let requestData = { starting_links: startingLinks, json_filename: jsonFilename };
+
+            fetch(endpoint, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(requestData)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert(data.message || "Crawling completed successfully.");
+                })
+                .catch(error => console.error('Error:', error));
+        });
+    </script>
+
+
 </body>
+
 </html>
