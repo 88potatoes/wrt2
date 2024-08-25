@@ -191,39 +191,6 @@
         });
     </script>
 
-    <!-- <script>
-        document.getElementById('crawlForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-
-            const formData = new FormData(event.target);
-            const startingLinks = formData.get('starting_links');
-            const jsonFilename = formData.get('json_filename');
-            console.log("bananaaa");
-
-            let endpoint = "{% url 'crawl' %}";
-
-            let requestData = { starting_links: startingLinks, json_filename: jsonFilename };
-
-            fetch(endpoint, {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify(requestData)
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok.');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    alert(data.message || "Crawling completed successfully.");
-                })
-                .catch(error => console.error('Error:', error));
-        });
-    </script> -->
 
 
 </body>
