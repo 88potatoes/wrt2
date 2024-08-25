@@ -76,7 +76,7 @@
     <div id="brokenLinksTab" class="tab-content" style="display:none;">
         <div class="columns is-centered">
             <div class="column is-8">
-                <form id="crawlForm">
+                <form id="crawlForm" action="{% url 'crawl' %}" method="POST">
                     <!-- CSRF token for Django -->
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="search_term_form">
@@ -129,12 +129,15 @@
 
                 const formData = new FormData(form);
                 const searchText = formData.get('search_text');
-                const startingLinks = formData.get('starting_links');
+
+                const startingLinksInput = formData.get('starting_links');
+                const startingLinks = startingLinksInput.split(/\s*[,\n]\s*/).filter(Boolean); // put the strings into a list
+
+
                 const jsonFilename = formData.get('json_filename');
 
                 let endpoint = form.getAttribute('action');
                 let requestData = { starting_links: startingLinks, json_filename: jsonFilename };
-
                 if (searchText) {
                     requestData.search_text = searchText;
                 }
@@ -147,9 +150,19 @@
                     },
                     body: JSON.stringify(requestData)
                 })
-                    .then(response => response.json())
+
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok.');
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         alert(data.message);
+
+                        if (data.links && data.links.length > 0) {
+                            console.log('Links crawled:', data.links);
+                        }
                     })
                     .catch(error => console.error('Error:', error));
             });
@@ -178,14 +191,14 @@
         });
     </script>
 
-    <script>
+    <!-- <script>
         document.getElementById('crawlForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
             const formData = new FormData(event.target);
             const startingLinks = formData.get('starting_links');
             const jsonFilename = formData.get('json_filename');
-            console.log("HI");
+            console.log("bananaaa");
 
             let endpoint = "{% url 'crawl' %}";
 
@@ -210,7 +223,7 @@
                 })
                 .catch(error => console.error('Error:', error));
         });
-    </script>
+    </script> -->
 
 
 </body>
