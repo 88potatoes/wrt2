@@ -43,14 +43,14 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
             broken_links.append(start_link)
             continue
         soup = BeautifulSoup(page.text, 'html.parser')
-        
+
         links = soup.findAll('a')
         pages_visited += 1
 
         # get new links
         for new_link in links:
             if "href" not in new_link.attrs:
-                    continue
+                continue
             href = new_link['href']
             # only crawl standard web URLs
             if href.startswith('http://') or href.startswith('https://'):
@@ -64,7 +64,7 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
             if not check_link_ok(robot_rules, href):
                 continue
             to_visit.append(potential_link)
-        visited[start_link] = True    
+        visited[start_link] = True
 
         # crawling
         while to_visit:
@@ -80,15 +80,15 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
                 if not (200 <= page.status_code <= 299):
                     broken_links.append(link)
                     continue
-                
-                # scraping code 
+
+                # scraping code
                 soup = BeautifulSoup(page.text, 'html.parser')
-                
+
                 # mark the item as visited, i.e., add to visited list, remove from to_visit
                 visited[link] = True
-                
+
                 links = soup.findAll('a')
-                
+
                 # get new links
                 for new_link in links:
                     if "href" not in new_link.attrs:
@@ -105,7 +105,7 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
                     # check if crawling abides by standard
                     if not check_link_ok(robot_rules, href):
                         continue
-                    # if link has not been visited and is not to be visited 
+                    # if link has not been visited and is not to be visited
                     if (potential_link not in visited) and (potential_link not in to_visit):
                         to_visit.append(potential_link)
                 pages_visited += 1
@@ -113,9 +113,9 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())
-    
+
     # create json output file
     with open(json_filename, "w") as outfile:
         json.dump(output, outfile)
-    
+
     return broken_links
