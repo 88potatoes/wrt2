@@ -46,7 +46,6 @@ def search(request):
             starting_links = data.get('starting_links', [])
             json_filename = data.get('json_filename')
             search_text = data.get('search_text')
-            print("hi", data)
 
             if not starting_links or not json_filename or not search_text:
                 return JsonResponse({'error': 'Missing required parameters.'})
