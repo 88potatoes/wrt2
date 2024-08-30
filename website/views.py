@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from json import loads
 from utils.broken_links import crawl
+from utils.string_match import scrape
 import traceback
 
 
@@ -35,7 +36,32 @@ def search(request):
         print("User is not a superuser")
         return redirect('/')
 
-    return render(request, 'wrt/search.html')
+    if request.method == "GET":
+        return render(request, 'wrt/search.html')
+
+    if request.method == 'POST':
+        print("Search view called")
+        try:
+            data = loads(request.body)
+            starting_links = data.get('starting_links', [])
+            json_filename = data.get('json_filename')
+            search_text = data.get('search_text')
+            print("hi", data)
+
+            if not starting_links or not json_filename or not search_text:
+                return JsonResponse({'error': 'Missing required parameters.'})
+
+            queried_pages = scrape(starting_links, json_filename, search_text)
+
+            if queried_pages:
+                return JsonResponse({'message': 'Links crawled successfully!', 'links': queried_pages})
+            else:
+                return JsonResponse({'message': 'No instances of text found.'})
+
+        except Exception as e:
+            return JsonResponse({'message': 'exception', 'error': str(e)})
+    else:
+        return JsonResponse({'message': 'error', 'error': str(e)})
 
 
 def crawl_view(request):

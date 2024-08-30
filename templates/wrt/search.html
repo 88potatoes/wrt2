@@ -36,7 +36,7 @@
     <div id="searchTermTab" class="tab-content">
         <div class="columns is-centered">
             <div class="column is-8">
-                <form action="{% url 'search_term' %}" method="POST">
+                <form id="searchForm" action="{% url 'search' %}" method="POST">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="search_term_form">
 
@@ -138,6 +138,7 @@
 
                 let endpoint = form.getAttribute('action');
                 let requestData = { starting_links: startingLinks, json_filename: jsonFilename };
+
                 if (searchText) {
                     requestData.search_text = searchText;
                 }
