@@ -57,12 +57,11 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
         # get new links
         for new_link in links:
             if "href" not in new_link.attrs:
-                    continue
+                continue
             href = new_link['href']
+            potential_link = urljoin(base, href)
             # only crawl standard web URLs
-            if href.startswith('http://') or href.startswith('https://'):
-                potential_link = urljoin(base, href)
-            else:
+            if not (potential_link.startswith('http://') or potential_link.startswith('https://')):
                 continue
             # check if link has the same domain
             if ((base + '/') not in potential_link):
@@ -72,6 +71,8 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                 continue
             to_visit.append(potential_link)
         visited[start_link] = True    
+
+        print(to_visit)
 
         # crawling
         while to_visit:
@@ -105,10 +106,9 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                     if "href" not in new_link.attrs:
                         continue
                     href = new_link['href']
+                    potential_link = urljoin(base, href)
                     # only crawl standard web URLs
-                    if href.startswith('http://') or href.startswith('https://'):
-                        potential_link = urljoin(base, href)
-                    else:
+                    if not (potential_link.startswith('http://') or potential_link.startswith('https://')):
                         continue
                     # check if link has the same domain
                     if ((base + '/') not in potential_link):
