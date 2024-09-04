@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 # A limit on the number of links crawled for each starting link
-SAFE_PAGE_LIMIT = 5
+SAFE_PAGE_LIMIT = 10
 
 
 def scrape(starting_links: List[str], json_filename: str, search_text) -> List[str]:
@@ -63,20 +63,18 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
             # only crawl standard web URLs
             if not (potential_link.startswith('http://') or potential_link.startswith('https://')):
                 continue
-            # check if link has the same domain
-            if ((base + '/') not in potential_link):
+            # check if link has the same subdomain
+            if urlparse(base).netloc != urlparse(potential_link).netloc:
                 continue
             # check if crawling abides by standard
             if not check_link_ok(robot_rules, href):
                 continue
             to_visit.append(potential_link)
         visited[start_link] = True    
-
-        print(to_visit)
-
+        
         # crawling
         while to_visit:
-            if pages_visited == SAFE_PAGE_LIMIT:
+            if pages_visited >= SAFE_PAGE_LIMIT:
                 break
             link = to_visit.pop(0)
 
@@ -95,11 +93,16 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                 # see if queried text is on webpage
                 if search(soup, search_text) and start_link not in queried_webpages:
                     queried_webpages.append(start_link)
-                
+
+                if link in visited:
+                    print(f"Link already visited: {link}")
+                    continue
+
                 # mark the item as visited, i.e., add to visited list, remove from to_visit
                 visited[link] = True
                 
                 links = soup.findAll('a')
+                print(f"Visiting: {link}, Pages visited: {pages_visited}")
                 
                 # get new links
                 for new_link in links:
@@ -110,8 +113,8 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                     # only crawl standard web URLs
                     if not (potential_link.startswith('http://') or potential_link.startswith('https://')):
                         continue
-                    # check if link has the same domain
-                    if ((base + '/') not in potential_link):
+                    # check if link has the same subdomain
+                    if urlparse(base).netloc != urlparse(potential_link).netloc:
                         continue
                     # check if crawling abides by standard
                     if not check_link_ok(robot_rules, href):

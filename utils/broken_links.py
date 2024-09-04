@@ -52,13 +52,12 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
             if "href" not in new_link.attrs:
                 continue
             href = new_link['href']
+            potential_link = urljoin(base, href)
             # only crawl standard web URLs
-            if href.startswith('http://') or href.startswith('https://'):
-                potential_link = urljoin(base, href)
-            else:
+            if not (potential_link.startswith('http://') or potential_link.startswith('https://')):
                 continue
-            # check if link has the same domain
-            if ((base + '/') not in potential_link):
+            # check if link has the same subdomain
+            if urlparse(base).netloc != urlparse(potential_link).netloc:
                 continue
             # check if crawling abides by standard
             if not check_link_ok(robot_rules, href):
@@ -84,6 +83,10 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
                 # scraping code
                 soup = BeautifulSoup(page.text, 'html.parser')
 
+                if link in visited:
+                    print(f"Link already visited: {link}")
+                    continue
+
                 # mark the item as visited, i.e., add to visited list, remove from to_visit
                 visited[link] = True
 
@@ -94,13 +97,12 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
                     if "href" not in new_link.attrs:
                         continue
                     href = new_link['href']
+                    potential_link = urljoin(base, href)
                     # only crawl standard web URLs
-                    if href.startswith('http://') or href.startswith('https://'):
-                        potential_link = urljoin(base, href)
-                    else:
+                    if not (potential_link.startswith('http://') or potential_link.startswith('https://')):
                         continue
-                    # check if link has the same domain
-                    if ((base + '/') not in potential_link):
+                    # check if link has the same subdomain
+                    if urlparse(base).netloc != urlparse(potential_link).netloc:
                         continue
                     # check if crawling abides by standard
                     if not check_link_ok(robot_rules, href):
