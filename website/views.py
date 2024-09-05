@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from json import loads
 from utils.broken_links import crawl
 from utils.string_match import scrape
+from api.models import PastSearch
 import traceback
 
 
@@ -35,9 +36,15 @@ def search(request):
     if not request.user.is_superuser:
         print("User is not a superuser")
         return redirect('/')
+    
+    past_searches = PastSearch.objects.filter(user=request.user, search_type='search').order_by('-created_at')
+    past_crawls = PastSearch.objects.filter(user=request.user, search_type='crawl').order_by('-created_at')
 
     if request.method == "GET":
-        return render(request, 'wrt/search.html')
+        return render(request, 'wrt/search.html', {
+            'past_searches': past_searches,
+            'past_crawls': past_crawls,
+        })
 
     if request.method == 'POST':
         print("Search view called")
@@ -51,6 +58,13 @@ def search(request):
                 return JsonResponse({'error': 'Missing required parameters.'})
 
             queried_pages = scrape(starting_links, json_filename, search_text)
+
+            PastSearch.objects.create(
+                user=request.user,
+                search_text=search_text,
+                starting_links=', '.join(starting_links),
+                json_filename=json_filename,
+            )
 
             if queried_pages:
                 return JsonResponse({'message': 'Links crawled successfully!', 'links': queried_pages})
@@ -75,6 +89,13 @@ def crawl_view(request):
                 return JsonResponse({'error': 'Missing required parameters.'})
 
             broken_links = crawl(starting_links, json_filename)
+
+            PastSearch.objects.create(
+                user=request.user,  # assuming user is logged in
+                starting_links=starting_links,
+                json_filename=json_filename,
+                search_type='crawl'
+            )
 
             if broken_links:
                 return JsonResponse({'message': 'Links crawled successfully!', 'links': broken_links})

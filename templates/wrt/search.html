@@ -71,6 +71,28 @@
                 </form>
             </div>
         </div>
+
+        <div class="columns is-centered" style="margin-top: 20px;">
+            <div class="column is-8">
+                <h2 class="subtitle">Search Results:</h2>
+                <div id="searchResults"></div> 
+            </div>
+        </div>
+
+        <div id="pastSearches" class="section">
+            <h2 class="title">Past Searches</h2>
+            <ul>
+                {% for search in past_searches %}
+                    <li>
+                        <strong>{{ search.search_text }}</strong> - {{ search.created_at }}<br>
+                        <em>Starting Links:</em> {{ search.starting_links }}<br>
+                        <em>JSON Filename:</em> {{ search.json_filename }}
+                    </li>
+                {% empty %}
+                    <li>No past searches found.</li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 
     <div id="brokenLinksTab" class="tab-content" style="display:none;">
@@ -105,6 +127,27 @@
                 </form>
             </div>
         </div>
+
+        <div class="columns is-centered" style="margin-top: 20px;">
+            <div class="column is-8">
+                <h2 class="subtitle">Crawl Results:</h2>
+                <div id="crawlResults"></div> <!-- Empty div for displaying crawl results -->
+            </div>
+        </div>
+
+        <div id="pastCrawls" class="section">
+            <h2 class="title">Past Crawls</h2>
+            <ul>
+                {% for search in past_crawls %}
+                    <li>
+                        <em>Starting Links:</em> {{ search.starting_links }}<br>
+                        <em>JSON Filename:</em> {{ search.json_filename }} - {{ search.created_at }}
+                    </li>
+                {% empty %}
+                    <li>No past crawls found.</li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 
     <script>
@@ -123,26 +166,25 @@
     </script>
 
     <script>
-        document.querySelectorAll('form').forEach(function (form) {
-            form.addEventListener('submit', function (event) {
-                event.preventDefault();
-
-                const formData = new FormData(form);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle SearchForm submission
+            const searchForm = document.getElementById('searchForm');
+            searchForm.addEventListener('submit', function(event) {
+                event.preventDefault();  
+        
+                const formData = new FormData(searchForm);
                 const searchText = formData.get('search_text');
-
                 const startingLinksInput = formData.get('starting_links');
-                const startingLinks = startingLinksInput.split(/\s*[,\n]\s*/).filter(Boolean); // put the strings into a list
-
-
+                const startingLinks = startingLinksInput.split(/\s*[,\n]\s*/).filter(Boolean); // Convert input to a list
                 const jsonFilename = formData.get('json_filename');
-
-                let endpoint = form.getAttribute('action');
+        
+                let endpoint = searchForm.getAttribute('action');
                 let requestData = { starting_links: startingLinks, json_filename: jsonFilename };
-
+        
                 if (searchText) {
                     requestData.search_text = searchText;
                 }
-
+        
                 fetch(endpoint, {
                     method: "POST",
                     headers: {
@@ -151,28 +193,76 @@
                     },
                     body: JSON.stringify(requestData)
                 })
+                .then(response => response.json())
+                .then(data => {
+                    const searchResultsDiv = document.getElementById('searchResults');
+                    searchResultsDiv.innerHTML = '';  // Clear previous results
+        
+                    if (data.links && data.links.length > 0) {
+                        const resultsList = document.createElement('ul');
+                        data.links.forEach(link => {
+                            const listItem = document.createElement('li');
+                            listItem.textContent = link;
+                            resultsList.appendChild(listItem);
+                        });
+                        searchResultsDiv.appendChild(resultsList);
+                    } else if (data.message) {
+                        searchResultsDiv.innerHTML = `<p>${data.message}</p>`;
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    </script>
 
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok.');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        alert(data.message);
-
-                        if (data.links && data.links.length > 0) {
-                            console.log('Links crawled:', data.links);
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle CrawlForm submission
+            const crawlForm = document.getElementById('crawlForm');
+            crawlForm.addEventListener('submit', function(event) {
+                event.preventDefault();  // Prevent the default form submission
+        
+                const formData = new FormData(crawlForm);
+                const startingLinksInput = formData.get('starting_links');
+                const startingLinks = startingLinksInput.split(/\s*[,\n]\s*/).filter(Boolean); // Convert input to a list
+                const jsonFilename = formData.get('json_filename');
+        
+                let endpoint = crawlForm.getAttribute('action');
+                let requestData = { starting_links: startingLinks, json_filename: jsonFilename };
+        
+                fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(requestData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const crawlResultsDiv = document.getElementById('crawlResults');
+                    crawlResultsDiv.innerHTML = '';  // Clear previous results
+        
+                    if (data.links && data.links.length > 0) {
+                        const resultsList = document.createElement('ul');
+                        data.links.forEach(link => {
+                            const listItem = document.createElement('li');
+                            listItem.textContent = link;
+                            resultsList.appendChild(listItem);
+                        });
+                        crawlResultsDiv.appendChild(resultsList);
+                    } else if (data.message) {
+                        crawlResultsDiv.innerHTML = `<p>${data.message}</p>`;
+                    }
+                })
+                .catch(error => console.error('Error:', error));
             });
         });
     </script>
 
     <script>
         document.getElementById('logoutLink').addEventListener('click', function (event) {
-            event.preventDefault();  // Prevent the default link behavior
+            event.preventDefault(); 
 
             fetch("{% url 'api_logout' %}", {
                 method: "POST",
