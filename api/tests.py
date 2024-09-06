@@ -469,7 +469,3 @@ class StringMatchTest(TestCase):
         self.assertEqual(result, [[], ['https://handbook.unimelb.edu.au/2024/courses/staff']])
 
 
-
-    
-
-
