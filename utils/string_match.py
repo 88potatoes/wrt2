@@ -77,7 +77,7 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
             if not check_link_ok(robot_rules, href):
                 continue
             to_visit.append(potential_link)
-        visited[start_link] = True    
+        visited[start_link] = True 
         
         # crawling
         while to_visit:
@@ -104,8 +104,8 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                 soup = BeautifulSoup(page.text, 'html.parser')
 
                 # see if queried text is on webpage
-                if search(soup, search_text) and start_link not in queried_webpages:
-                    queried_webpages.append(start_link)
+                if search(soup, search_text) and link not in queried_webpages:
+                    queried_webpages.append(link)
 
                 if link in visited:
                     print(f"Link already visited: {link}")

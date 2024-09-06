@@ -40,7 +40,6 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
                 broken_links.append(start_link)
                 print("new broken: ", start_link)
                 continue
-            # print("valid link", start_link)
         except requests.exceptions.RequestException as request_exception:
             broken_links.append(start_link)
             continue
@@ -75,8 +74,6 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
             to_visit.append(potential_link)
         visited[start_link] = True
 
-        # print(to_visit)
-        # print('visited', visited)
 
         # crawling
         while to_visit:
@@ -133,11 +130,7 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
             except requests.exceptions.RequestException as request_exception:
                 broken_links.append(link)
 
-        # print('start link', start_link)
-        # print('visited', visited.keys())
         output[start_link] = sorted(visited.keys())
-
-    # print(output)
 
     # create json output file
     with open(json_filename, "w") as outfile:
