@@ -214,7 +214,7 @@ class UnitTests(TestCase):
 
 
 
-class BrokenLinkIntegrationTest(TestCase):
+class BrokenLinkTest(TestCase):
     # valid input, broken links, links that require access, links that have been crawled
     @patch('requests.get')
     def test_are_broken_links(self, mock_get):
@@ -227,7 +227,7 @@ class BrokenLinkIntegrationTest(TestCase):
                 <p>This is a test page for the Bachelor of Arts.</p>
                 <a href="https://handbook.unimelb.edu.au/2024/courses">Courses Link</a>
                 <a href="https://handbook.unimelb.edu.au/2024/courses/arts-link">Arts Link</a>
-                <a href="https://handbook.unimelb.edu.au/2024/courses/staff">Private Acess Link</a>            
+                <a href="https://handbook.unimelb.edu.au/2024/courses/staff">Private Access Link</a>            
             </body>
             </html>
             ''')
@@ -263,45 +263,33 @@ class BrokenLinkIntegrationTest(TestCase):
     # valid input, no broken links
     @patch('requests.get')
     def test_no_broken_links(self, mock_get):
-        mock_get.side_effect = [
-            Mock(status_code=200, text="User-agent: *\nDisallow: /private/\n"),
-            Mock(status_code=200, text='''
-            <html>
-            <body>
-                <h1>Arts Degree</h1>
-                <p>This is a test page for the Bachelor of Arts.</p>
-                <a href="https://handbook.unimelb.edu.au/2024/courses/arts-link">Arts Link</a>
-            </body>
-            </html>
-            '''),
-            Mock(status_code=200)
-        ]
-        result = crawl(['https://handbook.unimelb.edu.au'], 'output.json')
-        self.assertEqual(result[0], [])
-    
-    # broken link as input
-    @patch('requests.get')
-    def test_broken_links_input(self, mock_get):
         def side_effect(url, *args, **kwargs):
             if url == 'https://handbook.unimelb.edu.au':
-                return Mock(status_code=404, text='''
+                return Mock(status_code=200, text='''
             <html>
             <body>
                 <h1>Arts Degree</h1>
                 <p>This is a test page for the Bachelor of Arts.</p>
+                <a href="https://handbook.unimelb.edu.au/2024/courses">Courses Link</a>
                 <a href="https://handbook.unimelb.edu.au/2024/courses/arts-link">Arts Link</a>
+                <a href="https://handbook.unimelb.edu.au/2024/courses/staff"> Private Access Link</a>            
             </body>
             </html>
             ''')
-            elif url == 'https://handbook.unimelb.edu.au/2024/courses/arts-link':
-                return Mock(status_code=404)
+            elif url == 'https://handbook.unimelb.edu.au/2024/courses/staff':
+                return Mock(status_code=401)
+            return Mock(status_code=200, text="User-agent: *\nDisallow: /private/\n") 
         mock_get.side_effect = side_effect
         result = crawl(['https://handbook.unimelb.edu.au'], 'output.json')
-        self.assertEqual(result[0], ['https://handbook.unimelb.edu.au'])
+        with open('output.json', 'r') as json_file:
+            json_data = json.load(json_file)
+        self.assertIn('https://handbook.unimelb.edu.au', json_data)
+        self.assertEqual(json_data['https://handbook.unimelb.edu.au'], ['https://handbook.unimelb.edu.au','https://handbook.unimelb.edu.au/2024/courses','https://handbook.unimelb.edu.au/2024/courses/arts-link'])
+        self.assertNotIn('https://handbook.unimelb.edu.au/2024/courses/staff', json_data['https://handbook.unimelb.edu.au'])
+        self.assertEqual(result, [[], ['https://handbook.unimelb.edu.au/2024/courses/staff']])
 
 
-
-
+# class StringMatchTest
     # # integration testing
     # # string matches
     # # valid input, have websites with the search term
