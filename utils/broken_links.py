@@ -26,6 +26,17 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
 
     # search for base urls
     for start_link in starting_links:
+        try:
+            page = requests.get(start_link)
+            # catch broken links
+            if not (200 <= page.status_code <= 299):
+                broken_links.append(start_link)
+                print("new broken: ", start_link)
+                continue
+        except requests.exceptions.RequestException as request_exception:
+            broken_links.append(start_link)
+            continue
+
         pages_visited = 0
         visited = {}
         base = re.search('https?://[^/]+', start_link).group()
@@ -33,15 +44,6 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
         robot_page = requests.get(robots_url)
         robot_rules = process_robots(robot_page.text)
 
-        try:
-            page = requests.get(start_link)
-            # catch broken links
-            if not (200 <= page.status_code <= 299):
-                broken_links.append(start_link)
-                continue
-        except requests.exceptions.RequestException as request_exception:
-            broken_links.append(start_link)
-            continue
         soup = BeautifulSoup(page.text, 'html.parser')
 
         links = soup.findAll('a')
@@ -77,6 +79,7 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
 
                 # catch broken links
                 if not (200 <= page.status_code <= 299):
+                    print("new broken: ", link)
                     broken_links.append(link)
                     continue
 

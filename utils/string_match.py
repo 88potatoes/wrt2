@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 # A limit on the number of links crawled for each starting link
-SAFE_PAGE_LIMIT = 10
+SAFE_PAGE_LIMIT = 5
 
 
 def scrape(starting_links: List[str], json_filename: str, search_text) -> List[str]:
@@ -28,13 +28,6 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
 
     # search for base urls
     for start_link in starting_links:
-        pages_visited = 0
-        visited = {}
-        base = re.search('https?://[^/]+', start_link).group()
-        robots_url = base + robots_item
-        robot_page = requests.get(robots_url)
-        robot_rules = process_robots(robot_page.text)
-        
         try:
             page = requests.get(start_link)
             # catch broken links
@@ -44,6 +37,12 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
         except requests.exceptions.RequestException as request_exception:
             broken_links.append(start_link)
             continue
+        pages_visited = 0
+        visited = {}
+        base = re.search('https?://[^/]+', start_link).group()
+        robots_url = base + robots_item
+        robot_page = requests.get(robots_url)
+        robot_rules = process_robots(robot_page.text)
 
         soup = BeautifulSoup(page.text, 'html.parser')
         
