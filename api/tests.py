@@ -308,7 +308,7 @@ class UnitTests(TestCase):
         self.assertIn('https://handbook.unimelb.edu.au/', json_data)
         self.assertEqual(json_data['https://handbook.unimelb.edu.au/'], ['https://handbook.unimelb.edu.au/','https://handbook.unimelb.edu.au/2024/courses',"https://handbook.unimelb.edu.au/2024/courses/arts-link", "https://handbook.unimelb.edu.au/2024/courses/history", "https://handbook.unimelb.edu.au/2024/courses/philosophy"])
 
-
+# integration tests (internal)
 class BrokenLinkTest(TestCase):
     # valid input, broken links, links that require access, links that have been crawled
     @patch('requests.get')
@@ -393,6 +393,7 @@ class BrokenLinkTest(TestCase):
         self.assertEqual(result, [[], ['https://handbook.unimelb.edu.au/2024/courses/staff']])
 
 
+# integration tests (internal)
 class StringMatchTest(TestCase):
     # valid input, have websites with the search term, private access link, repeated links
     @patch('requests.get')
@@ -467,5 +468,6 @@ class StringMatchTest(TestCase):
         self.assertIn('https://handbook.unimelb.edu.au/2024/courses/b-arts', json_data)
         self.assertEqual(json_data['https://handbook.unimelb.edu.au/2024/courses/b-arts'], ['https://handbook.unimelb.edu.au/2024/courses/arts-link', 'https://handbook.unimelb.edu.au/2024/courses/b-arts'])
         self.assertEqual(result, [[], ['https://handbook.unimelb.edu.au/2024/courses/staff']])
+
 
 
