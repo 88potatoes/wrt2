@@ -17,22 +17,30 @@ SAFE_PAGE_LIMIT = 5
 
 def crawl(starting_links: List[str], json_filename: str) -> List[str]:
     """ Crawl each url in the starting_link list, and output
-    the broken links. All links crawled stored in JSON file"""
+    the broken links and links that require private access. All links 
+    crawled stored in JSON file"""
 
     robots_item = '/robots.txt'
     to_visit = []
     broken_links = []
     output = {}
+    requires_access = []
 
     # search for base urls
     for start_link in starting_links:
         try:
             page = requests.get(start_link)
+            # catch links that require access
+            if page.status_code == 401 or page.status_code == 403:
+                print("requires acces: ", start_link)
+                requires_access.append(start_link)
+                continue
             # catch broken links
-            if not (200 <= page.status_code <= 299):
+            elif not (200 <= page.status_code <= 299):
                 broken_links.append(start_link)
                 print("new broken: ", start_link)
                 continue
+            # print("valid link", start_link)
         except requests.exceptions.RequestException as request_exception:
             broken_links.append(start_link)
             continue
@@ -67,6 +75,9 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
             to_visit.append(potential_link)
         visited[start_link] = True
 
+        # print(to_visit)
+        # print('visited', visited)
+
         # crawling
         while to_visit:
             if pages_visited == SAFE_PAGE_LIMIT:
@@ -77,10 +88,15 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
                 # Fetch the webpage
                 page = requests.get(link)
 
+                # catch links that require access
+                if page.status_code == 401 or page.status_code == 403:
+                    print("requires acces: ", link)
+                    requires_access.append(link)
+                    continue
                 # catch broken links
-                if not (200 <= page.status_code <= 299):
-                    print("new broken: ", link)
+                elif not (200 <= page.status_code <= 299):
                     broken_links.append(link)
+                    print("new broken: ", link)
                     continue
 
                 # scraping code
@@ -117,10 +133,14 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
             except requests.exceptions.RequestException as request_exception:
                 broken_links.append(link)
 
+        # print('start link', start_link)
+        # print('visited', visited.keys())
         output[start_link] = sorted(visited.keys())
+
+    # print(output)
 
     # create json output file
     with open(json_filename, "w") as outfile:
         json.dump(output, outfile)
 
-    return broken_links
+    return [broken_links, requires_access]
