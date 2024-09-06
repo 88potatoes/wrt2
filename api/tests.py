@@ -75,7 +75,6 @@ class UnitTests(TestCase):
         self.assertEqual(json_data, {})
         self.assertEqual(result, [[],[]])
 
-    
     def test_robots_txt(self):
         robot_rules = process_robots("User-agent: *\nDisallow: /private/\n")
         self.assertFalse(check_link_ok(robot_rules, '/private/'))
@@ -214,8 +213,6 @@ class UnitTests(TestCase):
         result = crawl(['https://handbook.unimelb.edu.au'], 'output.json')
         with open('output.json', 'r') as json_file:
             json_data = json.load(json_file)
-        print("json_data:", json_data)
-        print("result:", result)
         self.assertEqual(json_data, {})
         self.assertNotIn('https://handbook.unimelb.edu.au', json_data)
         self.assertEqual(result, [['https://handbook.unimelb.edu.au'], []])
@@ -223,8 +220,6 @@ class UnitTests(TestCase):
         result = scrape(['https://handbook.unimelb.edu.au'], 'output2.json', 'Arts')
         with open('output2.json', 'r') as json_file:
             json_data = json.load(json_file)
-        print("json_data:", json_data)
-        print("result:", result)
         self.assertEqual(json_data, {})
         self.assertNotIn('https://handbook.unimelb.edu.au', json_data)
         self.assertEqual(result, [[], []])
@@ -359,7 +354,7 @@ class BrokenLinkTest(TestCase):
         self.assertNotIn('https://handbook.unimelb.edu.au/2024/courses/staff', json_data['https://handbook.unimelb.edu.au/'])
         self.assertEqual(result, [['https://handbook.unimelb.edu.au/2024/courses/arts-link'], ['https://handbook.unimelb.edu.au/2024/courses/staff']])
         
-    # valid input, no broken links, private access link
+    # valid input, no broken links, private access link, links that have been crawled
     @patch('requests.get')
     def test_no_broken_links(self, mock_get):
         def side_effect(url, *args, **kwargs):
