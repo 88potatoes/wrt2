@@ -96,11 +96,22 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-SESSION_COOKIE_NAME = 'sessionid'  # Default cookie name
-SESSION_COOKIE_AGE = 10800  # 3 hours
-SESSION_COOKIE_SECURE = True 
-SESSION_COOKIE_HTTPONLY = True 
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/

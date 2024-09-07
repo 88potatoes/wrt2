@@ -12,11 +12,7 @@
             <div class="navbar-start">
                 <a href="/" class="navbar-item">Home</a>
                 <a href="/about" class="navbar-item">About Us</a>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'search' %}" class="navbar-item">Search</a>
-                {% else %}
-                    <a href="{% url 'login' %}?next={% url 'search' %}" class="navbar-item">Search</a>
-                {% endif %}
+                <a href="api/search-page/" class="navbar-item">Search</a>
             </div>
         </div>
     </nav>
@@ -26,7 +22,7 @@
             <h1 class="title has-text-centered">Login</h1>
             <div class="columns is-centered">
                 <div class="column is-4">
-                    <form id="loginForm" action="{% url 'login' %}" method="POST">
+                    <form id="loginForm">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.GET.next }}">
 
@@ -67,23 +63,34 @@
             const username = document.querySelector('input[name="username"]').value;
             const password = document.querySelector('input[name="password"]').value;
 
-            fetch("{% url 'api_login' %}", {
+            // Send login request to /api/token/ to get JWT tokens
+            fetch("/api/token/", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
+                    'X-CSRFToken': '{{ csrf_token }}' 
                 },
                 body: JSON.stringify({ username: username, password: password })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    window.location.href = "{{ request.GET.next|default_if_none:'/' }}";
-                } else if (data.error) {
-                    document.getElementById('errorMessage').textContent = data.error;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Login failed. Please check your credentials.');
                 }
+                return response.json();
             })
-            .catch(error => console.error('Error:', error));
+            .then(data => {
+                // Store the access and refresh tokens
+                localStorage.setItem('access_token', data.access);
+                localStorage.setItem('refresh_token', data.refresh);
+
+                const nextUrl = "/api/search-page/";
+                window.location.href = nextUrl;
+            })
+            .catch(error => {
+                // Display error message to the user
+                document.getElementById('errorMessage').textContent = error.message;
+                console.error('Error:', error);
+            });
         });
     </script>
 
