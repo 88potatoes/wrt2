@@ -1,5 +1,3 @@
-
-import pandas as pd
 import json
 from typing import List
 
@@ -18,32 +16,39 @@ SAFE_PAGE_LIMIT = 5
 
 def scrape(starting_links: List[str], json_filename: str, search_text) -> List[str]:
     """ Crawl each starting link and find websites that matches the query 
-    string. All links crawled stored in JSON file"""
+    string and links that require private access. All links crawled stored 
+    in JSON file"""
 
     robots_item = '/robots.txt'
     to_visit = []
     broken_links = []
     queried_webpages = []
     output = {}
+    requires_access = []
 
     # search for base urls
     for start_link in starting_links:
+        try:
+            page = requests.get(start_link)
+            # catch links that require access
+            if page.status_code == 401 or page.status_code == 403:
+                print("requires acces: ", start_link)
+                requires_access.append(start_link)
+                continue
+            # catch broken links
+            elif not (200 <= page.status_code <= 299):
+                broken_links.append(start_link)
+                print("new broken: ", start_link)
+                continue
+        except requests.exceptions.RequestException as request_exception:
+            broken_links.append(start_link)
+            continue
         pages_visited = 0
         visited = {}
         base = re.search('https?://[^/]+', start_link).group()
         robots_url = base + robots_item
         robot_page = requests.get(robots_url)
         robot_rules = process_robots(robot_page.text)
-        
-        try:
-            page = requests.get(start_link)
-            # catch broken links
-            if not (200 <= page.status_code <= 299):
-                broken_links.append(start_link)
-                continue
-        except requests.exceptions.RequestException as request_exception:
-            broken_links.append(start_link)
-            continue
 
         soup = BeautifulSoup(page.text, 'html.parser')
         
@@ -57,25 +62,24 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
         # get new links
         for new_link in links:
             if "href" not in new_link.attrs:
-                    continue
-            href = new_link['href']
-            # only crawl standard web URLs
-            if href.startswith('http://') or href.startswith('https://'):
-                potential_link = urljoin(base, href)
-            else:
                 continue
-            # check if link has the same domain
-            if ((base + '/') not in potential_link):
+            href = new_link['href']
+            potential_link = urljoin(base, href)
+            # only crawl standard web URLs
+            if not (potential_link.startswith('http://') or potential_link.startswith('https://')):
+                continue
+            # check if link has the same subdomain
+            if urlparse(base).netloc != urlparse(potential_link).netloc:
                 continue
             # check if crawling abides by standard
             if not check_link_ok(robot_rules, href):
                 continue
             to_visit.append(potential_link)
-        visited[start_link] = True    
-
+        visited[start_link] = True 
+        
         # crawling
         while to_visit:
-            if pages_visited == SAFE_PAGE_LIMIT:
+            if pages_visited >= SAFE_PAGE_LIMIT:
                 break
             link = to_visit.pop(0)
 
@@ -83,35 +87,45 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                 # Fetch the webpage
                 page = requests.get(link)
 
+                # catch links that require access
+                if page.status_code == 401 or page.status_code == 403:
+                    print("requires acces: ", link)
+                    requires_access.append(link)
+                    continue
                 # catch broken links
-                if not (200 <= page.status_code <= 299):
+                elif not (200 <= page.status_code <= 299):
                     broken_links.append(link)
+                    print("new broken: ", link)
                     continue
                 
                 # scraping code 
                 soup = BeautifulSoup(page.text, 'html.parser')
 
                 # see if queried text is on webpage
-                if search(soup, search_text) and start_link not in queried_webpages:
-                    queried_webpages.append(start_link)
-                
+                if search(soup, search_text) and link not in queried_webpages:
+                    queried_webpages.append(link)
+
+                if link in visited:
+                    print(f"Link already visited: {link}")
+                    continue
+
                 # mark the item as visited, i.e., add to visited list, remove from to_visit
                 visited[link] = True
                 
                 links = soup.findAll('a')
+                print(f"Visiting: {link}, Pages visited: {pages_visited}")
                 
                 # get new links
                 for new_link in links:
                     if "href" not in new_link.attrs:
                         continue
                     href = new_link['href']
+                    potential_link = urljoin(base, href)
                     # only crawl standard web URLs
-                    if href.startswith('http://') or href.startswith('https://'):
-                        potential_link = urljoin(base, href)
-                    else:
+                    if not (potential_link.startswith('http://') or potential_link.startswith('https://')):
                         continue
-                    # check if link has the same domain
-                    if ((base + '/') not in potential_link):
+                    # check if link has the same subdomain
+                    if urlparse(base).netloc != urlparse(potential_link).netloc:
                         continue
                     # check if crawling abides by standard
                     if not check_link_ok(robot_rules, href):
@@ -129,7 +143,7 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
     with open(json_filename, "w") as outfile:
         json.dump(output, outfile)
     
-    return queried_webpages
+    return [queried_webpages, requires_access]
 
 
 def search(soup, search_text):

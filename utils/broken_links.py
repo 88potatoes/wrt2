@@ -1,4 +1,3 @@
-import pandas as pd
 import json
 from typing import List
 
@@ -17,15 +16,33 @@ SAFE_PAGE_LIMIT = 5
 
 def crawl(starting_links: List[str], json_filename: str) -> List[str]:
     """ Crawl each url in the starting_link list, and output
-    the broken links. All links crawled stored in JSON file"""
+    the broken links and links that require private access. All links 
+    crawled stored in JSON file"""
 
     robots_item = '/robots.txt'
     to_visit = []
     broken_links = []
     output = {}
+    requires_access = []
 
     # search for base urls
     for start_link in starting_links:
+        try:
+            page = requests.get(start_link)
+            # catch links that require access
+            if page.status_code == 401 or page.status_code == 403:
+                print("requires acces: ", start_link)
+                requires_access.append(start_link)
+                continue
+            # catch broken links
+            elif not (200 <= page.status_code <= 299):
+                broken_links.append(start_link)
+                print("new broken: ", start_link)
+                continue
+        except requests.exceptions.RequestException as request_exception:
+            broken_links.append(start_link)
+            continue
+
         pages_visited = 0
         visited = {}
         base = re.search('https?://[^/]+', start_link).group()
@@ -33,15 +50,6 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
         robot_page = requests.get(robots_url)
         robot_rules = process_robots(robot_page.text)
 
-        try:
-            page = requests.get(start_link)
-            # catch broken links
-            if not (200 <= page.status_code <= 299):
-                broken_links.append(start_link)
-                continue
-        except requests.exceptions.RequestException as request_exception:
-            broken_links.append(start_link)
-            continue
         soup = BeautifulSoup(page.text, 'html.parser')
 
         links = soup.findAll('a')
@@ -52,19 +60,19 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
             if "href" not in new_link.attrs:
                 continue
             href = new_link['href']
+            potential_link = urljoin(base, href)
             # only crawl standard web URLs
-            if href.startswith('http://') or href.startswith('https://'):
-                potential_link = urljoin(base, href)
-            else:
+            if not (potential_link.startswith('http://') or potential_link.startswith('https://')):
                 continue
-            # check if link has the same domain
-            if ((base + '/') not in potential_link):
+            # check if link has the same subdomain
+            if urlparse(base).netloc != urlparse(potential_link).netloc:
                 continue
             # check if crawling abides by standard
             if not check_link_ok(robot_rules, href):
                 continue
             to_visit.append(potential_link)
         visited[start_link] = True
+
 
         # crawling
         while to_visit:
@@ -76,13 +84,23 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
                 # Fetch the webpage
                 page = requests.get(link)
 
+                # catch links that require access
+                if page.status_code == 401 or page.status_code == 403:
+                    print("requires acces: ", link)
+                    requires_access.append(link)
+                    continue
                 # catch broken links
-                if not (200 <= page.status_code <= 299):
+                elif not (200 <= page.status_code <= 299):
                     broken_links.append(link)
+                    print("new broken: ", link)
                     continue
 
                 # scraping code
                 soup = BeautifulSoup(page.text, 'html.parser')
+
+                if link in visited:
+                    print(f"Link already visited: {link}")
+                    continue
 
                 # mark the item as visited, i.e., add to visited list, remove from to_visit
                 visited[link] = True
@@ -94,13 +112,12 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
                     if "href" not in new_link.attrs:
                         continue
                     href = new_link['href']
+                    potential_link = urljoin(base, href)
                     # only crawl standard web URLs
-                    if href.startswith('http://') or href.startswith('https://'):
-                        potential_link = urljoin(base, href)
-                    else:
+                    if not (potential_link.startswith('http://') or potential_link.startswith('https://')):
                         continue
-                    # check if link has the same domain
-                    if ((base + '/') not in potential_link):
+                    # check if link has the same subdomain
+                    if urlparse(base).netloc != urlparse(potential_link).netloc:
                         continue
                     # check if crawling abides by standard
                     if not check_link_ok(robot_rules, href):
@@ -118,4 +135,4 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
     with open(json_filename, "w") as outfile:
         json.dump(output, outfile)
 
-    return broken_links
+    return [broken_links, requires_access]
