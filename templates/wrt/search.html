@@ -2,196 +2,204 @@
 <html lang="en">
 
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+    <link rel="stylesheet" href="{% static 'css/search.css' %}">
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="navbar-menu">
-            <div class="navbar-start">
-                <a href="/" class="navbar-item">Home</a>
-                <a href="/about" class="navbar-item">About Us</a>
-                <a href="/search" class="navbar-item" style="color: #58a1ef; font-weight: bold;">Search</a>
+    <div id="main-content">
+        <nav class="navbar">
+            <div class="navbar-menu">
+                <div class="navbar-start">
+                    <a href="/" class="navbar-item">Home</a>
+                    <a href="/about" class="navbar-item">About Us</a>
+                    <a href="/search" class="navbar-item" style="color: #58a1ef; font-weight: bold;">Search</a>
+                </div>
+                <div class="navbar-end">
+                    <!-- {% if user.is_authenticated %} -->
+                    <a href="#" id="logoutLink" class="navbar-item">Logout</a>
+                    <!-- {% else %} -->
+                    <a href="/login" class="navbar-item">Login</a>
+                    <!-- {% endif %} -->
+                </div>
             </div>
-            <div class="navbar-end">
-                <!-- {% if user.is_authenticated %} -->
-                <a href="#" id="logoutLink" class="navbar-item">Logout</a>
-                <!-- {% else %} -->
-                <a href="/login" class="navbar-item">Login</a>
-                <!-- {% endif %} -->
-            </div>
+        </nav>
+
+        <div class="tabs-is-centered">
+            <ul>
+                <li class="is-active"><a href="#" onclick="showTab('searchTermTab')">Search Term</a></li>
+                <li><a href="#" onclick="showTab('brokenLinksTab')">Broken Links</a></li>
+            </ul>
         </div>
-    </nav>
 
-    <div class="tabs is-centered">
-        <ul>
-            <li class="is-active"><a onclick="showTab('searchTermTab')">Search Term</a></li>
-            <li><a onclick="showTab('brokenLinksTab')">Broken Links</a></li>
-        </ul>
-    </div>
+        <div id="searchTermTab" class="tab-content">
+            <h2 class="tab-title">String Search</h2>
+            <div class="columns-is-centered">
+                <div class="column is-8">
+                    <form id="searchForm" action="{% url 'search' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="search_term_form">
 
-    <div id="searchTermTab" class="tab-content">
-        <div class="columns is-centered">
-            <div class="column is-8">
-                <form id="searchForm" action="{% url 'search' %}" method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_type" value="search_term_form">
-
-                    <div class="field">
-                        <label class="label">Search Term</label>
-                        <div class="control">
-                            <input class="input" type="text" name="search_text" placeholder="Enter your search term...">
+                        <div class="field">
+                            <label class="label">Search Term</label>
+                            <div class="control">
+                                <input class="input" type="text" name="search_text"
+                                    placeholder="Enter your search term...">
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="field">
-                        <label class="label">Website Range</label>
-                        <div class="control">
-                            <input class="input" type="text" name="starting_links"
-                                placeholder="Enter a URL defining the search range..." required>
+                        <div class="field">
+                            <label class="label">Website Range</label>
+                            <div class="control">
+                                <input class="input" type="text" name="starting_links"
+                                    placeholder="Enter a URL defining the search range..." required>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="field">
+                        <!-- <div class="field">
                         <label class="label">JSON Filename</label>
                         <div class="control">
                             <input class="input" type="text" name="json_filename"
                                 placeholder="Enter the output JSON filename..." required>
                         </div>
-                    </div>
+                    </div> -->
 
-                    <div class="field">
-                        <div class="control has-text-centered">
-                            <button class="button is-link" type="submit">Search</button>
+                        <div class="field">
+                            <div class="control">
+                                <button class="button is-link" type="submit">Search</button>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="brokenLinksTab" class="tab-content" style="display:none;">
-        <div class="columns is-centered">
-            <div class="column is-8">
-                <form id="crawlForm" action="{% url 'crawl' %}" method="POST">
-                    <!-- CSRF token for Django -->
-                    {% csrf_token %}
-                    <input type="hidden" name="form_type" value="search_term_form">
+        <div id="brokenLinksTab" class="tab-content" style="display:none;">
+            <h2 class="tab-title">Broken Link Search</h2>
+            <div class="columns-is-centered">
+                <div class="column is-8">
+                    <form id="crawlForm" action="{% url 'crawl' %}" method="POST">
+                        <!-- CSRF token for Django -->
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="search_term_form">
 
-                    <div class="field">
-                        <label class="label">Website Range</label>
-                        <div class="control">
-                            <input class="input" type="text" name="starting_links"
-                                placeholder="Enter a URL defining the search range..." required>
+                        <div class="field">
+                            <label class="label">Root URLs</label>
+                            <div class="control">
+                                <input class="input" type="text" name="starting_links"
+                                    placeholder="Enter a URL defining the search range..." required>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="field">
+                        <!-- <div class="field">
                         <label class="label">JSON Filename</label>
                         <div class="control">
                             <input class="input" type="text" name="json_filename"
                                 placeholder="Enter the output JSON filename..." required>
                         </div>
-                    </div>
+                    </div> -->
 
-                    <div class="field">
-                        <div class="control has-text-centered">
-                            <button class="button is-link" type="submit">Search</button>
+                        <div class="field">
+                            <div class="control">
+                                <button class="button is-link" type="submit">Search</button>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        function showTab(tabId) {
-            var tabContents = document.getElementsByClassName("tab-content");
-            for (var i = 0; i < tabContents.length; i++) {
-                tabContents[i].style.display = "none";
-            }
-            document.getElementById(tabId).style.display = "block";
-            var tabLinks = document.querySelectorAll(".tabs ul li");
-            tabLinks.forEach(function (link) {
-                link.classList.remove("is-active");
-            });
-            event.currentTarget.parentNode.classList.add("is-active");
-        }
-    </script>
-
-    <script>
-        document.querySelectorAll('form').forEach(function (form) {
-            form.addEventListener('submit', function (event) {
-                event.preventDefault();
-
-                const formData = new FormData(form);
-                const searchText = formData.get('search_text');
-
-                const startingLinksInput = formData.get('starting_links');
-                const startingLinks = startingLinksInput.split(/\s*[,\n]\s*/).filter(Boolean); // put the strings into a list
-
-
-                const jsonFilename = formData.get('json_filename');
-
-                let endpoint = form.getAttribute('action');
-                let requestData = { starting_links: startingLinks, json_filename: jsonFilename };
-
-                if (searchText) {
-                    requestData.search_text = searchText;
+        <script>
+            function showTab(tabId) {
+                var tabContents = document.getElementsByClassName("tab-content");
+                for (var i = 0; i < tabContents.length; i++) {
+                    tabContents[i].style.display = "none";
                 }
+                document.getElementById(tabId).style.display = "block";
 
-                fetch(endpoint, {
+                var tabLinks = document.querySelectorAll(".tabs-is-centered ul li");
+                tabLinks.forEach(function (link) {
+                    link.classList.remove("is-active");
+                });
+                document.querySelector(`.tabs-is-centered ul li a[onclick="showTab('${tabId}')"]`).parentNode.classList.add("is-active");
+                // event.currentTarget.parentNode.classList.add("is-active");
+            }
+        </script>
+
+        <script>
+            document.querySelectorAll('form').forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
+
+                    const formData = new FormData(form);
+                    const searchText = formData.get('search_text');
+
+                    const startingLinksInput = formData.get('starting_links');
+                    const startingLinks = startingLinksInput.split(/\s*[,\n]\s*/).filter(Boolean); // put the strings into a list
+
+
+                    const jsonFilename = formData.get('json_filename');
+
+                    let endpoint = form.getAttribute('action');
+                    let requestData = { starting_links: startingLinks, json_filename: "jsonFilename" };
+
+                    if (searchText) {
+                        requestData.search_text = searchText;
+                    }
+
+                    fetch(endpoint, {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify(requestData)
+                    })
+
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok.');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            alert(data.message);
+
+                            if (data.links && data.links.length > 0) {
+                                console.log('Links crawled:', data.links);
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                });
+            });
+        </script>
+
+        <script>
+            document.getElementById('logoutLink').addEventListener('click', function (event) {
+                event.preventDefault();  // Prevent the default link behavior
+
+                fetch("{% url 'api_logout' %}", {
                     method: "POST",
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    },
-                    body: JSON.stringify(requestData)
+                        'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token
+                    }
                 })
-
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok.');
-                        }
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
-                        alert(data.message);
-
-                        if (data.links && data.links.length > 0) {
-                            console.log('Links crawled:', data.links);
+                        if (data.message) {
+                            // Redirect to the homepage or login page after logout
+                            window.location.href = "/";
                         }
                     })
                     .catch(error => console.error('Error:', error));
             });
-        });
-    </script>
-
-    <script>
-        document.getElementById('logoutLink').addEventListener('click', function (event) {
-            event.preventDefault();  // Prevent the default link behavior
-
-            fetch("{% url 'api_logout' %}", {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        // Redirect to the homepage or login page after logout
-                        window.location.href = "/";
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
-    </script>
-
+        </script>
+    </div>
 
 
 </body>
