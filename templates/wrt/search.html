@@ -213,8 +213,8 @@
                 .then(data => {
                     if (data.access) {
                         console.log("New access token received:", data.access);
-                        localStorage.setItem('access_token', data.access);  // Store the new access token
-                        return data.access;  // Resolve the promise with the new access token
+                        localStorage.setItem('access_token', data.access); 
+                        return data.access;  
                     } else {
                         console.log("Failed to refresh token, redirecting to login...");
                         window.location.href = "/login";  
