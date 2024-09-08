@@ -1,0 +1,491 @@
+/* body {
+    background-color: #000B34;
+    color: white;
+    font-family: 'Roboto', sans-serif;
+}
+
+h1.title {
+    color: #FFF;
+    font-size: 34px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: 0.25px;
+}
+
+.navbar {
+    background-color: #000B34;
+}
+
+.navbar-item {
+    color: white;
+}
+
+.navbar-item:hover {
+    background-color: #007bff;
+}
+
+.section {
+    padding: 2rem 1rem;
+}
+
+h1.title {
+    color: #EAEAEA;
+}
+
+form {
+    background-color: #001b33;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.input {
+    background-color: #EAEAEA;
+    width: 487px;
+    height: 51px;
+    flex-shrink: 0;
+    color: white;
+    border: none;
+}
+
+.input:focus {
+    border-color: #58a1ef;
+    box-shadow: 0 0 5px rgba(88, 161, 239, 0.5);
+}
+
+.button.is-link {
+    background-color: #ABC1A7;
+    width: 90px;
+    height: 39px;
+    flex-shrink: 0;
+    border: none;
+}
+
+.button.is-link:hover {
+    background: var(--lightgreen, #ABC1A7);
+    width: 90px;
+    height: 39px;
+    flex-shrink: 0;
+}
+
+.has-text-danger {
+    color: #ff3860;
+}
+
+.columns.is-centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+}
+
+.column.is-4 {
+    max-width: 400px;
+}
+
+@media (max-width: 768px) {
+    .column.is-4 {
+        width: 100%;
+    }
+} */
+
+.url-controls-bg {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0%;
+    right: 0%;
+    bottom: 0%;
+    left: 0%;
+    box-shadow: 0px -1px 0px #dadce0 inset;
+    background-color: #fff;
+}
+
+.right-locked-icons {
+    position: absolute;
+    top: calc(50% - 11px);
+    right: 14px;
+    width: 51px;
+    height: 22px;
+    overflow: hidden;
+    object-fit: cover;
+}
+
+.url-fill-bg {
+    position: absolute;
+    width: 100%;
+    top: calc(50% - 14px);
+    right: 0%;
+    left: 0%;
+    border-radius: 14px;
+    background-color: #f1f3f4;
+    height: 28px;
+}
+
+.icon-favorite {
+    position: absolute;
+    top: calc(50% - 8px);
+    right: 10px;
+    width: 16px;
+    height: 16px;
+    object-fit: cover;
+}
+
+.domaincom {
+    position: relative;
+    letter-spacing: 0.25px;
+}
+
+.subdomain {
+    position: relative;
+    letter-spacing: 0.25px;
+    color: #696a6c;
+}
+
+.domaincom-parent {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.url-text {
+    position: absolute;
+    top: calc(50% - 8px);
+    left: 33px;
+    width: 165px;
+    height: 16px;
+}
+
+.icon-secure {
+    position: absolute;
+    top: calc(50% - 6px);
+    left: 11px;
+    width: 12px;
+    height: 12px;
+    object-fit: cover;
+}
+
+.url-bar {
+    position: absolute;
+    width: calc(100% - 215px);
+    top: calc(50% - 14px);
+    right: 81px;
+    left: 134px;
+    height: 28px;
+    overflow: hidden;
+}
+
+.icon-home {
+    position: absolute;
+    top: calc(50% - 8px);
+    left: calc(50% + 38.5px);
+    width: 16px;
+    height: 16px;
+    object-fit: cover;
+}
+
+.icon-refresh {
+    position: absolute;
+    top: calc(50% - 8px);
+    left: calc(50% + 7.5px);
+    width: 16px;
+    height: 16px;
+}
+
+.icon-forward {
+    position: absolute;
+    top: calc(50% - 8px);
+    left: calc(50% - 23.5px);
+    width: 16px;
+    height: 16px;
+}
+
+.icon-back {
+    position: absolute;
+    top: calc(50% - 8px);
+    left: calc(50% - 54.5px);
+    width: 16px;
+    height: 16px;
+}
+
+.left-locked-icons {
+    position: absolute;
+    top: calc(50% - 8px);
+    left: 12px;
+    width: 109px;
+    height: 16px;
+    overflow: hidden;
+}
+
+.toolbar-url-controls1 {
+    position: absolute;
+    width: 100%;
+    top: 0px;
+    right: 0px;
+    left: 0px;
+    height: 38px;
+    overflow: hidden;
+}
+
+.toolbar-url-controls {
+    position: absolute;
+    width: 100%;
+    top: 42px;
+    right: 0px;
+    left: 0px;
+    height: 38px;
+}
+
+.broswer-control-bar-bg {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0%;
+    right: 0%;
+    bottom: 0%;
+    left: 0%;
+    border-radius: 8px 8px 0px 0px;
+    background-color: #dee1e6;
+}
+
+.curve-l-icon {
+    width: 6px;
+    position: relative;
+    height: 8px;
+}
+
+.favicon {
+    width: 16px;
+    position: relative;
+    height: 16px;
+}
+
+.website-review-tool {
+    white-space: pre-wrap;
+}
+
+.span {
+    color: #fff;
+}
+
+.tab-name {
+    position: relative;
+    letter-spacing: 0.2px;
+}
+
+.icon-close {
+    width: 18px;
+    position: relative;
+    height: 18px;
+}
+
+.favicon-text-icons {
+    border-radius: 8px 8px 0px 0px;
+    background-color: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 8px;
+    gap: 9px;
+}
+
+.curve-r-icon {
+    width: 6px;
+    position: relative;
+    height: 8px;
+    object-fit: contain;
+}
+
+.curve-l-parent {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.icon-plus {
+    width: 20px;
+    position: relative;
+    height: 20px;
+}
+
+.frame-parent {
+    position: absolute;
+    top: 0px;
+    left: -6px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.browser-tab-with-plus {
+    position: absolute;
+    top: calc(50% - 17px);
+    left: 8px;
+    width: 131px;
+    height: 34px;
+}
+
+.tab-plus {
+    position: absolute;
+    top: calc(50% - 13px);
+    left: 72px;
+    width: 167px;
+    height: 34px;
+}
+
+.browser-controls-icon {
+    position: absolute;
+    top: calc(50% - 5.5px);
+    left: 13px;
+    width: 52px;
+    height: 12px;
+    overflow: hidden;
+}
+
+.broswer-control-bar {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0%;
+    right: 0%;
+    bottom: 0%;
+    left: 0%;
+    overflow: hidden;
+}
+
+.toolbar-browser-controls {
+    position: absolute;
+    height: 52.5%;
+    width: 100%;
+    top: 0%;
+    right: 0%;
+    bottom: 47.5%;
+    left: 0%;
+    font-size: 12px;
+    color: #494c4f;
+}
+
+.browser-url-controls {
+    position: absolute;
+    width: 100%;
+    top: 0px;
+    right: 0px;
+    left: 0px;
+    height: 80px;
+    overflow: hidden;
+    font-size: 14px;
+    color: #202124;
+}
+
+.login {
+    position: absolute;
+    top: 350px;
+    left: 678px;
+    font-size: 34px;
+    letter-spacing: 0.25px;
+}
+
+.username {
+    position: absolute;
+    top: 409px;
+    left: 477px;
+    font-size: 25px;
+    letter-spacing: 0.25px;
+}
+
+.group-child {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: #eaeaea;
+    width: 487px;
+    height: 51px;
+}
+
+.rectangle-parent {
+    position: absolute;
+    top: 438px;
+    left: 477px;
+    width: 487px;
+    height: 51px;
+    color: #bdbdbd;
+}
+
+.rectangle-wrapper {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 487px;
+    height: 51px;
+}
+
+.password {
+    position: absolute;
+    top: 12px;
+    left: 10px;
+    letter-spacing: 0.25px;
+}
+
+.group-parent {
+    position: absolute;
+    top: 537px;
+    left: 477px;
+    width: 487px;
+    height: 51px;
+    color: #bdbdbd;
+}
+
+.password1 {
+    position: absolute;
+    top: 508px;
+    left: 477px;
+    font-size: 25px;
+    letter-spacing: 0.25px;
+}
+
+.group-inner {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: #abc1a7;
+    width: 90px;
+    height: 39px;
+}
+
+.login1 {
+    position: absolute;
+    top: 6px;
+    left: 16px;
+    letter-spacing: 0.25px;
+}
+
+.rectangle-group {
+    position: absolute;
+    top: 636px;
+    left: 477px;
+    width: 90px;
+    height: 39px;
+    color: #000b34;
+}
+
+.wrt-login {
+    width: 100%;
+    position: relative;
+    background-color: #000b34;
+    height: 1024px;
+    overflow: hidden;
+    text-align: left;
+    font-size: 23px;
+    color: #fff;
+    font-family: Roboto;
+}

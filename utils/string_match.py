@@ -34,7 +34,7 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
         robots_url = base + robots_item
         robot_page = requests.get(robots_url)
         robot_rules = process_robots(robot_page.text)
-        
+
         try:
             page = requests.get(start_link)
             # catch broken links
@@ -46,18 +46,18 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
             continue
 
         soup = BeautifulSoup(page.text, 'html.parser')
-        
+
         # see if queried text is on webpage
         if search(soup, search_text) and start_link not in queried_webpages:
             queried_webpages.append(start_link)
-        
+
         links = soup.findAll('a')
         pages_visited += 1
 
         # get new links
         for new_link in links:
             if "href" not in new_link.attrs:
-                    continue
+                continue
             href = new_link['href']
             # only crawl standard web URLs
             if href.startswith('http://') or href.startswith('https://'):
@@ -71,7 +71,7 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
             if not check_link_ok(robot_rules, href):
                 continue
             to_visit.append(potential_link)
-        visited[start_link] = True    
+        visited[start_link] = True
 
         # crawling
         while to_visit:
@@ -87,19 +87,19 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                 if not (200 <= page.status_code <= 299):
                     broken_links.append(link)
                     continue
-                
-                # scraping code 
+
+                # scraping code
                 soup = BeautifulSoup(page.text, 'html.parser')
 
                 # see if queried text is on webpage
                 if search(soup, search_text) and start_link not in queried_webpages:
                     queried_webpages.append(start_link)
-                
+
                 # mark the item as visited, i.e., add to visited list, remove from to_visit
                 visited[link] = True
-                
+
                 links = soup.findAll('a')
-                
+
                 # get new links
                 for new_link in links:
                     if "href" not in new_link.attrs:
@@ -116,7 +116,7 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                     # check if crawling abides by standard
                     if not check_link_ok(robot_rules, href):
                         continue
-                    # if link has not been visited and is not to be visited 
+                    # if link has not been visited and is not to be visited
                     if (potential_link not in visited) and (potential_link not in to_visit):
                         to_visit.append(potential_link)
                 pages_visited += 1
@@ -124,16 +124,16 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())
-    
+
     # create json output file
     with open(json_filename, "w") as outfile:
         json.dump(output, outfile)
-    
+
     return queried_webpages
 
 
 def search(soup, search_text):
-    soup = soup.get_text(separator = ' ')
+    soup = soup.get_text(separator=' ')
 
     # change all characters to their casefolded form
     soup = soup.casefold()
@@ -141,11 +141,11 @@ def search(soup, search_text):
     # replace non-alphabetic characters to single-space characters
     pattern = r'[^a-zA-Z\s\\]'
     soup = re.sub(pattern, ' ', soup)
-    
-    # convert all spacing characters such as tabs and newlines into single-space characters
-    soup = re.sub(r'\s+', ' ',soup)
 
-    # text is converted to explicit tokens 
+    # convert all spacing characters such as tabs and newlines into single-space characters
+    soup = re.sub(r'\s+', ' ', soup)
+
+    # text is converted to explicit tokens
     tokens = soup.split()
 
     res = False
