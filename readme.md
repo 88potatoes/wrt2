@@ -11,3 +11,5 @@ DEBUG=True
 DJANGO_SECRET_KEY=zyd7_me&l#6vyajc+f40nt%6zo_s_09k1prm0izive)w1edkv7
 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
 ```
+
+Then run `python manage.py createsuperuser` and create a new user that you can log in with.

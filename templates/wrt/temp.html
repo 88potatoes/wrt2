@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protected Page</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-menu">
+            <div class="navbar-start">
+                <a href="/" class="navbar-item">Home</a>
+                <a href="/about" class="navbar-item">About Us</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="section">
+        <div class="container">
+            <h1 class="title has-text-centered">Welcome to the Protected Page!</h1>
+            <p class="has-text-centered">Only authenticated users can access this page.</p>
+        </div>
+    </section>
+
+    <script>
+        // Check if access token is present
+        const accessToken = localStorage.getItem('access_token');
+        
+        if (!accessToken) {
+            // Redirect to login if not authenticated
+            window.location.href = "/login";
+        } else {
+            // Optionally, verify token with the server (for more secure validation)
+            fetch('/api/protected-endpoint/', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + accessToken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log("Response status:", response.status);  // Log the response status
+                if (!response.ok) {
+                    console.log("Token is invalid or expired, status code:", response.status);
+                    setTimeout(() => {
+                        window.location.href = "/login";
+                    }, 5000);
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data) {
+                    console.log("API response data:", data);  // Log the response data if available
+                }
+            })
+            .catch(error => {
+                console.error('Error verifying token:', error);
+            });
+        }
+    </script>
+</body>
+</html>

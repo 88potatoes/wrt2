@@ -13,18 +13,11 @@
             <div class="navbar-start">
                 <a href="/" class="navbar-item">Home</a>
                 <a href="/about" class="navbar-item" style="color: #58a1ef; font-weight: bold;">About Us</a>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'search' %}" class="navbar-item">Search</a>
-                {% else %}
-                    <a href="{% url 'login' %}?next={% url 'search' %}" class="navbar-item">Search</a>
-                {% endif %}
+                <a href="api/search-page/" class="navbar-item">Search</a>
             </div>
             <div class="navbar-end">
-                {% if user.is_authenticated %}
-                    <a href="#" id="logoutLink" class="navbar-item">Logout</a>
-                {% else %}
-                    <a href="{% url 'login' %}?next={% url 'about' %}" class="navbar-item">Login</a>
-                {% endif %}
+                <a href="#" id="logoutLink" class="navbar-item">Logout</a>
+                <a href="/login" id="loginLink" class="navbar-item">Login</a>
             </div>
         </div>
     </nav>
@@ -117,24 +110,27 @@
     </section>
 
     <script>
-        document.getElementById('logoutLink').addEventListener('click', function(event) {
-            event.preventDefault();  // Prevent the default link behavior
+        document.addEventListener('DOMContentLoaded', function() {
+            const accessToken = localStorage.getItem('access_token');
+            const loginLink = document.getElementById('loginLink');
+            const logoutLink = document.getElementById('logoutLink');
     
-            fetch("{% url 'api_logout' %}", {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    // Redirect to the homepage or login page after logout
-                    window.location.href = "/";
-                }
-            })
-            .catch(error => console.error('Error:', error));
+            // If user has an access token, show logout and hide login
+            if (accessToken) {
+                loginLink.style.display = 'none';
+                logoutLink.style.display = 'block';
+            } else {
+                loginLink.style.display = 'block';
+                logoutLink.style.display = 'none';
+            }
+    
+            // Logout logic
+            logoutLink.addEventListener('click', function(event) {
+                event.preventDefault();
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                window.location.href = '/';  // Redirect to home page after logout
+            });
         });
     </script>
 

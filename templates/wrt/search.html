@@ -11,56 +11,50 @@
 </head>
 
 <body>
-    <div id="main-content">
-        <nav class="navbar">
-            <div class="navbar-menu">
-                <div class="navbar-start">
-                    <a href="/" class="navbar-item">Home</a>
-                    <a href="/about" class="navbar-item">About Us</a>
-                    <a href="/search" class="navbar-item" style="color: #58a1ef; font-weight: bold;">Search</a>
-                </div>
-                <div class="navbar-end">
-                    <!-- {% if user.is_authenticated %} -->
-                    <a href="#" id="logoutLink" class="navbar-item">Logout</a>
-                    <!-- {% else %} -->
-                    <a href="/login" class="navbar-item">Login</a>
-                    <!-- {% endif %} -->
-                </div>
+    <nav class="navbar">
+        <div class="navbar-menu">
+            <div class="navbar-start">
+                <a href="/" class="navbar-item">Home</a>
+                <a href="/about" class="navbar-item">About Us</a>
+                <a href="/api/search-page/" class="navbar-item" style="color: #58a1ef; font-weight: bold;">Search</a>
             </div>
-        </nav>
-
-        <div class="tabs-is-centered">
-            <ul>
-                <li class="is-active"><a href="#" onclick="showTab('searchTermTab')">Search Term</a></li>
-                <li><a href="#" onclick="showTab('brokenLinksTab')">Broken Links</a></li>
-            </ul>
+            <div class="navbar-end">
+                <a href="#" id="logoutLink" class="navbar-item">Logout</a>
+            </div>
         </div>
+    </nav>
 
-        <div id="searchTermTab" class="tab-content">
-            <h2 class="tab-title">String Search</h2>
-            <div class="columns-is-centered">
-                <div class="column is-8">
-                    <form id="searchForm" action="{% url 'search' %}" method="POST">
-                        {% csrf_token %}
-                        <input type="hidden" name="form_type" value="search_term_form">
+    <div class="tabs-is-centered">
+        <ul>
+            <li class="is-active"><a href="#" onclick="showTab('searchTermTab')">Search Term</a></li>
+            <li><a href="#" onclick="showTab('brokenLinksTab')">Broken Links</a></li>
+        </ul>
+    </div>
 
-                        <div class="field">
-                            <label class="label">Search Term</label>
-                            <div class="control">
-                                <input class="input" type="text" name="search_text"
-                                    placeholder="Enter your search term...">
-                            </div>
+    <div id="searchTermTab" class="tab-content">
+        <h2 class="tab-title">String Search</h2>
+        <div class="columns-is-centered">
+            <div class="column is-8">
+                <form id="searchForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="search_term_form">
+
+                    <div class="field">
+                        <label class="label">Search Term</label>
+                        <div class="control">
+                            <input class="input" type="text" name="search_text" placeholder="Enter your search term...">
                         </div>
+                    </div>
 
-                        <div class="field">
-                            <label class="label">Website Range</label>
-                            <div class="control">
-                                <input class="input" type="text" name="starting_links"
-                                    placeholder="Enter a URL defining the search range..." required>
-                            </div>
+                    <div class="field">
+                        <label class="label">Website Range</label>
+                        <div class="control">
+                            <input class="input" type="text" name="starting_links"
+                                placeholder="Enter a URL defining the search range..." required>
                         </div>
+                    </div>
 
-                        <!-- <div class="field">
+                    <!-- <div class="field">
                         <label class="label">JSON Filename</label>
                         <div class="control">
                             <input class="input" type="text" name="json_filename"
@@ -68,34 +62,41 @@
                         </div>
                     </div> -->
 
-                        <div class="field">
-                            <div class="control">
-                                <button class="button is-link" type="submit">Search</button>
-                            </div>
+                    <div class="field">
+                        <div class="control">
+                            <button class="button is-link" type="submit">Search</button>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <div id="brokenLinksTab" class="tab-content" style="display:none;">
-            <h2 class="tab-title">Broken Link Search</h2>
-            <div class="columns-is-centered">
-                <div class="column is-8">
-                    <form id="crawlForm" action="{% url 'crawl' %}" method="POST">
-                        <!-- CSRF token for Django -->
-                        {% csrf_token %}
-                        <input type="hidden" name="form_type" value="search_term_form">
+        <div class="columns is-centered" style="margin-top: 20px;">
+            <div class="column is-8">
+                <h2 class="subtitle">Search Results:</h2>
+                <div id="searchResults"></div>
+            </div>
+        </div>
+    </div>
 
-                        <div class="field">
-                            <label class="label">Root URLs</label>
-                            <div class="control">
-                                <input class="input" type="text" name="starting_links"
-                                    placeholder="Enter a URL defining the search range..." required>
-                            </div>
+    <div id="brokenLinksTab" class="tab-content" style="display:none;">
+        <h2 class="tab-title">Broken Link Search</h2>
+        <div class="columns-is-centered">
+            <div class="column is-8">
+                <form id="crawlForm" action="{% url 'crawl' %}" method="POST">
+                    <!-- CSRF token for Django -->
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="search_term_form">
+
+                    <div class="field">
+                        <label class="label">Root URLs</label>
+                        <div class="control">
+                            <input class="input" type="text" name="starting_links"
+                                placeholder="Enter a URL defining the search range..." required>
                         </div>
+                    </div>
 
-                        <!-- <div class="field">
+                    <!-- <div class="field">
                         <label class="label">JSON Filename</label>
                         <div class="control">
                             <input class="input" type="text" name="json_filename"
@@ -103,102 +104,365 @@
                         </div>
                     </div> -->
 
-                        <div class="field">
-                            <div class="control">
-                                <button class="button is-link" type="submit">Search</button>
-                            </div>
+                    <div class="field">
+                        <div class="control">
+                            <button class="button is-link" type="submit">Search</button>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <script>
-            function showTab(tabId) {
-                var tabContents = document.getElementsByClassName("tab-content");
-                for (var i = 0; i < tabContents.length; i++) {
-                    tabContents[i].style.display = "none";
-                }
-                document.getElementById(tabId).style.display = "block";
+        <div class="columns is-centered" style="margin-top: 20px;">
+            <div class="column is-8">
+                <h2 class="subtitle">Crawl Results:</h2>
+                <div id="crawlResults"></div>
+            </div>
+        </div>
+    </div>
 
-                var tabLinks = document.querySelectorAll(".tabs-is-centered ul li");
-                tabLinks.forEach(function (link) {
-                    link.classList.remove("is-active");
-                });
-                document.querySelector(`.tabs-is-centered ul li a[onclick="showTab('${tabId}')"]`).parentNode.classList.add("is-active");
-                // event.currentTarget.parentNode.classList.add("is-active");
-            }
-        </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const accessToken = localStorage.getItem('access_token');
+            const refreshToken = localStorage.getItem('refresh_token');
 
-        <script>
-            document.querySelectorAll('form').forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    event.preventDefault();
-
-                    const formData = new FormData(form);
-                    const searchText = formData.get('search_text');
-
-                    const startingLinksInput = formData.get('starting_links');
-                    const startingLinks = startingLinksInput.split(/\s*[,\n]\s*/).filter(Boolean); // put the strings into a list
-
-
-                    const jsonFilename = formData.get('json_filename');
-
-                    let endpoint = form.getAttribute('action');
-                    let requestData = { starting_links: startingLinks, json_filename: "jsonFilename" };
-
-                    if (searchText) {
-                        requestData.search_text = searchText;
-                    }
-
-                    fetch(endpoint, {
-                        method: "POST",
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        body: JSON.stringify(requestData)
-                    })
-
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok.');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            alert(data.message);
-
-                            if (data.links && data.links.length > 0) {
-                                console.log('Links crawled:', data.links);
-                            }
-                        })
-                        .catch(error => console.error('Error:', error));
-                });
-            });
-        </script>
-
-        <script>
-            document.getElementById('logoutLink').addEventListener('click', function (event) {
-                event.preventDefault();  // Prevent the default link behavior
-
-                fetch("{% url 'api_logout' %}", {
-                    method: "POST",
+            function refreshAccessToken() {
+                return fetch('/api/token/refresh/', {
+                    method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token
-                    }
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        refresh: refreshToken  // Use the refresh token to get a new access token
+                    })
                 })
                     .then(response => response.json())
                     .then(data => {
-                        if (data.message) {
-                            // Redirect to the homepage or login page after logout
-                            window.location.href = "/";
+                        if (data.access) {
+                            console.log("New access token received:", data.access);
+                            localStorage.setItem('access_token', data.access);
+                            return data.access;
+                        } else {
+                            console.log("Failed to refresh token, redirecting to login...");
+                            window.location.href = "/login";
+                            throw new Error('Failed to refresh token');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error refreshing token:', error);
+                        window.location.href = "/login";
+                        throw new Error('Error refreshing token');
+                    });
+            }
+
+            // Function to validate the access token on page load
+            function validateAccessToken() {
+                if (!accessToken) {
+                    console.log("No access token found. Redirecting to login...");
+                    window.location.href = "/login";
+                } else {
+                    fetch('/api/search-page/', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': 'Bearer ' + accessToken,
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(response => {
+                            if (response.status === 401) {
+                                console.log("Token invalid or expired. Attempting to refresh...");
+                                return refreshAccessToken().then(newAccessToken => {
+                                    return fetch('/api/search-page/', {
+                                        method: 'GET',
+                                        headers: {
+                                            'Authorization': 'Bearer ' + newAccessToken,
+                                            'Content-Type': 'application/json'
+                                        }
+                                    });
+                                });
+                            } else if (!response.ok) {
+                                console.log("Token validation failed, redirecting to login...");
+                                window.location.href = "/login";
+                            } else {
+                                console.log("Access token is valid.");
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error verifying token:', error);
+                            window.location.href = "/login";
+                        });
+                }
+            }
+
+            validateAccessToken();
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const accessToken = localStorage.getItem('access_token');
+            const refreshToken = localStorage.getItem('refresh_token');
+
+            // Function to refresh the access token
+            function refreshAccessToken() {
+                return fetch('/api/token/refresh/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        refresh: refreshToken  // Use the refresh token to get a new access token
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.access) {
+                            console.log("New access token received:", data.access);
+                            localStorage.setItem('access_token', data.access);
+                            return data.access;
+                        } else {
+                            console.log("Failed to refresh token, redirecting to login...");
+                            window.location.href = "/login";
+                            throw new Error('Failed to refresh token');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error refreshing token:', error);
+                        window.location.href = "/login";
+                        throw new Error('Error refreshing token');
+                    });
+            }
+
+            // Handle SearchForm submission
+            const searchForm = document.getElementById('searchForm');
+            searchForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const formData = new FormData(searchForm);
+                const searchText = formData.get('search_text');
+                const startingLinks = formData.get('starting_links').split(/\s*[,\n]\s*/).filter(Boolean); // Convert input to a list
+                const jsonFilename = formData.get('json_filename');
+
+                let accessToken = localStorage.getItem('access_token');
+
+                // Function to submit search form data
+                function submitSearchForm(token) {
+                    return fetch('/api/search/', {
+                        method: "POST",
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            search_text: searchText,
+                            starting_links: startingLinks,
+                            json_filename: jsonFilename
+                        })
+                    });
+                }
+
+                // Make the initial request
+                submitSearchForm(accessToken)
+                    .then(response => {
+                        if (response.ok) {
+                            console.log("Access token is valid. Processing response...");
+                            return response.json();
+                        } else if (response.status === 401) {
+                            console.log("Access token is invalid or expired. Attempting to refresh...");
+                            return refreshAccessToken().then(newAccessToken => {
+                                console.log("Retrying request with new access token.");
+                                return submitSearchForm(newAccessToken).then(retryResponse => {
+                                    if (retryResponse.ok) {
+                                        return retryResponse.json();
+                                    } else {
+                                        throw new Error('Retry failed.');
+                                    }
+                                });
+                            });
+                        } else {
+                            throw new Error('Something went wrong with the request.');
+                        }
+                    })
+                    .then(data => {
+                        console.log("Data received from the server:", data);
+                        const searchResultsDiv = document.getElementById('searchResults');
+                        searchResultsDiv.innerHTML = '';
+
+                        if (data.links && data.links.length > 0) {
+                            const resultsList = document.createElement('ul');
+                            data.links.forEach(link => {
+                                const listItem = document.createElement('li');
+                                listItem.textContent = link;
+                                resultsList.appendChild(listItem);
+                            });
+                            searchResultsDiv.appendChild(resultsList);
+                        } else if (data.message) {
+                            searchResultsDiv.innerHTML = `<p>${data.message}</p>`;
                         }
                     })
                     .catch(error => console.error('Error:', error));
             });
-        </script>
+
+            // Handle CrawlForm submission
+            const crawlForm = document.getElementById('crawlForm');
+            crawlForm.addEventListener('submit', function (event) {
+                event.preventDefault();  // Prevent the default form submission
+
+                const formData = new FormData(crawlForm);
+                const startingLinks = formData.get('starting_links').split(/\s*[,\n]\s*/).filter(Boolean); // Convert input to a list
+                const jsonFilename = formData.get('json_filename');
+
+                let accessToken = localStorage.getItem('access_token');  // Get the access token
+
+                // Function to submit crawl form data
+                function submitCrawlForm(token) {
+                    return fetch('/api/crawl/', {
+                        method: "POST",
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            starting_links: startingLinks,
+                            json_filename: jsonFilename
+                        })
+                    });
+                }
+
+                // Make the initial request
+                submitCrawlForm(accessToken)
+                    .then(response => {
+                        if (response.ok) {
+                            console.log("Access token is valid.");
+                            return response.json();
+                        } else if (response.status === 401) {
+                            console.log("Access token is invalid or expired. Attempting to refresh...");
+                            return refreshAccessToken().then(newAccessToken => {
+                                console.log("Retrying request with new access token.");
+                                return submitCrawlForm(newAccessToken).then(retryResponse => {
+                                    if (retryResponse.ok) {
+                                        return retryResponse.json();
+                                    } else {
+                                        throw new Error('Retry failed.');
+                                    }
+                                });
+                            });
+                        } else {
+                            throw new Error('Something went wrong with the request.');
+                        }
+                    })
+                    .then(data => {
+                        console.log("Data received from the server:", data);
+                        const crawlResultsDiv = document.getElementById('crawlResults');
+                        crawlResultsDiv.innerHTML = '';
+
+                        if (data.links && data.links.length > 0) {
+                            const resultsList = document.createElement('ul');
+                            data.links.forEach(link => {
+                                const listItem = document.createElement('li');
+                                listItem.textContent = link;
+                                resultsList.appendChild(listItem);
+                            });
+                            crawlResultsDiv.appendChild(resultsList);
+                        } else if (data.message) {
+                            crawlResultsDiv.innerHTML = `<p>${data.message}</p>`;
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        });
+    </script>
+
+    <script>
+        function showTab(tabId) {
+            var tabContents = document.getElementsByClassName("tab-content");
+            for (var i = 0; i < tabContents.length; i++) {
+                tabContents[i].style.display = "none";
+            }
+            document.getElementById(tabId).style.display = "block";
+
+            var tabLinks = document.querySelectorAll(".tabs-is-centered ul li");
+            tabLinks.forEach(function (link) {
+                link.classList.remove("is-active");
+            });
+            document.querySelector(`.tabs-is-centered ul li a[onclick="showTab('${tabId}')"]`).parentNode.classList.add("is-active");
+            // event.currentTarget.parentNode.classList.add("is-active");
+        }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const logoutLink = document.getElementById('logoutLink');
+
+            logoutLink.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                const formData = new FormData(form);
+                const searchText = formData.get('search_text');
+
+                const startingLinksInput = formData.get('starting_links');
+                const startingLinks = startingLinksInput.split(/\s*[,\n]\s*/).filter(Boolean); // put the strings into a list
+
+
+                const jsonFilename = formData.get('json_filename');
+
+                let endpoint = form.getAttribute('action');
+                let requestData = { starting_links: startingLinks, json_filename: "jsonFilename" };
+
+                if (searchText) {
+                    requestData.search_text = searchText;
+                }
+
+                fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(requestData)
+                })
+
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok.');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        alert(data.message);
+
+                        if (data.links && data.links.length > 0) {
+                            console.log('Links crawled:', data.links);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        });
+    </script>
+
+    <script>
+        document.getElementById('logoutLink').addEventListener('click', function (event) {
+            event.preventDefault();  // Prevent the default link behavior
+
+            fetch("{% url 'api_logout' %}", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        // Redirect to the homepage or login page after logout
+                        window.location.href = "/";
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
+    </script>
     </div>
 
 

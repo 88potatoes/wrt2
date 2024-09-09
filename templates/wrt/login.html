@@ -69,7 +69,8 @@
             const username = document.querySelector('input[name="username"]').value;
             const password = document.querySelector('input[name="password"]').value;
 
-            fetch("{% url 'api_login' %}", {
+            // Send login request to /api/token/ to get JWT tokens
+            fetch("/api/token/", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
