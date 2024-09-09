@@ -49,7 +49,6 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
         robots_url = base + robots_item
         robot_page = requests.get(robots_url)
         robot_rules = process_robots(robot_page.text)
-<<<<<<< HEAD
 
         try:
             page = requests.get(start_link)
@@ -60,8 +59,6 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
         except requests.exceptions.RequestException as request_exception:
             broken_links.append(start_link)
             continue
-=======
->>>>>>> eae00981c5f3e362a3f4d1e130bf3f426ea179ce
 
         soup = BeautifulSoup(page.text, 'html.parser')
 
@@ -75,15 +72,12 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
         # get new links
         for new_link in links:
             if "href" not in new_link.attrs:
-<<<<<<< HEAD
                 continue
             href = new_link['href']
             # only crawl standard web URLs
             if href.startswith('http://') or href.startswith('https://'):
                 potential_link = urljoin(base, href)
             else:
-=======
->>>>>>> eae00981c5f3e362a3f4d1e130bf3f426ea179ce
                 continue
             href = new_link['href']
             potential_link = urljoin(base, href)
@@ -97,13 +91,8 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
             if not check_link_ok(robot_rules, href):
                 continue
             to_visit.append(potential_link)
-<<<<<<< HEAD
         visited[start_link] = True
 
-=======
-        visited[start_link] = True 
-        
->>>>>>> eae00981c5f3e362a3f4d1e130bf3f426ea179ce
         # crawling
         while to_visit:
             if pages_visited >= SAFE_PAGE_LIMIT:
@@ -129,28 +118,17 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                 soup = BeautifulSoup(page.text, 'html.parser')
 
                 # see if queried text is on webpage
-<<<<<<< HEAD
-                if search(soup, search_text) and start_link not in queried_webpages:
-                    queried_webpages.append(start_link)
-=======
                 if search(soup, search_text) and link not in queried_webpages:
                     queried_webpages.append(link)
 
                 if link in visited:
                     print(f"Link already visited: {link}")
                     continue
->>>>>>> eae00981c5f3e362a3f4d1e130bf3f426ea179ce
 
                 # mark the item as visited, i.e., add to visited list, remove from to_visit
                 visited[link] = True
 
                 links = soup.findAll('a')
-<<<<<<< HEAD
-
-=======
-                print(f"Visiting: {link}, Pages visited: {pages_visited}")
-                
->>>>>>> eae00981c5f3e362a3f4d1e130bf3f426ea179ce
                 # get new links
                 for new_link in links:
                     if "href" not in new_link.attrs:
@@ -178,13 +156,8 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
     # create json output file
     with open(json_filename, "w") as outfile:
         json.dump(output, outfile)
-<<<<<<< HEAD
 
     return queried_webpages
-=======
-    
-    return [queried_webpages, requires_access]
->>>>>>> eae00981c5f3e362a3f4d1e130bf3f426ea179ce
 
 
 def search(soup, search_text):
