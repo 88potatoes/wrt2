@@ -260,6 +260,14 @@
                 const startingLinks = formData.get('starting_links').split(/\s*[,\n]\s*/).filter(Boolean); // Convert input to a list
                 const jsonFilename = formData.get('json_filename');
 
+                // const dummyData = {
+                //     links: [
+                //         "http://example.com/page1",
+                //         "http://example.com/page2"
+                //     ],
+                //     message: ""
+                // };
+
                 let accessToken = localStorage.getItem('access_token');
 
                 // Function to submit search form data
