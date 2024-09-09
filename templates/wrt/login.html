@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
+
 <body>
-    <nav class="navbar">
+    <!-- <nav class="navbar">
         <div class="navbar-menu">
             <div class="navbar-start">
                 <a href="/" class="navbar-item">Home</a>
@@ -15,11 +19,11 @@
                 <a href="api/search-page/" class="navbar-item">Search</a>
             </div>
         </div>
-    </nav>
+    </nav> -->
 
     <section class="section">
         <div class="container">
-            <h1 class="title has-text-centered">Login</h1>
+            <h1 class="title-has-text-centered">Login</h1>
             <div class="columns is-centered">
                 <div class="column is-4">
                     <form id="loginForm">
@@ -59,8 +63,8 @@
 
     <script>
         // Handle the form submission using AJAX
-        document.getElementById('loginForm').addEventListener('submit', function(event) {
-            event.preventDefault();  
+        document.getElementById('loginForm').addEventListener('submit', function (event) {
+            event.preventDefault();
 
             const username = document.querySelector('input[name="username"]').value;
             const password = document.querySelector('input[name="password"]').value;
@@ -70,31 +74,32 @@
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}' 
+                    'X-CSRFToken': '{{ csrf_token }}'
                 },
                 body: JSON.stringify({ username: username, password: password })
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Login failed. Please check your credentials.');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Store the access and refresh tokens
-                localStorage.setItem('access_token', data.access);
-                localStorage.setItem('refresh_token', data.refresh);
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Login failed. Please check your credentials.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Store the access and refresh tokens
+                    localStorage.setItem('access_token', data.access);
+                    localStorage.setItem('refresh_token', data.refresh);
 
-                const nextUrl = "/api/search-page/";
-                window.location.href = nextUrl;
-            })
-            .catch(error => {
-                // Display error message to the user
-                document.getElementById('errorMessage').textContent = error.message;
-                console.error('Error:', error);
-            });
+                    const nextUrl = "/api/search-page/";
+                    window.location.href = nextUrl;
+                })
+                .catch(error => {
+                    // Display error message to the user
+                    document.getElementById('errorMessage').textContent = error.message;
+                    console.error('Error:', error);
+                });
         });
     </script>
 
 </body>
+
 </html>
