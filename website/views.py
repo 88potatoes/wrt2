@@ -9,14 +9,9 @@ from api.models import PastSearch
 import traceback
 
 
-def home(request):
-    print("Home view called")
-    return render(request, 'wrt/index.html')
-
-
-def about(request):
-    print("About view called")
-    return render(request, 'wrt/about.html')
+# def home(request):
+#     print("Home view called")
+#     return render(request, 'wrt/index.html')
 
 
 def login_view(request):
