@@ -70,9 +70,29 @@
             </div>
         </div>
 
-        <div class="columns is-centered" style="margin-top: 20px;">
-            <h2 class="subtitle">Search Results:</h2>
-            <div id="searchResults"></div>
+        <div class="container">
+            <h2 class="results">Results - Strings Matched</h2>
+            <div id="searchResults">
+                <table class="table is-bordered is-fullwidth is-hoverable">
+                    <thead>
+                        <tr>
+                            <th>Matched String</th>
+                            <th>Page URL</th>
+                        </tr>
+
+                        <tr class="urlRange">
+                            <th colspan="2">Web Pages with URL Prefix "there should be a placeholder of the link here"</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="resultsBody"> 
+                        <!-- <tr>
+                            <td>givenString</td>
+                            <td>url</td>
+                        </tr> -->
+                    </tbody>
+                </table>  
+            </div>
         </div>
     </div>
     </div>
@@ -284,19 +304,33 @@
                     .then(data => {
                         console.log("Data received from the server:", data);
                         const searchResultsDiv = document.getElementById('searchResults');
+                        const resultsBody = document.getElementById('resultsBody');
                         searchResultsDiv.innerHTML = '';
 
                         if (data.links && data.links.length > 0) {
-                            const resultsList = document.createElement('ul');
                             data.links.forEach(link => {
-                                const listItem = document.createElement('li');
-                                listItem.textContent = link;
-                                resultsList.appendChild(listItem);
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td>${searchText}</td>
+                                    <td><a href="${link}" target="_blank">${link}</a></td>
+                                `;
+                                resultsBody.appendChild(row);
                             });
-                            searchResultsDiv.appendChild(resultsList);
                         } else if (data.message) {
                             searchResultsDiv.innerHTML = `<p>${data.message}</p>`;
                         }
+
+                        // if (data.links && data.links.length > 0) {
+                        //     const resultsList = document.createElement('ul');
+                        //     data.links.forEach(link => {
+                        //         const listItem = document.createElement('li');
+                        //         listItem.textContent = link;
+                        //         resultsList.appendChild(listItem);
+                        //     });
+                        //     searchResultsDiv.appendChild(resultsList);
+                        // } else if (data.message) {
+                        //     searchResultsDiv.innerHTML = `<p>${data.message}</p>`;
+                        // }
                     })
                     .catch(error => console.error('Error:', error));
             });
