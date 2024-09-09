@@ -1,0 +1,160 @@
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#main-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.tab-content {
+    flex: 1;
+}
+
+.navbar {
+    background-color: #000B34;
+}
+
+.navbar-item {
+    color: white;
+}
+
+.tabs-is-centered {
+    background-color: #000B34;
+    padding: 1rem;
+}
+
+.tabs-is-centered ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.tabs-is-centered li {
+    margin: 0 1rem;
+}
+
+.tabs-is-centered a {
+    text-decoration: none;
+    font-size: 16px;
+    padding: 0.5rem 1rem;
+    display: inline-block;
+
+}
+
+.tabs-is-centered li.is-active a {
+    color: white;
+}
+
+.tabs-is-centered li:not(.is-active) a {
+    color: grey;
+}
+
+.tab-content {
+    background-color: white;
+    padding: 5rem;
+}
+
+.tab-content .columns {
+    display: block;
+    width: 100%;
+}
+
+.column.is-8 {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.field {
+    margin-bottom: 1rem;
+}
+
+.input {
+    background-color: #EAEAEA;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+    height: 51px;
+    color: #000;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 1rem;
+}
+
+.tab-title {
+    font-size: 24px;
+    font-weight: 50;
+    font-weight: bold;
+    color: #000B34;
+    margin-bottom: 4rem;
+    text-align: left;
+}
+
+.label {
+    color: #000B34
+}
+
+.button.is-link {
+    background-color: #000B34;
+    width: 90px;
+    height: 39px;
+    border-radius: 0;
+    margin-top: 1rem;
+    border: none;
+}
+
+.button.is-link:hover {
+    background-color: #000B34;
+}
+
+.field .control {
+    text-align: left;
+    /* Aligns content to the left */
+}
+
+.has-text-danger {
+    color: #ff3860;
+}
+
+.field .control .button {
+    margin-left: 0;
+    /* Remove any left margin */
+}
+
+.button.is-link {
+    background-color: #ABC1A7;
+    color: #000B34;
+    width: 90px;
+    height: 39px;
+    border-radius: 0;
+    margin-top: 1rem;
+    border: none;
+}
+
+.button.is-link:hover {
+    background-color: #000B34;
+}
+
+.columns.is-centered {
+    display: flex;
+    justify-content: left;
+    align-items: left;
+    height: 80vh;
+}
+
+.column.is-8 {
+    max-width: 600px;
+}
+
+@media (max-width: 768px) {
+    .column.is-8 {
+        width: 100%;
+    }
+}
