@@ -85,6 +85,12 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
+        if (!accessToken) {
+            console.log("No access token found. Redirecting to login...");
+            window.location.href = "/"; // Redirect to login if no token
+            return;
+        }
+
         submitRequest(accessToken)
             .then(response => {
                 if (response.ok) {
@@ -124,56 +130,55 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log("Search Text: ", searchText);  
 
         submitForm(event, '/api/search/', { search_text: searchText, starting_links: startingLinks }, (data) => {
-            if (data.message) {
-                alert(data.message);
-            }
-        })
-            .then(data => {
-                console.log("Data received from the server:", data);
-                const searchResultsDiv = document.getElementById('searchResults');
+            // given successful request, display data
+            console.log("Data received from the server:", data);
+            const searchResultsDiv = document.getElementById('searchResults');
 
+            if (data.links && data.links[0].length > 0) {
                 // clears previous results
                 searchResultsDiv.innerHTML = '';
 
-                if (data.links && data.links.length > 0) {
-                    const resultsTitle = document.createElement('h2');
-                    resultsTitle.classList.add('results');
-                    resultsTitle.textContent = 'Results - Strings Matched';
-                    searchResultsDiv.appendChild(resultsTitle);
+                const resultsTitle = document.createElement('h2');
+                resultsTitle.classList.add('results');
+                resultsTitle.textContent = 'Results - Strings Matched';
+                searchResultsDiv.appendChild(resultsTitle);
 
-                    const table = document.createElement('table');
-                    table.classList.add('table is-bordered is-fullwidth is-hoverable');
-                    table.innerHTML = `
-                        <thead>
-                            <tr>
-                                <th>Matched String</th>
-                                <th>Page URL</th>
-                            </tr>
+                const table = document.createElement('table');
+                table.classList.add('table', 'is-bordered', 'is-fullwidth', 'is-hoverable');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Matched String</th>
+                            <th>Page URL</th>
+                        </tr>
 
-                            <tr class="urlRange">
-                                <th colspan="2">Web Pages with URL Prefix "there should be a placeholder of the link here"</th>
-                            </tr>
-                        </thead>
+                        <tr class="urlRange">
+                            <th colspan="2">Results for Website Range "${startingLinks[0]}"</th>
+                        </tr>
+                    </thead>
+                `;
+
+                const tableBody = document.createElement('tbody');
+
+                data.links[0].forEach(link => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${searchText}</td>
+                        <td><a href="${link}" target="_blank">${link}</a></td>
                     `;
+                    tableBody.appendChild(row);
+                });
 
-                    const tableBody = document.createElement('tbody');
-
-                    data.links.forEach(link => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${searchText}</td>
-                            <td><a href="${link}" target="_blank">${link}</a></td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-
-                    table.appendChild(tableBody);
-                    searchResultsDiv.appendChild(table);
-                } else if (data.message) {
-                    searchResultsDiv.innerHTML = `<p>${data.message}</p>`;
-                }
-            })
-            .catch(error => console.error('Error:', error));
+                table.appendChild(tableBody);
+                searchResultsDiv.appendChild(table);
+            } else if (data.links[0].length == 0) {
+                searchResultsDiv.innerHTML = `
+                <p>No results found!</p>
+                `;
+            } else if (data.message) {
+                searchResultsDiv.innerHTML = `<p>${data.message}</p>`;
+            }
+        })
     });
 
     // Handle CrawlForm submission
