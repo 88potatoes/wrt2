@@ -127,7 +127,53 @@ document.addEventListener('DOMContentLoaded', function () {
             if (data.message) {
                 alert(data.message);
             }
-        });
+        })
+            .then(data => {
+                console.log("Data received from the server:", data);
+                const searchResultsDiv = document.getElementById('searchResults');
+
+                // clears previous results
+                searchResultsDiv.innerHTML = '';
+
+                if (data.links && data.links.length > 0) {
+                    const resultsTitle = document.createElement('h2');
+                    resultsTitle.classList.add('results');
+                    resultsTitle.textContent = 'Results - Strings Matched';
+                    searchResultsDiv.appendChild(resultsTitle);
+
+                    const table = document.createElement('table');
+                    table.classList.add('table is-bordered is-fullwidth is-hoverable');
+                    table.innerHTML = `
+                        <thead>
+                            <tr>
+                                <th>Matched String</th>
+                                <th>Page URL</th>
+                            </tr>
+
+                            <tr class="urlRange">
+                                <th colspan="2">Web Pages with URL Prefix "there should be a placeholder of the link here"</th>
+                            </tr>
+                        </thead>
+                    `;
+
+                    const tableBody = document.createElement('tbody');
+
+                    data.links.forEach(link => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${searchText}</td>
+                            <td><a href="${link}" target="_blank">${link}</a></td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    table.appendChild(tableBody);
+                    searchResultsDiv.appendChild(table);
+                } else if (data.message) {
+                    searchResultsDiv.innerHTML = `<p>${data.message}</p>`;
+                }
+            })
+            .catch(error => console.error('Error:', error));
     });
 
     // Handle CrawlForm submission
