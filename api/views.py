@@ -45,14 +45,13 @@ def search_api(request):
     try:
         data = request.data
         starting_links = data.get('starting_links', [])
-        json_filename = data.get('json_filename')
         search_text = data.get('search_text')
 
-        if not starting_links or not json_filename or not search_text:
+        if not starting_links or not search_text:
             return Response({'error': 'Missing required parameters.'}, status=400)
 
         # Call scrape without saving to the database
-        queried_pages = scrape(starting_links, json_filename, search_text)
+        queried_pages = scrape(starting_links, search_text)
 
         if queried_pages:
             return Response({'message': 'Links crawled successfully!', 'links': queried_pages})
@@ -67,13 +66,12 @@ def crawl_api(request):
     try:
         data = request.data
         starting_links = data.get('starting_links', [])
-        json_filename = data.get('json_filename')
 
-        if not starting_links or not json_filename:
+        if not starting_links:
             return Response({'error': 'Missing required parameters.'}, status=400)
 
         # Call crawl without saving to the database
-        broken_links = crawl(starting_links, json_filename)
+        broken_links = crawl(starting_links)
 
         if broken_links:
             return Response({'message': 'Links crawled successfully!', 'links': broken_links})

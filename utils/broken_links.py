@@ -13,8 +13,7 @@ from bs4 import BeautifulSoup
 # A limit on the number of links crawled for each starting link
 SAFE_PAGE_LIMIT = 5
 
-
-def crawl(starting_links: List[str], json_filename: str) -> List[str]:
+def crawl(starting_links: List[str]) -> List[str]:
     """ Crawl each url in the starting_link list, and output
     the broken links and links that require private access. All links 
     crawled stored in JSON file"""
@@ -131,8 +130,4 @@ def crawl(starting_links: List[str], json_filename: str) -> List[str]:
 
         output[start_link] = sorted(visited.keys())
 
-    # create json output file
-    with open(json_filename, "w") as outfile:
-        json.dump(output, outfile)
-
-    return [broken_links, requires_access]
+    return [broken_links, requires_access, output]

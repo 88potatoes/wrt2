@@ -8,12 +8,6 @@ from utils.string_match import scrape
 from api.models import PastSearch
 import traceback
 
-
-# def home(request):
-#     print("Home view called")
-#     return render(request, 'wrt/index.html')
-
-
 def login_view(request):
     print("Login view called")
     error = None
