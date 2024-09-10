@@ -84,6 +84,7 @@ def crawl_api(request):
 
 # Search Text String API
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def search_text_string(request):
     serializer = SearchTermSerializer(data=request.data)
     print("Request method:", request.method)
@@ -91,9 +92,9 @@ def search_text_string(request):
     if serializer.is_valid():
         search_text = serializer.validated_data['search_text']
         starting_links = serializer.validated_data['starting_links']
-        json_filename = serializer.validated_data['json_filename']
+        # json_filename = serializer.validated_data['json_filename']
 
-        result = scrape(starting_links, json_filename, search_text)
+        result = scrape(starting_links, search_text)
         return Response(result, status=status.HTTP_200_OK)
     else:
         print("Serializer errors 1:", serializer.errors)
@@ -101,6 +102,7 @@ def search_text_string(request):
 
 # Broken Links API
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def search_broken_links(request):
     print("Request data:", request.data)
     serializer = BrokenLinksSerializer(data=request.data)

@@ -10,8 +10,8 @@ urlpatterns = [
 
     # Search Pages
     path('search-page/', views.render_search_view, name='render_search_view'),
-    path('search/', views.search_api, name='search_api'),
-    path('crawl/', views.crawl_api, name='crawl_api'),
+    path('search/', views.search_text_string, name='search_api'),
+    path('crawl/', views.search_broken_links, name='crawl_api'),
 
     # Login & Token handling
     path('login', views.api_login, name='api_login'),

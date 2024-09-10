@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     });
                 } else {
+                    console.log("RESPONSE DATA: " + response.data); // TODO Remove
                     throw new Error('Something went wrong with the request.');
                 }
             })
@@ -134,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log("Data received from the server:", data);
             const searchResultsDiv = document.getElementById('searchResults');
 
-            if (data.links && data.links[0].length > 0) {
+            if (data.length > 0 && data[0].length > 0) {
                 // clears previous results
                 searchResultsDiv.innerHTML = '';
 
@@ -160,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const tableBody = document.createElement('tbody');
 
-                data.links[0].forEach(link => {
+                data[0].forEach(link => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${searchText}</td>
@@ -171,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 table.appendChild(tableBody);
                 searchResultsDiv.appendChild(table);
-            } else if (data.links[0].length == 0) {
+            } else if (data[0].length == 0) {
                 searchResultsDiv.innerHTML = `
                 <p>No results found!</p>
                 `;
