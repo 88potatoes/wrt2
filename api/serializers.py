@@ -29,7 +29,7 @@ class BaseSerializer(serializers.Serializer):
         child=serializers.URLField(),
         required=True
     )
-    json_filename = serializers.CharField(required=True, max_length=100)
+    json_filename = serializers.CharField(required=False, max_length=100)
 
     def validate_json_filename(self, value):
         return validate_json_filename(value)

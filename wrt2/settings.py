@@ -76,10 +76,21 @@ WSGI_APPLICATION = "wrt2.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    },
+    "turso": {
+        'ENGINE': 'wrt2.db.backends.sqlite3', 
+        'NAME': f"{config('TURSO_DATABASE_URL')}?authToken={config('TURSO_AUTH_TOKEN')}",
     }
 }
+
+# Check if we are using the Turso database
+if config('USE_TURSO_DATABASE', "") == 'true':
+    DATABASES['default'] = {
+        'ENGINE': 'wrt2.db.backends.sqlite3', 
+        'NAME': f"{config('TURSO_DATABASE_URL')}?authToken={config('TURSO_AUTH_TOKEN')}",
+    }
 
 
 # Password validation
