@@ -67,9 +67,10 @@ def search_broken_links(request):
 
     if serializer.is_valid():
         starting_links = serializer.validated_data['starting_links']
-        json_filename = serializer.validated_data['json_filename']
+        # json_filename = serializer.validated_data['json_filename']
 
-        result = crawl(starting_links, json_filename)
+        result = crawl(starting_links)
+        print(result) # TODO Remove
         return Response(result, status=status.HTTP_200_OK)
     else:
         print("Serializer errors 2:", serializer.errors)
