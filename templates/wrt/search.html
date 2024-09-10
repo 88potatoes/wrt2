@@ -43,19 +43,13 @@
 
                     <div class="field">
                         <label class="label">Website Range</label>
-                        <div class="control">
-                            <input class="input" type="text" name="starting_links"
-                                placeholder="Enter a URL defining the search range..." required>
+                        <div id="searchUrlInputContainer">
+                            <div class="control">
+                                <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range..." required>
+                            </div>
                         </div>
+                        <button id="addSearchInputBtn" type="button" class="button is-link is-light" style="margin-top: 10px;">Add URL</button>
                     </div>
-
-                    <!-- <div class="field">
-                        <label class="label">JSON Filename</label>
-                        <div class="control">
-                            <input class="input" type="text" name="json_filename"
-                                placeholder="Enter the output JSON filename..." required>
-                        </div>
-                    </div> -->
 
                     <div class="field">
                         <div class="control">
@@ -84,11 +78,13 @@
                     <input type="hidden" name="form_type" value="search_term_form">
 
                     <div class="field">
-                        <label class="label">Root URLs</label>
-                        <div class="control">
-                            <input class="input" type="text" name="starting_links"
-                                placeholder="Enter a URL defining the search range..." required>
+                        <label class="label">Root URLS</label>
+                        <div id="crawlUrlInputContainer">
+                            <div class="control">
+                                <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range..." required>
+                            </div>
                         </div>
+                        <button id="addCrawlInputBtn" type="button" class="button is-link is-light" style="margin-top: 10px;">Add URL</button>
                     </div>
 
                     <div class="field">
@@ -110,7 +106,7 @@
         </div>
     </div>
 
-    <script src="{% static 'js/searchscript.js' %}"></script>
+    <script src="{% static 'js/search.js' %}"></script>
 
 </body>
 

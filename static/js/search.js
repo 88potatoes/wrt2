@@ -113,9 +113,15 @@ document.addEventListener('DOMContentLoaded', function () {
     // Handle SearchForm submission
     const searchForm = document.getElementById('searchForm');
     searchForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+
         const formData = new FormData(searchForm);
         const searchText = formData.get('search_text');
-        const startingLinks = formData.get('starting_links').split(/\s*[,\n]\s*/).filter(Boolean);
+        const startingLinks = formData.getAll('starting_links[]');  
+        
+        // Debug
+        console.log("Starting Links: ", startingLinks);  
+        console.log("Search Text: ", searchText);  
 
         submitForm(event, '/api/search/', { search_text: searchText, starting_links: startingLinks }, (data) => {
             if (data.message) {
@@ -128,7 +134,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const crawlForm = document.getElementById('crawlForm');
     crawlForm.addEventListener('submit', function (event) {
         const formData = new FormData(crawlForm);
-        const startingLinks = formData.get('starting_links').split(/\s*[,\n]\s*/).filter(Boolean);
+        const startingLinks = formData.getAll('starting_links[]');  
+
+        // Debug
+        console.log("Starting Links: ", startingLinks);  
 
         submitForm(event, '/api/crawl/', { starting_links: startingLinks }, (data) => {
             if (data.message) {
@@ -164,3 +173,35 @@ function showTab(tabId) {
     });
     document.querySelector(`.tabs-is-centered ul li a[onclick="showTab('${tabId}')"]`).parentNode.classList.add("is-active");
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Handle adding input fields for Search Form
+    const addSearchInputBtn = document.getElementById('addSearchInputBtn');
+    const searchUrlInputContainer = document.getElementById('searchUrlInputContainer');
+
+    addSearchInputBtn.addEventListener('click', function () {
+        const newFieldDiv = document.createElement('div');
+        newFieldDiv.classList.add('control');
+        newFieldDiv.style.marginTop = '10px';
+
+        newFieldDiv.innerHTML = `
+            <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
+        `;
+        searchUrlInputContainer.appendChild(newFieldDiv);
+    });
+
+    // Handle adding input fields for Crawl Form
+    const addCrawlInputBtn = document.getElementById('addCrawlInputBtn');
+    const crawlUrlInputContainer = document.getElementById('crawlUrlInputContainer');
+
+    addCrawlInputBtn.addEventListener('click', function () {
+        const newFieldDiv = document.createElement('div');
+        newFieldDiv.classList.add('control');
+        newFieldDiv.style.marginTop = '10px';
+
+        newFieldDiv.innerHTML = `
+            <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
+        `;
+        crawlUrlInputContainer.appendChild(newFieldDiv);
+    });
+});

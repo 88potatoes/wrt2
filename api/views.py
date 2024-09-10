@@ -47,6 +47,8 @@ def search_api(request):
         starting_links = data.get('starting_links', [])
         search_text = data.get('search_text')
 
+        print(f"Received starting links: {starting_links}")
+
         if not starting_links or not search_text:
             return Response({'error': 'Missing required parameters.'}, status=400)
 
