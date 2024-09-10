@@ -39,49 +39,6 @@ def api_login(request):
 def render_search_view(request):
     return render(request, 'wrt/search.html')
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def search_api(request):
-    try:
-        data = request.data
-        starting_links = data.get('starting_links', [])
-        search_text = data.get('search_text')
-
-        print(f"Received starting links: {starting_links}")
-
-        if not starting_links or not search_text:
-            return Response({'error': 'Missing required parameters.'}, status=400)
-
-        # Call scrape without saving to the database
-        queried_pages = scrape(starting_links, search_text)
-
-        if queried_pages:
-            return Response({'message': 'Links crawled successfully!', 'links': queried_pages})
-        else:
-            return Response({'message': 'No instances of text found.'})
-    except Exception as e:
-        return Response({'message': 'exception', 'error': str(e)}, status=500)
-    
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def crawl_api(request):
-    try:
-        data = request.data
-        starting_links = data.get('starting_links', [])
-
-        if not starting_links:
-            return Response({'error': 'Missing required parameters.'}, status=400)
-
-        # Call crawl without saving to the database
-        broken_links = crawl(starting_links)
-
-        if broken_links:
-            return Response({'message': 'Links crawled successfully!', 'links': broken_links})
-        else:
-            return Response({'message': 'No broken links found.'})
-    except Exception as e:
-        return Response({'error': str(e)}, status=500)
-
 # Search Text String API
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])

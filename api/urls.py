@@ -4,10 +4,6 @@ from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
 from . import views
 
 urlpatterns = [
-    path('broken-links', views.search_broken_links, name='broken_links'),
-    path('string-match', views.search_text_string, name='string_match'),
-    path('search-term', views.search_text_string, name='search_term'),
-
     # Search Pages
     path('search-page/', views.render_search_view, name='render_search_view'),
     path('search/', views.search_text_string, name='search_api'),
