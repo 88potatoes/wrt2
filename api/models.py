@@ -10,6 +10,5 @@ class PastSearch(models.Model):
     search_type = models.CharField(max_length=50, choices=[('search', 'Search'), ('crawl', 'Crawl')])
     created_at = models.DateTimeField(auto_now_add=True)
 
-
     def __str__(self):
         return f'{self.search_text} - {self.created_at}'
