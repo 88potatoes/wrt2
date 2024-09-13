@@ -55,9 +55,6 @@ def search_api(request):
         # Call scrape without saving to the database
         queried_pages = scrape(starting_links, search_text)
 
-        print(search_text)
-        print(queried_pages)
-
         if queried_pages:
             return Response({'message': 'Links crawled successfully!', 'links': queried_pages})
         else:
