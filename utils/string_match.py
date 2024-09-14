@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 # A limit on the number of links crawled for each starting link
-SAFE_PAGE_LIMIT = 10
+SAFE_PAGE_LIMIT = 5
 MAX_OPTIONS = 10
 
 
