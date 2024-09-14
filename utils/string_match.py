@@ -12,7 +12,8 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 # A limit on the number of links crawled for each starting link
-SAFE_PAGE_LIMIT = 5
+SAFE_PAGE_LIMIT = 10
+MAX_OPTIONS = 10
 
 
 def scrape(starting_links: List[str], json_filename: str, search_text) -> List[str]:
@@ -167,6 +168,9 @@ def create_pattern(search_term):
 
     # handle alternation for multiple options with any characters
     search_term = re.sub(r'\[([^\]]+)\]', lambda m: f"({m.group(1)})", search_term)
+    options = search_term.split('|')
+    if len(options) > MAX_OPTIONS:
+        raise ValueError(f"Too many options in alternation. Limit is {MAX_OPTIONS}.")
     
     # replace placeholders back to their literal characters
     search_term = search_term.replace('[PERCENT]', r'%')
