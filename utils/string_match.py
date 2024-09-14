@@ -147,12 +147,19 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
     with open(json_filename, "w") as outfile:
         json.dump(output, outfile)
 
+    print(pattern)
+    print(queried_webpages)
+
     return [queried_webpages, requires_access]
 
 
 def create_pattern(search_term):
-    search_term = search_term.replace(r'\%', '[PERCENT]')
-    search_term = search_term.replace(r'\?', '[QUESTION_MARK]')
+    search_term = search_term.replace(r'\%', '<PERCENT>')
+    search_term = search_term.replace(r'\?', '<QUESTION_MARK>')
+
+    search_term = search_term.replace(r'\[', '<LITERAL_OPEN_BRACKET>')
+    search_term = search_term.replace(r'\]', '<LITERAL_CLOSE_BRACKET>')
+    search_term = search_term.replace(r'\|', '<LITERAL_PIPE>')
     
     # escape all other regex special characters
     search_term = re.sub(r'([.^$*+{}\\()])', r'\\\1', search_term)
@@ -168,10 +175,14 @@ def create_pattern(search_term):
     options = search_term.split('|')
     if len(options) > MAX_OPTIONS:
         raise ValueError(f"Too many options in alternation. Limit is {MAX_OPTIONS}.")
+
+    search_term = search_term.replace('<LITERAL_OPEN_BRACKET>', r'\\[')
+    search_term = search_term.replace('<LITERAL_CLOSE_BRACKET>', r'\\]')
+    search_term = search_term.replace('<LITERAL_PIPE>', r'\\|')
     
     # replace placeholders back to their literal characters
-    search_term = search_term.replace('[PERCENT]', r'%')
-    search_term = search_term.replace('[QUESTION_MARK]', r'\?')
+    search_term = search_term.replace('<PERCENT>', r'%')
+    search_term = search_term.replace('<QUESTION_MARK>', r'\?')
 
     has_leading_wildcard = search_term.startswith('.*')
     has_trailing_wildcard = search_term.endswith('.*')
