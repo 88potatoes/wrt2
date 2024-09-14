@@ -147,9 +147,6 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
     with open(json_filename, "w") as outfile:
         json.dump(output, outfile)
 
-    print(pattern)
-    print(queried_webpages)
-
     return [queried_webpages, requires_access]
 
 
