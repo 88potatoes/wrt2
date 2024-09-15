@@ -12,27 +12,6 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .serializers import SearchTermSerializer, BrokenLinksSerializer
 
 """ 
-================================= Login Functions ====
-"""
-@api_view(['POST'])
-def api_login(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    next_url = request.data.get('next', '/')
-
-    if not next_url:
-        next_url = '/'
-
-    user = authenticate(request, username=username, password=password)
-    if user is not None:
-        login(request, user)
-        print("User logged in successfully")
-        return Response({"message": "Login successful", "next_url": next_url}, status=status.HTTP_200_OK)
-    else:
-        print("User flopped log in")
-        return Response({"error": "Invalid username or password"}, status=status.HTTP_400_BAD_REQUEST)
-
-""" 
 ================================= Search Functions =================================
 """
 @permission_classes([IsAuthenticated])
@@ -52,10 +31,12 @@ def search_api(request):
         if not starting_links or not search_text:
             return Response({'error': 'Missing required parameters.'}, status=400)
 
+        print(search_text)
+
         # Call scrape without saving to the database
         queried_pages = scrape(starting_links, search_text)
 
-        print(search_text)
+        
         print(queried_pages)
 
         if queried_pages:
@@ -63,7 +44,7 @@ def search_api(request):
         else:
             return Response({'message': 'No instances of text found.'})
     except Exception as e:
-        return Response({'message': 'exception', 'error': str(e)}, status=500)
+        return Response({'message': 'An error occurred', 'error': str(e)}, status=500)
     
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

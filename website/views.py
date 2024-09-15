@@ -1,15 +1,7 @@
-from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from json import loads
-from utils.broken_links import crawl
-from utils.string_match import scrape
-from api.models import PastSearch
-import traceback
+from django.shortcuts import render
 
 def login_view(request):
     print("Login view called")
     error = None
-
     return render(request, 'wrt/login.html', {'error': error})
+

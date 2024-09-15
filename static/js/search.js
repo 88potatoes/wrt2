@@ -4,37 +4,89 @@ document.addEventListener('DOMContentLoaded', function () {
     // Function to refresh the access token
     function refreshAccessToken() {
         const refreshToken = localStorage.getItem('refresh_token');
+        if (!refreshToken || isTokenExpired(refreshToken)) {
+            console.log("Refresh token expired or missing, redirecting to login...");
+            window.location.href = "/";
+            return Promise.reject('No valid refresh token available');
+        }
+
         return fetch('/api/token/refresh/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refresh: refreshToken })
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.access) {
-                    console.log("New access token received:", data.access);
-                    localStorage.setItem('access_token', data.access);
-                    return data.access;
-                } else {
-                    console.log("Failed to refresh token, redirecting to login...");
-                    window.location.href = "/";
-                    throw new Error('Failed to refresh token');
-                }
-            })
-            .catch(error => {
-                console.error('Error refreshing token:', error);
+        .then(response => {
+            if (!response.ok) {
+                console.log("Failed to refresh token, redirecting to login...");
                 window.location.href = "/";
-                throw new Error('Error refreshing token');
-            });
+                throw new Error('Failed to refresh token');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.access) {
+                console.log("New access token received:", data.access);
+                localStorage.setItem('access_token', data.access);
+                return data.access;
+            } else {
+                console.log("Failed to refresh token, redirecting to login...");
+                window.location.href = "/";
+                throw new Error('Failed to refresh token');
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing token:', error);
+            window.location.href = "/";
+            throw new Error('Error refreshing token');
+        });
     }
 
     // Function to validate the access token
     function validateAccessToken() {
         const accessToken = localStorage.getItem('access_token');
-        if (!accessToken) {
-            console.log("No access token found. Redirecting to login...");
-            window.location.href = "/";
+        const refreshToken = localStorage.getItem('refresh_token');
+    
+        // First, check if the refresh token is expired or missing
+        if (!refreshToken || isTokenExpired(refreshToken)) {
+            console.log("Refresh token expired or missing, redirecting to login...");
+            localStorage.removeItem('access_token');  // Clear access token
+            localStorage.removeItem('refresh_token');  // Clear refresh token
+            window.location.href = "/";  // Redirect to login
+            return;
+        }
+    
+        // If refresh token is valid, check if the access token is expired
+        if (!accessToken || isTokenExpired(accessToken)) {
+            console.log("Access token expired. Attempting to refresh...");
+            refreshAccessToken()
+                .then(newAccessToken => {
+                    console.log("Access token refreshed successfully.");
+                    localStorage.setItem('access_token', newAccessToken);  // Update the access token
+    
+                    // Proceed to validate the new access token by making the API call
+                    return fetch('/api/search-page/', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': 'Bearer ' + newAccessToken,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        console.log("Token validation failed. Redirecting to login...");
+                        window.location.href = "/";  // Redirect to login if token validation fails
+                    } else {
+                        console.log("Access token is valid.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error during token refresh or API call:', error);
+                    window.location.href = "/";  // Redirect to login on error
+                });
         } else {
+            // If the access token is still valid, make the API call directly
+            console.log("Access token is valid. Proceeding with the API call...");
             fetch('/api/search-page/', {
                 method: 'GET',
                 headers: {
@@ -42,29 +94,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     'Content-Type': 'application/json'
                 }
             })
-                .then(response => {
-                    if (response.status === 401) {
-                        console.log("Token invalid or expired. Attempting to refresh...");
-                        return refreshAccessToken().then(newAccessToken => {
-                            return fetch('/api/search-page/', {
-                                method: 'GET',
-                                headers: {
-                                    'Authorization': 'Bearer ' + newAccessToken,
-                                    'Content-Type': 'application/json'
-                                }
-                            });
-                        });
-                    } else if (!response.ok) {
-                        console.log("Token validation failed, redirecting to login...");
-                        window.location.href = "/";
-                    } else {
-                        console.log("Access token is valid.");
-                    }
-                })
-                .catch(error => {
-                    console.error('Error verifying token:', error);
-                    window.location.href = "/";
-                });
+            .then(response => {
+                if (!response.ok) {
+                    console.log("Token validation failed, redirecting to login...");
+                    window.location.href = "/";  // Redirect if the token is invalid or expired
+                } else {
+                    console.log("Access token is valid.");
+                }
+            })
+            .catch(error => {
+                console.error('Error verifying token:', error);
+                window.location.href = "/";  // Redirect on error
+            });
         }
     }
 
@@ -72,8 +113,15 @@ document.addEventListener('DOMContentLoaded', function () {
     function submitForm(event, apiUrl, formData, successCallback) {
         event.preventDefault();
         const accessToken = localStorage.getItem('access_token');
-
-        function submitRequest(token) {
+        
+        if (!accessToken) {
+            console.log("No access token found. Redirecting to login...");
+            window.location.href = "/";
+            return;
+        }
+    
+        // Create a common request function
+        const submitRequest = (token) => {
             return fetch(apiUrl, {
                 method: "POST",
                 headers: {
@@ -83,37 +131,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: JSON.stringify(formData)
             });
-        }
-
-        if (!accessToken) {
-            console.log("No access token found. Redirecting to login...");
-            window.location.href = "/"; // Redirect to login if no token
-            return;
-        }
-
+        };
+    
         submitRequest(accessToken)
             .then(response => {
-                if (response.ok) {
-                    console.log("Access token is valid. Processing response...");
-                    return response.json();
-                } else if (response.status === 401) {
-                    console.log("Access token is invalid or expired. Attempting to refresh...");
-                    return refreshAccessToken().then(newAccessToken => {
-                        console.log("Retrying request with new access token.");
-                        return submitRequest(newAccessToken).then(retryResponse => {
-                            if (retryResponse.ok) {
-                                return retryResponse.json();
-                            } else {
-                                throw new Error('Retry failed.');
-                            }
-                        });
-                    });
-                } else {
-                    throw new Error('Something went wrong with the request.');
+                if (response.status === 401) {
+                    console.log("Access token expired. Attempting to refresh...");
+                    return refreshAccessToken().then(newAccessToken => submitRequest(newAccessToken));
                 }
+                return response;
             })
+            .then(response => response.ok ? response.json() : Promise.reject('Request failed'))
             .then(data => successCallback(data))
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Session expired. Please log in again.");
+                window.location.href = "/";
+            });
     }
 
     // Handle SearchForm submission
@@ -209,6 +243,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     validateAccessToken();
 });
+
+// Checking token expiration
+function isTokenExpired(token) {
+    const payload = JSON.parse(atob(token.split('.')[1])); 
+    const expiration = payload.exp * 1000; 
+    return Date.now() > expiration;
+}
 
 // Tab switching function
 function showTab(tabId) {

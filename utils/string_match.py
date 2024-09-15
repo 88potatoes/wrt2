@@ -13,7 +13,6 @@ from bs4 import BeautifulSoup
 # A limit on the number of links crawled for each starting link
 SAFE_PAGE_LIMIT = 5
 
-
 def scrape(starting_links: List[str], search_text) -> List[str]:
     """ Crawl each starting link and find websites that matches the query 
     string and links that require private access. All links crawled stored 
@@ -53,14 +52,8 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
         soup = BeautifulSoup(page.text, 'html.parser')
         
         # see if queried text is on webpage
-        search_results = search(soup, search_text)
-        if search_results:
-            # append each result with context and unique anchor
-            for result in search_results:
-                queried_webpages.append({
-                    'url': start_link + result['anchor'],
-                    'context': result['context']
-                })
+        if search(soup, search_text) and start_link not in queried_webpages:
+            queried_webpages.append(start_link)
         
         links = soup.findAll('a')
         pages_visited += 1
@@ -108,13 +101,8 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
                 soup = BeautifulSoup(page.text, 'html.parser')
 
                 # see if queried text is on webpage
-                search_results = search(soup, search_text)
-                if search_results:
-                    for result in search_results:
-                        queried_webpages.append({
-                            'url': link + result['anchor'],
-                            'context': result['context']
-                        })
+                if search(soup, search_text) and link not in queried_webpages:
+                    queried_webpages.append(link)
 
                 if link in visited:
                     print(f"Link already visited: {link}")
@@ -153,32 +141,33 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
     return [queried_webpages, requires_access, output]
 
 
-
 def search(soup, search_text):
-    soup_text = soup.get_text(separator=' ')
-    
-    # Convert all characters to lowercase for case-insensitive search
-    soup_text_lower = soup_text.casefold()
-    search_text = search_text.lower()
+    soup = soup.get_text(separator = ' ')
 
-    # Find all occurrences of the search string
-    matches = [(m.start(), m.end()) for m in re.finditer(re.escape(search_text), soup_text_lower)]
+    # change all characters to their casefolded form
+    soup = soup.casefold()
+
+    # replace non-alphabetic characters to single-space characters
+    pattern = r'[^a-zA-Z\s\\]'
+    soup = re.sub(pattern, ' ', soup)
     
-    # If no matches, return empty result
-    if not matches:
-        return []
-    
-    # Gather surrounding context (let's say 50 characters before and after the match)
-    context_list = []
-    for start, end in matches:
-        surrounding_start = max(0, start - 50)
-        surrounding_end = min(len(soup_text), end + 50)
-        context_snippet = soup_text[surrounding_start:surrounding_end]
-        
-        # Add to the context list along with an identifier
-        context_list.append({
-            'context': context_snippet.strip(),
-            'anchor': f'#occurrence-{start}'  # Create a unique anchor based on character position
-        })
-    
-    return context_list
+    # convert all spacing characters such as tabs and newlines into single-space characters
+    soup = re.sub(r'\s+', ' ',soup)
+
+    # text is converted to explicit tokens 
+    tokens = soup.split()
+
+    res = False
+    search_text = search_text.lower()
+    search = search_text.split()
+    search_text_len = len(search)
+
+    for j in range(len(tokens) - search_text_len + 1):
+        if tokens[j] == search[0]:
+            for i in range(1, search_text_len):
+                if tokens[j + i] != search[i]:
+                    break
+            else:
+                res = True
+                return res
+    return res

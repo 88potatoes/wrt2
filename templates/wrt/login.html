@@ -28,7 +28,6 @@
                 <div class="column is-4">
                     <form id="loginForm">
                         {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.GET.next }}">
 
                         <div class="field">
                             <label class="label">Username</label>
