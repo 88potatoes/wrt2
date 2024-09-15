@@ -7,13 +7,16 @@ from .robots import process_robots, check_link_ok
 from collections import defaultdict as dd
 import re
 from urllib.parse import urljoin
+from urllib.parse import quote
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 # A limit on the number of links crawled for each starting link
-SAFE_PAGE_LIMIT = 5
+SAFE_PAGE_LIMIT = 1
+MAX_OPTIONS = 10
 
-def scrape(starting_links: List[str], search_text) -> List[str]:
+
+def scrape(starting_links: List[str], json_filename: str, search_text) -> List[str]:
     """ Crawl each starting link and find websites that matches the query 
     string and links that require private access. All links crawled stored 
     in JSON file"""
@@ -24,6 +27,7 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
     queried_webpages = []
     output = {}
     requires_access = []
+    pattern = create_pattern(search_text)
 
     # search for base urls
     for start_link in starting_links:
@@ -52,7 +56,7 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
         soup = BeautifulSoup(page.text, 'html.parser')
         
         # see if queried text is on webpage
-        if search(soup, search_text) and start_link not in queried_webpages:
+        if search(soup, pattern):
             queried_webpages.append(start_link)
         
         links = soup.findAll('a')
@@ -101,7 +105,7 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
                 soup = BeautifulSoup(page.text, 'html.parser')
 
                 # see if queried text is on webpage
-                if search(soup, search_text) and link not in queried_webpages:
+                if search(soup, pattern):
                     queried_webpages.append(link)
 
                 if link in visited:
@@ -138,36 +142,103 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
 
         output[start_link] = sorted(visited.keys())
     
-    return [queried_webpages, requires_access, output]
+    # create json output file
+    with open(json_filename, "w") as outfile:
+        json.dump(output, outfile)
+
+    print(pattern)
+    print(queried_webpages)
+
+    return [queried_webpages, requires_access]
 
 
-def search(soup, search_text):
-    soup = soup.get_text(separator = ' ')
+def validate_brackets(search_term):
+    balance = 0
+    in_brackets = False
+    # keep track of the last open bracket index
+    last_open_index = -1  
+    for i, char in enumerate(search_term):
+        if char == '[':
+            # found a '[' before closing the previous '['
+            if in_brackets: 
+                raise ValueError("Unbalanced or nested brackets found.")
+            in_brackets = True
+            balance += 1
+            # update the position of the last open bracket
+            last_open_index = i  
+        elif char == ']':
+            if not in_brackets:
+                raise ValueError("Closing bracket ']' found before any opening bracket '['.")
+            # check if the content between the last '[' and this ']' is completely empty
+            if i == last_open_index + 1:
+                raise ValueError("Empty brackets found.")
+            in_brackets = False
+            balance -= 1
 
-    # change all characters to their casefolded form
-    soup = soup.casefold()
+    if balance != 0:
+        raise ValueError("Unbalanced brackets detected.")
+    return True
 
-    # replace non-alphabetic characters to single-space characters
-    pattern = r'[^a-zA-Z\s\\]'
-    soup = re.sub(pattern, ' ', soup)
+def create_pattern(search_term):
+    if not validate_brackets(search_term):
+        raise ValueError(f"Invalid bracket syntax.")
+
+    search_term = search_term.replace(r'\%', '<PERCENT>')
+    search_term = search_term.replace(r'\?', '<QUESTION_MARK>')
+    search_term = search_term.replace(r'\[', '<LITERAL_OPEN_BRACKET>')
+    search_term = search_term.replace(r'\]', '<LITERAL_CLOSE_BRACKET>')
+    search_term = search_term.replace(r'\|', '<LITERAL_PIPE>')
     
-    # convert all spacing characters such as tabs and newlines into single-space characters
-    soup = re.sub(r'\s+', ' ',soup)
+    # escape all other regex special characters
+    search_term = re.sub(r'([.^$*+{}\\()])', r'\\\1', search_term)
+    
+    # replace unescaped % with regex equivalent (any sequence of characters)
+    search_term = search_term.replace('%', '.*')
+    
+    # replace unescaped ? with regex equivalent (any single character)
+    search_term = search_term.replace('?', '.')
 
-    # text is converted to explicit tokens 
-    tokens = soup.split()
+    # handle alternation for multiple options with any characters
+    search_term = re.sub(r'\[([^\]]+)\]', lambda m: f"({m.group(1)})", search_term)
+    options = search_term.split('|')
+    if len(options) > MAX_OPTIONS:
+        raise ValueError(f"Too many options in alternation. Limit is {MAX_OPTIONS}.")
+    
+    # replace placeholders back to their literal characters
+    search_term = search_term.replace('<PERCENT>', r'%')
+    search_term = search_term.replace('<QUESTION_MARK>', r'\?')
+    search_term = search_term.replace('<LITERAL_OPEN_BRACKET>', r'\[')
+    search_term = search_term.replace('<LITERAL_CLOSE_BRACKET>', r'\]')
+    search_term = search_term.replace('<LITERAL_PIPE>', r'\|')
 
-    res = False
-    search_text = search_text.lower()
-    search = search_text.split()
-    search_text_len = len(search)
+    no_leading_boundary = search_term.startswith('.*')
+    if not re.match(r'^[a-zA-Z0-9_?]', search_term[0]):
+        no_leading_boundary = True
+    no_trailing_boundary = search_term.endswith('.*')
+    if not re.match(r'^[a-zA-Z0-9_?]', search_term[-1]):
+        no_trailing_boundary = True
 
-    for j in range(len(tokens) - search_text_len + 1):
-        if tokens[j] == search[0]:
-            for i in range(1, search_text_len):
-                if tokens[j + i] != search[i]:
-                    break
-            else:
-                res = True
-                return res
-    return res
+    print("NO LEADING \\b: ", no_leading_boundary)
+    print("NO TRAILING \\b: ", no_trailing_boundary)
+
+    # no word boundaries if both ends have wildcards
+    if no_leading_boundary and no_trailing_boundary:
+        pattern = search_term
+    # no leading word boundary
+    elif no_leading_boundary:
+        pattern = search_term + r'\b'
+    # no trailing word boundary
+    elif no_trailing_boundary:
+        pattern = r'\b' + search_term
+    # use word boundaries on both sides
+    else:
+        pattern = r'\b' + search_term + r'\b'
+
+    return pattern
+
+
+def search(soup, pattern):
+    results = soup.find_all(string=re.compile(pattern, re.IGNORECASE))
+    if results: 
+        return True
+    return False

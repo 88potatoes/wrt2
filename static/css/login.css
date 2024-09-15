@@ -19,50 +19,41 @@ body {
 
 h1.title-has-text-centered {
     color: #EAEAEA;
-    font-size: 34px;
+    font-size: clamp(24px, 5vw, 34px);
     font-style: normal;
     font-weight: 400;
     line-height: normal;
     letter-spacing: 0.25px;
-    margin-top: 20rem;
-    margin-bottom: 8rem;
+    margin-bottom: clamp(1rem, 5vw, 2rem);
     text-align: center;
 }
 
-.navbar {
-    background-color: #000B34;
-}
-
-.navbar-item {
-    color: white;
-}
-
 .label {
-    font-weight: 20;
-    font-size: 25px;
-    margin-top: 5rem;
-    margin-bottom: 1rem;
+    font-weight: 400;
+    font-size: clamp(18px, 4vw, 25px);
+    margin-top: clamp(3rem, 5vw, 5rem);
+    margin-bottom: clamp(1rem, 2vw, 1rem);
 }
+
+
 
 .section {
     padding: 0rem 10rem;
 }
 
-
 form {
-    /* background-color: #001b33; */
     padding: 2rem;
     border-radius: 10px;
     max-width: 600px;
-    margin-bottom: 50rem;
-    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+    /* margin-bottom: 50rem; */
 }
 
 .field {
-    width: 487px;
+    width: 100%;
+    max-width: 487px;
     height: 51px;
     margin-top: 1rem;
-    margin-bottom: 10rem;
+    /* margin-bottom: 10rem; */
 }
 
 .input {
