@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    
+
 
     // Function to refresh the access token
     function refreshAccessToken() {
@@ -124,11 +124,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const formData = new FormData(searchForm);
         const searchText = formData.get('search_text');
-        const startingLinks = formData.getAll('starting_links[]');  
-        
+        const startingLinks = formData.getAll('starting_links[]');
+
         // Debug
-        console.log("Starting Links: ", startingLinks);  
-        console.log("Search Text: ", searchText);  
+        console.log("Starting Links: ", startingLinks);
+        console.log("Search Text: ", searchText);
 
         submitForm(event, '/api/search/', { search_text: searchText, starting_links: startingLinks }, (data) => {
             // given successful request, display data
@@ -186,10 +186,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const crawlForm = document.getElementById('crawlForm');
     crawlForm.addEventListener('submit', function (event) {
         const formData = new FormData(crawlForm);
-        const startingLinks = formData.getAll('starting_links[]');  
+        const startingLinks = formData.getAll('starting_links[]');
 
         // Debug
-        console.log("Starting Links: ", startingLinks);  
+        console.log("Starting Links: ", startingLinks);
 
         submitForm(event, '/api/crawl/', { starting_links: startingLinks }, (data) => {
             console.log(data);
@@ -281,9 +281,17 @@ document.addEventListener('DOMContentLoaded', function () {
         newFieldDiv.classList.add('control');
         newFieldDiv.style.marginTop = '10px';
 
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = "X";
+        deleteBtn.classList.add("delete-btn");
+        deleteBtn.addEventListener('click', () => {
+            newFieldDiv.remove();
+        })
+
         newFieldDiv.innerHTML = `
             <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
         `;
+        newFieldDiv.appendChild(deleteBtn);
         searchUrlInputContainer.appendChild(newFieldDiv);
     });
 
@@ -302,3 +310,20 @@ document.addEventListener('DOMContentLoaded', function () {
         crawlUrlInputContainer.appendChild(newFieldDiv);
     });
 });
+
+function enableTooltip(tooltipIconId, tooltipTextId) {
+    const tooltipIcon = document.getElementById(tooltipIconId);
+    const tooltipText = tooltipIcon.querySelector('.tooltip');
+
+    tooltipIcon.addEventListener('mouseenter', function () {
+        tooltipText.classList.add('tooltip-visible');
+    });
+
+    tooltipIcon.addEventListener('mouseleave', function () {
+        tooltipText.classList.remove('tooltip-visible');
+    });
+}
+
+enableTooltip('tooltipIcon1');
+enableTooltip('tooltipIcon2');
+enableTooltip('tooltipIcon3');
