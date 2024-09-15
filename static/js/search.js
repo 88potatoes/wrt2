@@ -281,9 +281,17 @@ document.addEventListener('DOMContentLoaded', function () {
         newFieldDiv.classList.add('control');
         newFieldDiv.style.marginTop = '10px';
 
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = "X";
+        deleteBtn.classList.add("delete-btn");
+        deleteBtn.addEventListener('click', () => {
+            newFieldDiv.remove();
+        })
+
         newFieldDiv.innerHTML = `
             <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
         `;
+        newFieldDiv.appendChild(deleteBtn);
         searchUrlInputContainer.appendChild(newFieldDiv);
     });
 

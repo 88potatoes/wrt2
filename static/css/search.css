@@ -163,6 +163,18 @@ body {
     background-color: #000B34;
 }
 
+.delete-btn {
+    position: absolute;
+    right: 0;
+    height: 76%;
+    background: #182c75d2;
+    color: white;
+    margin-bottom: 1rem;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    border-radius: 3px;
+}
+
 .field .control {
     text-align: left;
     /* Aligns content to the left */
