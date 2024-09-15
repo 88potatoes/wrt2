@@ -8,6 +8,8 @@
     <title>Search</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
     <link rel="stylesheet" href="{% static 'css/search.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 </head>
 
 <body>
@@ -35,20 +37,33 @@
                     <input type="hidden" name="form_type" value="search_term_form">
 
                     <div class="field">
-                        <label class="label">Search Term</label>
+                        <label class="label">Search Term
+                            <span class="icon has-tooltip" id="tooltipIcon1">
+                                <i class="fas fa-info-circle"></i>
+                                <div class="tooltip">The search term will include spaces </div>
+                            </span>
+                        </label>
                         <div class="control">
                             <input class="input" type="text" name="search_text" placeholder="Enter your search term...">
                         </div>
                     </div>
 
                     <div class="field">
-                        <label class="label">Website Range</label>
+                        <label class="label">Website Range
+                            <span class="icon has-tooltip" id="tooltipIcon2">
+                                <i class="fas fa-info-circle"></i>
+                                <div class="tooltip">Every searched URL follows this path,
+                                    searching any links found on this website</div>
+                            </span>
+                        </label>
                         <div id="searchUrlInputContainer">
                             <div class="control">
-                                <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range..." required>
+                                <input class="input" type="text" name="starting_links[]"
+                                    placeholder="Enter a URL defining the search range..." required>
                             </div>
                         </div>
-                        <button id="addSearchInputBtn" type="button" class="button is-link is-light" style="margin-top: 10px;">Add URL</button>
+                        <button id="addSearchInputBtn" type="button" class="button is-link is-light"
+                            style="margin-top: 10px;">Add URL</button>
                     </div>
 
                     <div class="field">
@@ -77,13 +92,21 @@
                     <input type="hidden" name="form_type" value="search_term_form">
 
                     <div class="field">
-                        <label class="label">Root URLS</label>
+                        <label class="label">Root URLS
+                            <span class="icon has-tooltip" id="tooltipIcon3">
+                                <i class="fas fa-info-circle"></i>
+                                <div class="tooltip">The search will begin with this root URL, and then also search for
+                                    any broken links on links from here</div>
+                            </span>
+                        </label>
                         <div id="crawlUrlInputContainer">
                             <div class="control">
-                                <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range..." required>
+                                <input class="input" type="text" name="starting_links[]"
+                                    placeholder="Enter a URL defining the search range..." required>
                             </div>
                         </div>
-                        <button id="addCrawlInputBtn" type="button" class="button is-link is-light" style="margin-top: 10px;">Add URL</button>
+                        <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
+                            style="margin-top: 10px;">Add URL</button>
                     </div>
 
                     <div class="field">
@@ -105,7 +128,7 @@
         </div>
     </div>
 
-<script src="{% static 'js/search.js' %}"></script>
+    <script src="{% static 'js/search.js' %}"></script>
 
 </body>
 

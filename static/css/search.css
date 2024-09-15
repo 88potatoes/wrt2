@@ -12,6 +12,8 @@ body {
 }
 
 .tab-content {
+    height: -webkit-fill-available;
+    background-color: white;
     flex: 1;
 }
 
@@ -64,6 +66,53 @@ body {
 .tab-content .columns {
     display: block;
     width: 100%;
+}
+
+.icon {
+    position: relative;
+    display: inline-block;
+    margin-left: 8px;
+    cursor: pointer;
+}
+
+.icon .fas {
+    font-size: 16px;
+    color: #000B34;
+}
+
+.tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    font-size: small;
+    background-color: #555;
+    color: white;
+    width: 150px;
+    height: 100px;
+    text-align: center;
+    border-radius: 5px;
+    padding: 5px;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 1;
+    top: 40%;
+    left: 150%;
+    transform: scale(0);
+}
+
+.icon {
+    position: relative;
+    display: inline-block;
+}
+
+.icon .tooltip {
+    top: -5px;
+    left: 110%;
+}
+
+.icon .tooltip-visible {
+    visibility: visible;
+    opacity: 1;
+    transform: scale(1);
 }
 
 .column.is-8 {
