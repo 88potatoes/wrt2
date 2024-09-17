@@ -84,7 +84,7 @@ def search_text_string(request):
 # Broken Links API
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def search_broken_links(request):
+def search_broken_links(request): # TODO write the results to the database
     print("Request data:", request.data)
     serializer = BrokenLinksSerializer(data=request.data)
     print("Request method:", request.method)

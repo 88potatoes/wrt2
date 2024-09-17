@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} Search {% endblock %}
+
+{% block head %} 
+    <link rel="stylesheet" href="{% static 'css/search.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- probably don't need to load in all the icons -->
+    <script src="{% static 'js/search.js' %}" defer></script> 
+{% endblock %}
+
+{% block content %} 
+    {% include "partials/navbar.html" %}
+
+    <div id="brokenLinksTab" class="tab-content" style="display:none;">
+        <h2 class="tab-title">Broken Link Search</h2>
+        <div class="columns-is-centered">
+            <div class="column is-8">
+                <form id="crawlForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="search_term_form">
+
+                    <div class="field">
+                        <label class="label">Root URLS
+                            <span class="icon has-tooltip" id="tooltipIcon3">
+                                <i class="fas fa-info-circle"></i>
+                                <div class="tooltip">The search will begin with this root URL, and then also search for
+                                    any broken links on links from here</div>
+                            </span>
+                        </label>
+                        <div id="crawlUrlInputContainer">
+                            <div class="control">
+                                <input class="input" type="text" name="starting_links[]"
+                                    placeholder="Enter a URL defining the search range..." required>
+                            </div>
+                        </div>
+                        <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
+                            style="margin-top: 10px;">Add URL</button>
+                    </div>
+
+                    <div class="field">
+                        <div class="control">
+                            <button class="button is-link" type="submit">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="columns is-centered" style="margin-top: 20px;">
+            <div class="column is-8">
+                <h2 class="subtitle">Crawl Results:</h2>
+                <div id="crawlResults">
+                    <!-- Results will be displayed here after search -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
