@@ -51,7 +51,7 @@ def search_text_string(request):
         starting_links = serializer.validated_data['starting_links']
         # json_filename = serializer.validated_data['json_filename']
 
-        result = scrape(starting_links, "a.json", search_text)
+        result = scrape(starting_links, "a.json", search_text) # TODO we need to decide on the json filename, is that a requirement
         print(result)
 
 
@@ -74,6 +74,7 @@ def search_broken_links(request):
 
         result = crawl(starting_links)
         print(result) # TODO Remove
+        
         return Response(result, status=status.HTTP_200_OK)
     else:
         print("Serializer errors 2:", serializer.errors)
