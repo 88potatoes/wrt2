@@ -185,6 +185,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Handle CrawlForm submission
     const crawlForm = document.getElementById('crawlForm');
     crawlForm.addEventListener('submit', function (event) {
+        event.preventDefault();
         const formData = new FormData(crawlForm);
         const startingLinks = formData.getAll('starting_links[]');
 

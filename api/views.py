@@ -51,7 +51,10 @@ def search_text_string(request):
         starting_links = serializer.validated_data['starting_links']
         # json_filename = serializer.validated_data['json_filename']
 
-        result = scrape(starting_links, search_text)
+        result = scrape(starting_links, "a.json", search_text)
+        print(result)
+
+
         return Response(result, status=status.HTTP_200_OK)
     else:
         print("Serializer errors 1:", serializer.errors)
