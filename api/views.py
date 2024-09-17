@@ -10,6 +10,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .serializers import SearchTermSerializer, BrokenLinksSerializer
+import json
+from .models import PastSearch
+
 
 """ 
 ================================= Login Functions ====
@@ -51,9 +54,27 @@ def search_text_string(request):
         starting_links = serializer.validated_data['starting_links']
         # json_filename = serializer.validated_data['json_filename']
 
-        result = scrape(starting_links, "a.json", search_text) # TODO we need to decide on the json filename, is that a requirement
+        result = scrape(starting_links, search_text)
         print(result)
 
+        with open("a.json", "w") as outfile: # TODO: Decide if there will still be a json file
+            json.dump(result[2], outfile)
+
+        # writing history to database
+        queried_webpages, requires_access, output = result
+
+        for seed_url in output:
+            for page in output[seed_url]:
+                print(f"{seed_url}: {page}")
+                past_search = PastSearch.objects.create(
+                    user=request.user,
+                    seed_url=seed_url,
+                    url_from=page,
+                    search_type='search',
+                    search_text=search_text,
+                )
+                past_search.save()
+        
 
         return Response(result, status=status.HTTP_200_OK)
     else:

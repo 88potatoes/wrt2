@@ -1,4 +1,3 @@
-import json
 from typing import List
 
 import requests
@@ -12,11 +11,11 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 # A limit on the number of links crawled for each starting link
-SAFE_PAGE_LIMIT = 1
+SAFE_PAGE_LIMIT = 5
 MAX_OPTIONS = 10
 
 
-def scrape(starting_links: List[str], json_filename: str, search_text) -> List[str]:
+def scrape(starting_links: List[str], search_text: str) -> List[str]:
     """ Crawl each starting link and find websites that matches the query 
     string and links that require private access. All links crawled stored 
     in JSON file"""
@@ -141,15 +140,8 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())
-    
-    # create json output file
-    with open(json_filename, "w") as outfile:
-        json.dump(output, outfile)
 
-    print(pattern)
-    print(queried_webpages)
-
-    return [queried_webpages, requires_access]
+    return [queried_webpages, requires_access, output]
 
 
 def validate_brackets(search_term):
