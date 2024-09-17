@@ -38,9 +38,6 @@ def api_login(request):
 """ 
 ================================= Search Functions =================================
 """
-@permission_classes([IsAuthenticated])
-def render_search_view(request):
-    return render(request, 'wrt/search.html')
 
 # Search Text String API
 @api_view(["POST"])

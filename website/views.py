@@ -1,15 +1,18 @@
-from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from json import loads
-from utils.broken_links import crawl
-from utils.string_match import scrape
-from api.models import PastSearch
-import traceback
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
 
+@api_view(['GET'])
 def login_view(request):
-    print("Login view called")
-    error = None
+    return render(request, 'wrt/login.html')
 
-    return render(request, 'wrt/login.html', {'error': error})
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_term_view(request):
+    return render(request, 'wrt/search.html')
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def crawl_broken_links_view(request):
+    return render(request, 'wrt/brokenLinks.html')

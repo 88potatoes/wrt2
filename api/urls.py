@@ -5,7 +5,6 @@ from . import views
 
 urlpatterns = [
     # Search Pages
-    path('search-page/', views.render_search_view, name='render_search_view'),
     path('search/', views.search_text_string, name='search_api'),
     path('crawl/', views.search_broken_links, name='crawl_api'),
 
