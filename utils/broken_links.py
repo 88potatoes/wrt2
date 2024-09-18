@@ -35,11 +35,11 @@ def crawl(starting_links: List[str]) -> List[str]:
                 continue
             # catch broken links
             elif not (200 <= page.status_code <= 299):
-                broken_links.append(start_link)
+                broken_links.append((start_link,start_link))
                 print("new broken: ", start_link)
                 continue
         except requests.exceptions.RequestException as request_exception:
-            broken_links.append(start_link)
+            broken_links.append((start_link,start_link))
             continue
 
         pages_visited = 0
@@ -90,7 +90,7 @@ def crawl(starting_links: List[str]) -> List[str]:
                     continue
                 # catch broken links
                 elif not (200 <= page.status_code <= 299):
-                    broken_links.append(link)
+                    broken_links.append((start_link,link))
                     print("new broken: ", link)
                     continue
 
@@ -126,7 +126,7 @@ def crawl(starting_links: List[str]) -> List[str]:
                         to_visit.append(potential_link)
                 pages_visited += 1
             except requests.exceptions.RequestException as request_exception:
-                broken_links.append(link)
+                broken_links.append((start_link,link))
 
         output[start_link] = sorted(visited.keys())
 

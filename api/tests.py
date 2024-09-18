@@ -45,7 +45,7 @@ class UnitTests(TestCase):
         result = scrape(['invalid-url'], 'output.json', 'search text')
         self.assertEqual(result[0],[])
         result = crawl(['invalid-url'], 'output2.json')
-        self.assertEqual(result[0],['invalid-url'])
+        self.assertEqual(result[0],[('invalid-url','invalid-url')])
 
     def test_multiple_start_links(self):
         result = scrape(['https://research.unimelb.edu.au', 'https://www.unimelb.edu.au'], 'output.json', 'search text')
@@ -183,7 +183,7 @@ class UnitTests(TestCase):
         self.assertIn('https://handbook.unimelb.edu.au/', json_data)
         self.assertEqual(json_data['https://handbook.unimelb.edu.au/'], ['https://handbook.unimelb.edu.au/'])
         self.assertNotIn('https://handbook.unimelb.edu.au/2024/courses/arts-link', json_data['https://handbook.unimelb.edu.au/'])
-        self.assertEqual(result, [['https://handbook.unimelb.edu.au/2024/courses/arts-link'], []])
+        self.assertEqual(result, [[('https://handbook.unimelb.edu.au/', 'https://handbook.unimelb.edu.au/2024/courses/arts-link')], []])
 
         mock_get.side_effect = side_effect
         result = scrape(['https://handbook.unimelb.edu.au/'], 'output2.json', 'hey')
@@ -215,7 +215,7 @@ class UnitTests(TestCase):
             json_data = json.load(json_file)
         self.assertEqual(json_data, {})
         self.assertNotIn('https://handbook.unimelb.edu.au', json_data)
-        self.assertEqual(result, [['https://handbook.unimelb.edu.au'], []])
+        self.assertEqual(result, [[('https://handbook.unimelb.edu.au','https://handbook.unimelb.edu.au')], []])
 
         result = scrape(['https://handbook.unimelb.edu.au'], 'output2.json', 'Arts')
         with open('output2.json', 'r') as json_file:
@@ -352,7 +352,7 @@ class BrokenLinkTest(TestCase):
         self.assertEqual(json_data['https://handbook.unimelb.edu.au/'], ['https://handbook.unimelb.edu.au/','https://handbook.unimelb.edu.au/2024/courses'])
         self.assertNotIn('https://handbook.unimelb.edu.au/2024/courses/arts-link', json_data['https://handbook.unimelb.edu.au/'])
         self.assertNotIn('https://handbook.unimelb.edu.au/2024/courses/staff', json_data['https://handbook.unimelb.edu.au/'])
-        self.assertEqual(result, [['https://handbook.unimelb.edu.au/2024/courses/arts-link'], ['https://handbook.unimelb.edu.au/2024/courses/staff']])
+        self.assertEqual(result, [[('https://handbook.unimelb.edu.au/','https://handbook.unimelb.edu.au/2024/courses/arts-link')], ['https://handbook.unimelb.edu.au/2024/courses/staff']])
         
     # valid input, no broken links, private access link, links that have been crawled
     @patch('requests.get')
