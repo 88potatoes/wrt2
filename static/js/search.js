@@ -2,7 +2,7 @@
 function submitForm(event, apiUrl, formData, successCallback) {
     event.preventDefault();
     const accessToken = localStorage.getItem('access_token');
-
+    console.log(accessToken);
     function submitRequest(token) {
         return fetch(apiUrl, {
             method: "POST",
@@ -15,11 +15,11 @@ function submitForm(event, apiUrl, formData, successCallback) {
         });
     }
 
-    if (!accessToken) {
-        console.log("No access token found. Redirecting to login...");
-        window.location.href = "/"; // Redirect to login if no token
-        return;
-    }
+    // if (!accessToken) {
+    //     console.log("No access token found. Redirecting to login...");
+    //     window.location.href = "/"; // Redirect to login if no token
+    //     return;
+    // }
 
     submitRequest(accessToken)
         .then(response => {
@@ -169,19 +169,4 @@ addSearchInputBtn.addEventListener('click', function () {
         `;
     newFieldDiv.appendChild(deleteBtn);
     searchUrlInputContainer.appendChild(newFieldDiv);
-});
-
-// Handle adding input fields for Crawl Form
-const addCrawlInputBtn = document.getElementById('addCrawlInputBtn');
-const crawlUrlInputContainer = document.getElementById('crawlUrlInputContainer');
-
-addCrawlInputBtn.addEventListener('click', function () {
-    const newFieldDiv = document.createElement('div');
-    newFieldDiv.classList.add('control');
-    newFieldDiv.style.marginTop = '10px';
-
-    newFieldDiv.innerHTML = `
-            <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
-        `;
-    crawlUrlInputContainer.appendChild(newFieldDiv);
 });

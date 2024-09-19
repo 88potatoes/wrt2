@@ -59,3 +59,18 @@ crawlForm.addEventListener('submit', function (event) {
         }
     });
 });
+
+// Handle adding input fields for Crawl Form
+const addCrawlInputBtn = document.getElementById('addCrawlInputBtn');
+const crawlUrlInputContainer = document.getElementById('crawlUrlInputContainer');
+
+addCrawlInputBtn.addEventListener('click', function () {
+    const newFieldDiv = document.createElement('div');
+    newFieldDiv.classList.add('control');
+    newFieldDiv.style.marginTop = '10px';
+
+    newFieldDiv.innerHTML = `
+            <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
+        `;
+    crawlUrlInputContainer.appendChild(newFieldDiv);
+});
