@@ -12,14 +12,13 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 # A limit on the number of links crawled for each starting link
-SAFE_PAGE_LIMIT = 1
+SAFE_PAGE_LIMIT = 5
 MAX_OPTIONS = 10
 
 
-def scrape(starting_links: List[str], json_filename: str, search_text) -> List[str]:
+def scrape(starting_links: List[str], search_text) -> List[str]:
     """ Crawl each starting link and find websites that matches the query 
-    string and links that require private access. All links crawled stored 
-    in JSON file"""
+    string and links that require private access."""
 
     robots_item = '/robots.txt'
     to_visit = []
@@ -28,6 +27,7 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
     output = {}
     requires_access = []
     pattern = create_pattern(search_text)
+    # search_str_webpages = []
 
     # search for base urls
     for start_link in starting_links:
@@ -141,11 +141,7 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())
-    
-    # create json output file
-    with open(json_filename, "w") as outfile:
-        json.dump(output, outfile)
-
+        
     print(pattern)
     print(queried_webpages)
 
@@ -210,6 +206,7 @@ def create_pattern(search_term):
     search_term = search_term.replace('<LITERAL_OPEN_BRACKET>', r'\[')
     search_term = search_term.replace('<LITERAL_CLOSE_BRACKET>', r'\]')
     search_term = search_term.replace('<LITERAL_PIPE>', r'\|')
+    search_term = search_term.replace(' ', r'\s+')
 
     no_leading_boundary = search_term.startswith('.*')
     if not re.match(r'^[a-zA-Z0-9_?]', search_term[0]):
@@ -236,10 +233,10 @@ def create_pattern(search_term):
 
     return pattern
 
-
 def search(soup, pattern):
-    results = soup.find_all(string=re.compile(pattern, re.IGNORECASE))
+    # extract all text without HTML tags
+    text = soup.get_text(separator=" ")  
+    results = re.search(pattern, text, re.IGNORECASE)
     if results: 
         return True
     return False
-
