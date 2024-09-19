@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const resultsTitle = document.createElement('h2');
                 resultsTitle.classList.add('results');
-                resultsTitle.textContent = 'Results - Strings Matched';
+                resultsTitle.textContent = 'Results - Broken Links Discovered';
                 crawlResultsDiv.appendChild(resultsTitle);
 
                 const table = document.createElement('table');
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 table.innerHTML = `
                     <thead>
                         <tr>
-                            <th>Matched String</th>
+                            <th>Broken Links</th>
                             <th>Page URL</th>
                         </tr>
 
