@@ -29,44 +29,44 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Function to validate the access token
-    function validateAccessToken() {
-        const accessToken = localStorage.getItem('access_token');
-        if (!accessToken) {
-            console.log("No access token found. Redirecting to login...");
-            window.location.href = "/";
-        } else {
-            fetch('/api/search-page/', {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + accessToken,
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => {
-                    if (response.status === 401) {
-                        console.log("Token invalid or expired. Attempting to refresh...");
-                        return refreshAccessToken().then(newAccessToken => {
-                            return fetch('/api/search-page/', {
-                                method: 'GET',
-                                headers: {
-                                    'Authorization': 'Bearer ' + newAccessToken,
-                                    'Content-Type': 'application/json'
-                                }
-                            });
-                        });
-                    } else if (!response.ok) {
-                        console.log("Token validation failed, redirecting to login...");
-                        window.location.href = "/";
-                    } else {
-                        console.log("Access token is valid.");
-                    }
-                })
-                .catch(error => {
-                    console.error('Error verifying token:', error);
-                    window.location.href = "/";
-                });
-        }
-    }
+    // function validateAccessToken() {
+    //     const accessToken = localStorage.getItem('access_token');
+    //     if (!accessToken) {
+    //         console.log("No access token found. Redirecting to login...");
+    //         window.location.href = "/";
+    //     } else {
+    //         fetch('/api/search-page/', {
+    //             method: 'GET',
+    //             headers: {
+    //                 'Authorization': 'Bearer ' + accessToken,
+    //                 'Content-Type': 'application/json'
+    //             }
+    //         })
+    //             .then(response => {
+    //                 if (response.status === 401) {
+    //                     console.log("Token invalid or expired. Attempting to refresh...");
+    //                     return refreshAccessToken().then(newAccessToken => {
+    //                         return fetch('/api/search-page/', {
+    //                             method: 'GET',
+    //                             headers: {
+    //                                 'Authorization': 'Bearer ' + newAccessToken,
+    //                                 'Content-Type': 'application/json'
+    //                             }
+    //                         });
+    //                     });
+    //                 } else if (!response.ok) {
+    //                     console.log("Token validation failed, redirecting to login...");
+    //                     window.location.href = "/";
+    //                 } else {
+    //                     console.log("Access token is valid.");
+    //                 }
+    //             })
+    //             .catch(error => {
+    //                 console.error('Error verifying token:', error);
+    //                 window.location.href = "/";
+    //             });
+    //     }
+    // }
 
     // Function to handle form submission
     function submitForm(event, apiUrl, formData, successCallback) {
