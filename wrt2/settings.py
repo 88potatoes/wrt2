@@ -51,12 +51,12 @@ MIDDLEWARE = [
 ]
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_NAME = 'sessionid'  # Name of the session cookie
-SESSION_COOKIE_AGE = 1209600 # Two weeks
-SESSION_COOKIE_SECURE = False  # Set to True only if you're using HTTPS
-SESSION_COOKIE_HTTPONLY = True  # Helps prevent XSS attacks
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_SAMESITE = 'None'
+# SESSION_COOKIE_NAME = 'sessionid'  # Name of the session cookie
+# SESSION_COOKIE_AGE = 1209600 # Two weeks
+# SESSION_COOKIE_SECURE = False  # Set to True only if you're using HTTPS
+# SESSION_COOKIE_HTTPONLY = True  # Helps prevent XSS attacks
+# SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+# SESSION_COOKIE_SAMESITE = 'None'
 
 ROOT_URLCONF = "wrt2.urls"
 
