@@ -257,21 +257,6 @@ document.addEventListener('DOMContentLoaded', function () {
     validateAccessToken();
 });
 
-// Tab switching function
-function showTab(tabId) {
-    var tabContents = document.getElementsByClassName("tab-content");
-    for (var i = 0; i < tabContents.length; i++) {
-        tabContents[i].style.display = "none";
-    }
-    document.getElementById(tabId).style.display = "block";
-
-    var tabLinks = document.querySelectorAll(".tabs-is-centered ul li");
-    tabLinks.forEach(function (link) {
-        link.classList.remove("is-active");
-    });
-    document.querySelector(`.tabs-is-centered ul li a[onclick="showTab('${tabId}')"]`).parentNode.classList.add("is-active");
-}
-
 document.addEventListener('DOMContentLoaded', function () {
     // Handle adding input fields for Search Form
     const addSearchInputBtn = document.getElementById('addSearchInputBtn');
