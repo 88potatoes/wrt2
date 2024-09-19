@@ -185,4 +185,4 @@ STATICFILES_DIRS = [
 
 # login stuff
 LOGIN_URL = "/"
-# LOGIN_REDIRECT_URL = '/search_term'
+LOGIN_REDIRECT_URL = '/search_term'
