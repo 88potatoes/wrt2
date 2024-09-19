@@ -8,11 +8,11 @@ def login_view(request):
     return render(request, 'wrt/login.html')
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@login_required
 def search_term_view(request):
     return render(request, 'wrt/search.html')
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@login_required
 def crawl_broken_links_view(request):
     return render(request, 'wrt/brokenLinks.html')

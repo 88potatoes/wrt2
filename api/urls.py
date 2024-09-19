@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from utils.broken_links import crawl
 from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
 from . import views
