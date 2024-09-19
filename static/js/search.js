@@ -84,48 +84,6 @@ function refreshAccessToken() {
         });
 }
 
-validateAccessToken();
-
-// Function to validate the access token
-// function validateAccessToken() {
-//     const accessToken = localStorage.getItem('access_token');
-//     if (!accessToken) {
-//         console.log("No access token found. Redirecting to login...");
-//         window.location.href = "/";
-//     } else {
-//         fetch('/api/search-page/', {
-//             method: 'GET',
-//             headers: {
-//                 'Authorization': 'Bearer ' + accessToken,
-//                 'Content-Type': 'application/json'
-//             }
-//         })
-//             .then(response => {
-//                 if (response.status === 401) {
-//                     console.log("Token invalid or expired. Attempting to refresh...");
-//                     return refreshAccessToken().then(newAccessToken => {
-//                         return fetch('/api/search-page/', {
-//                             method: 'GET',
-//                             headers: {
-//                                 'Authorization': 'Bearer ' + newAccessToken,
-//                                 'Content-Type': 'application/json'
-//                             }
-//                         });
-//                     });
-//                 } else if (!response.ok) {
-//                     console.log("Token validation failed, redirecting to login...");
-//                     window.location.href = "/";
-//                 } else {
-//                     console.log("Access token is valid.");
-//                 }
-//             })
-//             .catch(error => {
-//                 console.error('Error verifying token:', error);
-//                 window.location.href = "/";
-//             });
-//     }
-// }
-
 const searchForm = document.getElementById('searchForm');
 searchForm.addEventListener('submit', function (event) {
     event.preventDefault();
@@ -190,42 +148,40 @@ searchForm.addEventListener('submit', function (event) {
     })
 });
 
-document.addEventListener('DOMContentLoaded', function () {
-    // Handle adding input fields for Search Form
-    const addSearchInputBtn = document.getElementById('addSearchInputBtn');
-    const searchUrlInputContainer = document.getElementById('searchUrlInputContainer');
+// Handle adding input fields for Search Form
+const addSearchInputBtn = document.getElementById('addSearchInputBtn');
+const searchUrlInputContainer = document.getElementById('searchUrlInputContainer');
 
-    addSearchInputBtn.addEventListener('click', function () {
-        const newFieldDiv = document.createElement('div');
-        newFieldDiv.classList.add('control');
-        newFieldDiv.style.marginTop = '10px';
+addSearchInputBtn.addEventListener('click', function () {
+    const newFieldDiv = document.createElement('div');
+    newFieldDiv.classList.add('control');
+    newFieldDiv.style.marginTop = '10px';
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = "X";
-        deleteBtn.classList.add("delete-btn");
-        deleteBtn.addEventListener('click', () => {
-            newFieldDiv.remove();
-        })
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = "X";
+    deleteBtn.classList.add("delete-btn");
+    deleteBtn.addEventListener('click', () => {
+        newFieldDiv.remove();
+    })
 
-        newFieldDiv.innerHTML = `
+    newFieldDiv.innerHTML = `
             <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
         `;
-        newFieldDiv.appendChild(deleteBtn);
-        searchUrlInputContainer.appendChild(newFieldDiv);
-    });
+    newFieldDiv.appendChild(deleteBtn);
+    searchUrlInputContainer.appendChild(newFieldDiv);
+});
 
-    // Handle adding input fields for Crawl Form
-    const addCrawlInputBtn = document.getElementById('addCrawlInputBtn');
-    const crawlUrlInputContainer = document.getElementById('crawlUrlInputContainer');
+// Handle adding input fields for Crawl Form
+const addCrawlInputBtn = document.getElementById('addCrawlInputBtn');
+const crawlUrlInputContainer = document.getElementById('crawlUrlInputContainer');
 
-    addCrawlInputBtn.addEventListener('click', function () {
-        const newFieldDiv = document.createElement('div');
-        newFieldDiv.classList.add('control');
-        newFieldDiv.style.marginTop = '10px';
+addCrawlInputBtn.addEventListener('click', function () {
+    const newFieldDiv = document.createElement('div');
+    newFieldDiv.classList.add('control');
+    newFieldDiv.style.marginTop = '10px';
 
-        newFieldDiv.innerHTML = `
+    newFieldDiv.innerHTML = `
             <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
         `;
-        crawlUrlInputContainer.appendChild(newFieldDiv);
-    });
+    crawlUrlInputContainer.appendChild(newFieldDiv);
 });
