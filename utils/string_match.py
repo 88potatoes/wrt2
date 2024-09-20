@@ -1,18 +1,19 @@
-import json
 from typing import List
+import urllib.parse
 
 import requests
 from .robots import process_robots, check_link_ok
 
 from collections import defaultdict as dd
 import re
+import urllib
 from urllib.parse import urljoin
 from urllib.parse import quote
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 # A limit on the number of links crawled for each starting link
-SAFE_PAGE_LIMIT = 5
+SAFE_PAGE_LIMIT = 1
 MAX_OPTIONS = 10
 
 
@@ -27,7 +28,7 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
     output = {}
     requires_access = []
     pattern = create_pattern(search_text)
-    # search_str_webpages = []
+    search_str_webpages = []
 
     # search for base urls
     for start_link in starting_links:
@@ -56,8 +57,17 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
         soup = BeautifulSoup(page.text, 'html.parser')
         
         # see if queried text is on webpage
-        if search(soup, pattern):
+        # if search(soup, pattern):
+        #     queried_webpages.append(start_link)
+
+        fragments = search(soup, pattern)
+        if fragments and start_link not in queried_webpages:
             queried_webpages.append(start_link)
+            parsed_url = urllib.parse.urlparse(start_link)
+            for fragment in fragments:
+                updated_url = parsed_url._replace(fragment=fragment)
+                final_url = urllib.parse.urlunparse(updated_url)
+                search_str_webpages.append(final_url)
         
         links = soup.findAll('a')
         pages_visited += 1
@@ -105,8 +115,17 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
                 soup = BeautifulSoup(page.text, 'html.parser')
 
                 # see if queried text is on webpage
-                if search(soup, pattern):
+                # if search(soup, pattern):
+                #     queried_webpages.append(link)
+
+                fragments = search(soup, pattern)
+                if fragments and link not in queried_webpages:
                     queried_webpages.append(link)
+                    parsed_url = urllib.parse.urlparse(link)
+                    for fragment in fragments:
+                        updated_url = parsed_url._replace(fragment=fragment)
+                        final_url = urllib.parse.urlunparse(updated_url)
+                        search_str_webpages.append(final_url)
 
                 if link in visited:
                     print(f"Link already visited: {link}")
@@ -141,9 +160,10 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())
-        
+
     print(pattern)
-    print(queried_webpages)
+    print(search_str_webpages)
+    print('done')
 
     return [queried_webpages, requires_access]
 
@@ -189,7 +209,7 @@ def create_pattern(search_term):
     search_term = re.sub(r'([.^$*+{}\\()])', r'\\\1', search_term)
     
     # replace unescaped % with regex equivalent (any sequence of characters)
-    search_term = search_term.replace('%', '.*')
+    search_term = search_term.replace('%', '.*?')
     
     # replace unescaped ? with regex equivalent (any single character)
     search_term = search_term.replace('?', '.')
@@ -206,13 +226,13 @@ def create_pattern(search_term):
     search_term = search_term.replace('<LITERAL_OPEN_BRACKET>', r'\[')
     search_term = search_term.replace('<LITERAL_CLOSE_BRACKET>', r'\]')
     search_term = search_term.replace('<LITERAL_PIPE>', r'\|')
-    search_term = search_term.replace(' ', r'\s+')
+    search_term = search_term.replace(' ', r'(?:\s|\r\n|\r|\n)*')
 
-    no_leading_boundary = search_term.startswith('.*')
-    if not re.match(r'^[a-zA-Z0-9_?]', search_term[0]):
+    no_leading_boundary = search_term.startswith('.*?')
+    if not re.match(r'^[a-zA-Z0-9.]', search_term[0]):
         no_leading_boundary = True
-    no_trailing_boundary = search_term.endswith('.*')
-    if not re.match(r'^[a-zA-Z0-9_?]', search_term[-1]):
+    no_trailing_boundary = search_term.endswith('.*?')
+    if not re.match(r'^[a-zA-Z0-9.]', search_term[-1]):
         no_trailing_boundary = True
 
     print("NO LEADING \\b: ", no_leading_boundary)
@@ -233,10 +253,139 @@ def create_pattern(search_term):
 
     return pattern
 
+
+def check_char(char):
+    if not char.isprintable():
+        return False
+    # Define allowed characters: Alphanumeric, safe, reserved, and typically unsafe characters
+    allowed_chars = re.compile(r'^[a-zA-Z0-9$-_.+!*\'\"(),;/?:@=&<>#%{}|\\^~\[\]` ]*$')
+    return bool(allowed_chars.match(char))
+
+def find_suffix(text, index, len_text):
+    prev_end = index
+    if text[index] == "\n":
+        index += 1
+    num_chars = 0
+    char_limit = 100
+    while index < len_text and check_char(text[index]) and num_chars < char_limit:
+        print(text[index])
+        if text[index] == ' ':
+            prev_end = index
+        num_chars += 1
+        index += 1
+    if index < len_text and not text[index].isprintable():
+        prev_end = index
+    return prev_end
+
+def find_prefix(text, index):
+    if index == 0:
+        return index
+    prev_start = index
+    index -= 1
+    if text[index] == '\n':
+        index -= 1
+    num_chars = 0
+    char_limit = 100
+    while index >= 0 and check_char(text[index]) and num_chars < char_limit:
+        print(text[index])
+        if text[index] == ' ':
+            prev_start = index
+        num_chars += 1
+        index -= 1
+    if index >=0 and not text[index].isprintable():
+        prev_start = index
+    return prev_start
+
+
+def show_hidden_chars(text):
+    # Replace hidden characters with visible symbols for easier debugging
+    visible_text = (
+        text.replace("\n", "\\n")
+            .replace("\t", "\\t")
+            .replace("\r", "\\r")
+            .replace(" ", "[space]")  # Optional: make spaces visible too
+    )
+    return visible_text
+
+
 def search(soup, pattern):
     # extract all text without HTML tags
-    text = soup.get_text(separator=" ")  
-    results = re.search(pattern, text, re.IGNORECASE)
-    if results: 
-        return True
-    return False
+    for element in soup(["style", "script", "title"]): # "meta"
+        element.decompose()
+    text = soup.get_text(separator="\n") 
+    text = text.lower() 
+    print(show_hidden_chars(text))
+    regex = re.compile(pattern, re.IGNORECASE)
+    match = re.search(regex, text)
+    if not match:
+        return False
+    
+    index = 0
+    char_limit = 70
+    fragments = []
+    len_text = len(text)
+    fragment_start = ":~:text="
+    print('found a match')
+    while match is not None:
+        match_start = match.start() + index
+        match_end = match.end() + index
+
+        start = -1
+        end = find_suffix(text, match_end, len_text)
+        print("Found suffix!")
+        if (end - match_end + 1) < char_limit:
+            start = find_prefix(text, match_start)
+            print("Found prefix!")
+        
+        if end != match_end:
+            if text[match_end] == '\n':
+                suffix = text[match_end + 1: end]
+            else:
+                suffix = text[match_end:end]
+            suffix = suffix.strip()
+            suffix = urllib.parse.quote(suffix, safe="")
+            suffix = re.sub(r'-', '%2D', suffix)
+            print('suffix: ', suffix)
+        else:
+            suffix = ""
+
+        if start != -1 and start != match_start:
+            if text[match_start - 1] == '\n':
+                prefix = text[start: match_start - 1]
+            else:
+                prefix = text[start:match_start]
+            prefix = prefix.strip()
+            prefix = urllib.parse.quote(prefix, safe="")
+            prefix = re.sub(r'-', '%2D', prefix)
+            print('prefix: ', prefix)
+        else:
+            prefix = ""
+        
+        term = match.group()
+        term = urllib.parse.quote(term)
+        term = re.sub(r'-', '%2D', term)
+        term = re.sub(r'\s+', ' ', term) # Replace one or more whitespace characters with a single space
+        term = term.strip()  # Remove leading/trailing spaces
+
+        if prefix and suffix:
+            fragment = fragment_start + prefix + '-,' + term + ",-" + suffix
+        elif suffix:
+            fragment = fragment_start + term + ",-" + suffix
+        elif prefix:
+            fragment = fragment_start + prefix + '-,' + term 
+        else:
+            fragment = fragment_start + term
+        
+        print("fragment: ", fragment)
+        fragments.append(fragment)
+        index = match_end
+        match = re.search(pattern, text[match_end:], re.IGNORECASE)
+ 
+
+    print(len(fragments))
+    return fragments
+
+        
+
+
+
