@@ -208,11 +208,11 @@ def create_pattern(search_term):
     # escape all other regex special characters
     search_term = re.sub(r'([.^$*+{}\\()])', r'\\\1', search_term)
     
-    # replace unescaped % with regex equivalent (any sequence of characters)
-    search_term = search_term.replace('%', '.*?')
-    
     # replace unescaped ? with regex equivalent (any single character)
     search_term = search_term.replace('?', '.')
+
+    # replace unescaped % with regex equivalent (any sequence of characters)
+    search_term = search_term.replace('%', '.*')
 
     # handle alternation for multiple options with any characters
     search_term = re.sub(r'\[([^\]]+)\]', lambda m: f"({m.group(1)})", search_term)
@@ -228,10 +228,10 @@ def create_pattern(search_term):
     search_term = search_term.replace('<LITERAL_PIPE>', r'\|')
     search_term = search_term.replace(' ', r'(?:\s|\r\n|\r|\n)*')
 
-    no_leading_boundary = search_term.startswith('.*?')
+    no_leading_boundary = search_term.startswith('.*')
     if not re.match(r'^[a-zA-Z0-9.]', search_term[0]):
         no_leading_boundary = True
-    no_trailing_boundary = search_term.endswith('.*?')
+    no_trailing_boundary = search_term.endswith('.*')
     if not re.match(r'^[a-zA-Z0-9.]', search_term[-1]):
         no_trailing_boundary = True
 
