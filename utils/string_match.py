@@ -1,3 +1,4 @@
+import json
 from typing import List
 import urllib.parse
 
@@ -160,7 +161,7 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())
-
+    
     print(pattern)
     print(search_str_webpages)
     print('done')
@@ -212,7 +213,7 @@ def create_pattern(search_term):
     search_term = search_term.replace('?', '.')
 
     # replace unescaped % with regex equivalent (any sequence of characters)
-    search_term = search_term.replace('%', '.*')
+    search_term = search_term.replace('%', '\w+')
 
     # handle alternation for multiple options with any characters
     search_term = re.sub(r'\[([^\]]+)\]', lambda m: f"({m.group(1)})", search_term)
@@ -229,10 +230,10 @@ def create_pattern(search_term):
     search_term = search_term.replace(' ', r'(?:\s|\r\n|\r|\n)*')
 
     no_leading_boundary = search_term.startswith('.*')
-    if not re.match(r'^[a-zA-Z0-9.]', search_term[0]):
+    if not re.match(r'^[a-zA-Z0-9.]|\w+', search_term[0]):
         no_leading_boundary = True
     no_trailing_boundary = search_term.endswith('.*')
-    if not re.match(r'^[a-zA-Z0-9.]', search_term[-1]):
+    if not re.match(r'^[a-zA-Z0-9.]|\w+', search_term[-1]):
         no_trailing_boundary = True
 
     print("NO LEADING \\b: ", no_leading_boundary)
@@ -268,7 +269,6 @@ def find_suffix(text, index, len_text):
     num_chars = 0
     char_limit = 100
     while index < len_text and check_char(text[index]) and num_chars < char_limit:
-        print(text[index])
         if text[index] == ' ':
             prev_end = index
         num_chars += 1
@@ -287,7 +287,6 @@ def find_prefix(text, index):
     num_chars = 0
     char_limit = 100
     while index >= 0 and check_char(text[index]) and num_chars < char_limit:
-        print(text[index])
         if text[index] == ' ':
             prev_start = index
         num_chars += 1
@@ -310,7 +309,7 @@ def show_hidden_chars(text):
 
 def search(soup, pattern):
     # extract all text without HTML tags
-    for element in soup(["style", "script", "title"]): # "meta"
+    for element in soup(["style", "script", "title"]): # "meta" ,
         element.decompose()
     text = soup.get_text(separator="\n") 
     text = text.lower() 
@@ -343,8 +342,12 @@ def search(soup, pattern):
             else:
                 suffix = text[match_end:end]
             suffix = suffix.strip()
+            # print('suffix before ', suffix)
             suffix = urllib.parse.quote(suffix, safe="")
             suffix = re.sub(r'-', '%2D', suffix)
+            suffix = re.sub(r'\.', '%2E', suffix)
+            suffix = re.sub(r'_', '	%5F', suffix)
+            suffix = re.sub(r'~', '%7E', suffix)
             print('suffix: ', suffix)
         else:
             suffix = ""
@@ -357,6 +360,9 @@ def search(soup, pattern):
             prefix = prefix.strip()
             prefix = urllib.parse.quote(prefix, safe="")
             prefix = re.sub(r'-', '%2D', prefix)
+            prefix = re.sub(r'\.', '%2E', prefix)
+            prefix = re.sub(r'_', '	%5F', prefix)
+            prefix = re.sub(r'~', '%7E', prefix)
             print('prefix: ', prefix)
         else:
             prefix = ""
@@ -381,11 +387,5 @@ def search(soup, pattern):
         index = match_end
         match = re.search(pattern, text[match_end:], re.IGNORECASE)
  
-
     print(len(fragments))
     return fragments
-
-        
-
-
-
