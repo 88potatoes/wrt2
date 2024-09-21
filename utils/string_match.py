@@ -12,6 +12,8 @@ from urllib.parse import urljoin
 from urllib.parse import quote
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
+from selenium import webdriver
+
 
 # A limit on the number of links crawled for each starting link
 SAFE_PAGE_LIMIT = 1
@@ -61,7 +63,7 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
         # if search(soup, pattern):
         #     queried_webpages.append(start_link)
 
-        fragments = search(soup, pattern)
+        fragments = search(soup, pattern, start_link)
         if fragments and start_link not in queried_webpages:
             queried_webpages.append(start_link)
             parsed_url = urllib.parse.urlparse(start_link)
@@ -119,7 +121,7 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
                 # if search(soup, pattern):
                 #     queried_webpages.append(link)
 
-                fragments = search(soup, pattern)
+                fragments = search(soup, pattern, link)
                 if fragments and link not in queried_webpages:
                     queried_webpages.append(link)
                     parsed_url = urllib.parse.urlparse(link)
@@ -161,7 +163,7 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())
-    
+
     print(pattern)
     print(search_str_webpages)
     print('done')
@@ -196,7 +198,24 @@ def validate_brackets(search_term):
         raise ValueError("Unbalanced brackets detected.")
     return True
 
+
+def replace_empty_options(match):
+    # This function will be used to replace empty options within parentheses
+    content = match.group(0)
+    # Replace empty options only inside the captured content
+    replaced_content = re.sub(r'(?<=\|)(?=\|)|(?<=\()(?=\|)|(?<=\|)(?=\))', r'\\b', content)
+    return replaced_content
+
+
+def replace(search_term):
+    # Replace within content enclosed by parentheses
+    search_term = re.sub(r'\(.*?\)', replace_empty_options, search_term)
+    return search_term
+
+
 def create_pattern(search_term):
+    if search_term == '%':
+        return ValueError(f"Invalid wildcard.")
     if not validate_brackets(search_term):
         raise ValueError(f"Invalid bracket syntax.")
 
@@ -218,8 +237,12 @@ def create_pattern(search_term):
     # handle alternation for multiple options with any characters
     search_term = re.sub(r'\[([^\]]+)\]', lambda m: f"({m.group(1)})", search_term)
     options = search_term.split('|')
-    if len(options) > MAX_OPTIONS:
+    len_options = len(options)
+    if len_options > MAX_OPTIONS:
         raise ValueError(f"Too many options in alternation. Limit is {MAX_OPTIONS}.")
+    if len_options > 0:
+        if search_term[0] == '(' or search_term[-1] == ')':
+            search_term = replace(search_term)
     
     # replace placeholders back to their literal characters
     search_term = search_term.replace('<PERCENT>', r'%')
@@ -264,13 +287,15 @@ def check_char(char):
 
 def find_suffix(text, index, len_text):
     prev_end = index
-    if text[index] == "\n":
+    # print(text[index])
+    while re.match(r'\s+', text[index]):
         index += 1
     num_chars = 0
     char_limit = 100
     while index < len_text and check_char(text[index]) and num_chars < char_limit:
         if text[index] == ' ':
             prev_end = index
+        # print(text[index])
         num_chars += 1
         index += 1
     if index < len_text and not text[index].isprintable():
@@ -282,13 +307,15 @@ def find_prefix(text, index):
         return index
     prev_start = index
     index -= 1
-    if text[index] == '\n':
+    # print(text[index])
+    while re.match(r'\s+', text[index]):
         index -= 1
     num_chars = 0
     char_limit = 100
     while index >= 0 and check_char(text[index]) and num_chars < char_limit:
         if text[index] == ' ':
             prev_start = index
+        # print(text[index])
         num_chars += 1
         index -= 1
     if index >=0 and not text[index].isprintable():
@@ -307,20 +334,32 @@ def show_hidden_chars(text):
     return visible_text
 
 
-def search(soup, pattern):
+def search(soup, pattern, url):
     # extract all text without HTML tags
-    for element in soup(["style", "script", "title"]): # "meta" ,
+    driver = webdriver.Chrome()
+    driver.implicitly_wait(10)
+    driver.get(url)
+
+    # elements = driver.find_elements_by_xpath("//*[not(self::script) and not(self::style) and not(self::meta) and not(self::title)]")
+    # visible_text = [element.text for element in elements if element.is_displayed() and element.text.strip() != '']
+    # text = '\n'.join(visible_text)
+
+    html = driver.page_source
+    soup = BeautifulSoup(html, 'html.parser')
+    # print(soup.prettify())
+
+    for element in soup(["title"]): # "meta", "style", "script", 
         element.decompose()
     text = soup.get_text(separator="\n") 
     text = text.lower() 
-    print(show_hidden_chars(text))
+    # print(show_hidden_chars(text))
     regex = re.compile(pattern, re.IGNORECASE)
     match = re.search(regex, text)
     if not match:
         return False
     
     index = 0
-    char_limit = 70
+    # char_limit = 70
     fragments = []
     len_text = len(text)
     fragment_start = ":~:text="
@@ -329,13 +368,25 @@ def search(soup, pattern):
         match_start = match.start() + index
         match_end = match.end() + index
 
-        start = -1
+        # parent = match.parent
+        # print('still fine before checking parent')
+        # if not parent.is_displayed():
+        #     index = match_end
+        #     match = re.search(pattern, text[match_end:], re.IGNORECASE)
+
+        # start = -1
+        # end = find_suffix(text, match_end, len_text)
+        # print("Found suffix!")
+        # if (end - match_end + 1) < char_limit:
+        #     start = find_prefix(text, match_start)
+        #     print("Found prefix!")
+        
+        start = find_prefix(text, match_start)
+        print("Found prefix!")
         end = find_suffix(text, match_end, len_text)
         print("Found suffix!")
-        if (end - match_end + 1) < char_limit:
-            start = find_prefix(text, match_start)
-            print("Found prefix!")
         
+        # if end != -1 and end != match_end:
         if end != match_end:
             if text[match_end] == '\n':
                 suffix = text[match_end + 1: end]
@@ -352,7 +403,8 @@ def search(soup, pattern):
         else:
             suffix = ""
 
-        if start != -1 and start != match_start:
+        if start != match_start:
+        # if start != -1 and start != match_start:
             if text[match_start - 1] == '\n':
                 prefix = text[start: match_start - 1]
             else:
@@ -386,6 +438,12 @@ def search(soup, pattern):
         fragments.append(fragment)
         index = match_end
         match = re.search(pattern, text[match_end:], re.IGNORECASE)
+
+        # if len(fragments) > 5:
+        #     break
  
     print(len(fragments))
+    driver.quit()
     return fragments
+
+    
