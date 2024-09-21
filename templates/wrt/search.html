@@ -40,7 +40,13 @@
                         <label class="label">Search Term
                             <span class="icon has-tooltip" id="tooltipIcon1">
                                 <i class="fas fa-info-circle"></i>
-                                <div class="tooltip">The search term will include spaces </div>
+                                <div class="tooltip">
+                                    <ul>
+                                        <li>?: Represents a single wildcard character</li>
+                                        <li>%: Acts as a wildcard for 0 or more characters</li>
+                                        <li>[a|b|c]: Any of the options can be matched, including % and ? wildcards</li>
+                                    </ul>
+                                </div>
                             </span>
                         </label>
                         <div class="control">
@@ -52,8 +58,13 @@
                         <label class="label">Website Range
                             <span class="icon has-tooltip" id="tooltipIcon2">
                                 <i class="fas fa-info-circle"></i>
-                                <div class="tooltip">Every searched URL follows this path,
-                                    searching any links found on this website</div>
+                                <div class="tooltip">
+                                    This website crawl starts at
+                                    these seed URLs,
+                                    scraping the text for the target string and then follows any links that lead
+                                    to
+                                    other pages within the same site.
+                                </div>
                             </span>
                         </label>
                         <div id="searchUrlInputContainer">
@@ -96,8 +107,10 @@
                         <label class="label">Root URLS
                             <span class="icon has-tooltip" id="tooltipIcon3">
                                 <i class="fas fa-info-circle"></i>
-                                <div class="tooltip">The search will begin with this root URL, and then also search for
-                                    any broken links on links from here</div>
+                                <div class="tooltip">This tool scans a website for broken links and pages that require
+                                    login access, like those using Okta. It checks the seed URLs and all the
+                                    internal links with the same prefix URL.
+                                </div>
                             </span>
                         </label>
                         <div id="crawlUrlInputContainer">
