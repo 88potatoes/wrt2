@@ -1,25 +1,19 @@
 import json
 from typing import List
 import urllib.parse
-
 import requests
 from .robots import process_robots, check_link_ok
 from .search import search
 from .create_pattern import create_pattern
-
-from collections import defaultdict as dd
 import re
 import urllib
 from urllib.parse import urljoin
-from urllib.parse import quote
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 
 
 # A limit on the number of links crawled for each starting link
-SAFE_PAGE_LIMIT = 1
+SAFE_PAGE_LIMIT = 5
 
 
 def scrape(starting_links: List[str], json_filename, search_text) -> List[str]:
@@ -175,6 +169,6 @@ def scrape(starting_links: List[str], json_filename, search_text) -> List[str]:
         unique_webpages.add(webpage)
         print(count, ' ', webpage)
         count += 1
-    # print('done')
+    print('done')
 
     return [search_str_webpages, requires_access]
