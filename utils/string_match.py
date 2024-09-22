@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 
 
 # A limit on the number of links crawled for each starting link
-SAFE_PAGE_LIMIT = 5
+SAFE_PAGE_LIMIT = 1
 
 
 def scrape(starting_links: List[str], search_text) -> List[str]:
@@ -41,7 +41,7 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
             # catch broken links
             elif not (200 <= page.status_code <= 299):
                 broken_links.append(start_link)
-                print("new broken: ", start_link)
+                print("new broken: ", start_link, ' code: ', page.status_code)
                 continue
         except requests.exceptions.RequestException as request_exception:
             broken_links.append(start_link)
@@ -161,6 +161,7 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
         output[start_link] = sorted(visited.keys())
 
     print(pattern)
+    # print(search_str_webpages)
     unique_webpages = set()
     count = 1
     for webpage in search_str_webpages:

@@ -196,12 +196,12 @@ def search(pattern, url):
         else:
             fragment = fragment_start + term
         
-        # print("fragment: ", fragment)
+        print("fragment: ", fragment)
         fragments.append(fragment)
         index = match_end
         match = re.search(pattern, text[match_end:], re.IGNORECASE)
  
-    # print(len(fragments))
+    print(len(fragments))
     driver.quit()
     return fragments
 

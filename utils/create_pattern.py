@@ -56,6 +56,13 @@ def create_pattern(search_term):
     search_term = search_term.replace(r'\[', '<LITERAL_OPEN_BRACKET>')
     search_term = search_term.replace(r'\]', '<LITERAL_CLOSE_BRACKET>')
     search_term = search_term.replace(r'\|', '<LITERAL_PIPE>')
+
+    no_leading_boundary = search_term.startswith('%')
+    if not no_leading_boundary:
+        no_leading_boundary = search_term.startswith('(')
+    no_trailing_boundary = search_term.endswith('%')
+    if not no_trailing_boundary:
+        no_trailing_boundary = search_term.endswith(')')
     
     # escape all other regex special characters
     search_term = re.sub(r'([.^$*+{}\\()])', r'\\\1', search_term)
@@ -84,11 +91,9 @@ def create_pattern(search_term):
     search_term = search_term.replace('<LITERAL_PIPE>', r'\|')
     search_term = search_term.replace(' ', r'(?:\s|\r\n|\r|\n)*')
 
-    no_leading_boundary = search_term.startswith('.*')
-    if not re.match(r'^[a-zA-Z0-9.]|\w+', search_term[0]):
+    if not re.match(r'^[a-zA-Z0-9?]', search_term[0]):
         no_leading_boundary = True
-    no_trailing_boundary = search_term.endswith('.*')
-    if not re.match(r'^[a-zA-Z0-9.]|\w+', search_term[-1]):
+    if not re.match(r'^[a-zA-Z0-9?]', search_term[-1]):
         no_trailing_boundary = True
 
     print("NO LEADING \\b: ", no_leading_boundary)
