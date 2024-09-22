@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 SAFE_PAGE_LIMIT = 5
 
 
-def scrape(starting_links: List[str], json_filename, search_text) -> List[str]:
+def scrape(starting_links: List[str], search_text) -> List[str]:
     """ Crawl each starting link and find websites that matches the query 
     string and links that require private access."""
 
