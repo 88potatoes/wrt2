@@ -14,7 +14,6 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from user_agents import parse
 
 
 # A limit on the number of links crawled for each starting link
@@ -59,7 +58,7 @@ remove_mobile_elements_js = """
 
 
 
-def scrape(starting_links: List[str], search_text) -> List[str]: # , user_agent_str
+def scrape(starting_links: List[str], json_filename, search_text) -> List[str]:
     """ Crawl each starting link and find websites that matches the query 
     string and links that require private access."""
 
@@ -71,8 +70,6 @@ def scrape(starting_links: List[str], search_text) -> List[str]: # , user_agent_
     requires_access = []
     pattern = create_pattern(search_text)
     search_str_webpages = []
-    # user_agent = parse(user_agent_str)
-    # browser = user_agent.browser.family
 
     # search for base urls
     for start_link in starting_links:
@@ -99,10 +96,6 @@ def scrape(starting_links: List[str], search_text) -> List[str]: # , user_agent_
         robot_rules = process_robots(robot_page.text)
 
         soup = BeautifulSoup(page.text, 'html.parser')
-
-        # if browser != 'Chrome':
-        #     if search_without_highlighting(soup, pattern):
-        #         queried_webpages.append(start_link)
         
         # see if queried text is on webpage
         # if search(soup, pattern):
@@ -400,18 +393,6 @@ def url_encode(string):
     return string
 
 def search(soup, pattern, url):
-    # print(soup.get_text(separator="\n"))
-    # extract all text without HTML tags
-    # if browser == 'Chrome':
-    #     print('is chrome')
-    # options = webdriver.ChromeOptions()
-    # options.add_argument("--headless=new")
-    # # options.add_argument(f'user-agent={user_agent_str}')
-    # options.add_argument("window-size=2560,1600")
-    # driver = webdriver.Chrome(options=options)
-    # else:
-    #     return search_without_highlighting(soup, pattern)
-
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
     options.add_argument("--headless=new")
