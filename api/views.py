@@ -15,27 +15,6 @@ from .models import PastSearch
 
 
 """ 
-================================= Login Functions ====
-"""
-@api_view(['POST'])
-def api_login(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    next_url = request.data.get('next', '/')
-
-    if not next_url:
-        next_url = '/'
-
-    user = authenticate(request, username=username, password=password)
-    if user is not None:
-        login(request, user)
-        print("User logged in successfully")
-        return Response({"message": "Login successful", "next_url": next_url}, status=status.HTTP_200_OK)
-    else:
-        print("User flopped log in")
-        return Response({"error": "Invalid username or password"}, status=status.HTTP_400_BAD_REQUEST)
-
-""" 
 ================================= Search Functions =================================
 """
 

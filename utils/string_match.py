@@ -234,4 +234,3 @@ def search(soup, pattern):
     if results: 
         return True
     return False
-

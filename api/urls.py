@@ -9,7 +9,6 @@ urlpatterns = [
     path('crawl/', views.search_broken_links, name='crawl_api'),
 
     # Login & Token handling
-    path('login', views.api_login, name='api_login'),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
