@@ -24,7 +24,13 @@
                         <label class="label">Search Term
                             <span class="icon has-tooltip" id="tooltipIcon1">
                                 <i class="fas fa-info-circle"></i>
-                                <div class="tooltip">The search term will include spaces </div>
+                                <div class="tooltip">
+                                    <ul>
+                                        <li>?: Represents a single wildcard character</li>
+                                        <li>%: Acts as a wildcard for 0 or more characters</li>
+                                        <li>[a|b|c]: Any of the options can be matched, including % and ? wildcards</li>
+                                    </ul>
+                                </div>
                             </span>
                         </label>
                         <div class="control">
@@ -36,8 +42,13 @@
                         <label class="label">Website Range
                             <span class="icon has-tooltip" id="tooltipIcon2">
                                 <i class="fas fa-info-circle"></i>
-                                <div class="tooltip">Every searched URL follows this path,
-                                    searching any links found on this website</div>
+                                <div class="tooltip">
+                                    This website crawl starts at
+                                    these seed URLs,
+                                    scraping the text for the target string and then follows any links that lead
+                                    to
+                                    other pages within the same site.
+                                </div>
                             </span>
                         </label>
                         <div id="searchUrlInputContainer">
@@ -67,5 +78,4 @@
         </div>
     </div>
     </div>
-
 {% endblock %}
