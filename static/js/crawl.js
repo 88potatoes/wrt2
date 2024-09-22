@@ -60,6 +60,81 @@ crawlForm.addEventListener('submit', function (event) {
     });
 });
 
+function submitForm(event, apiUrl, formData, successCallback) {
+    event.preventDefault();
+    const accessToken = localStorage.getItem('access_token');
+    console.log(accessToken);
+    function submitRequest(token) {
+        return fetch(apiUrl, {
+            method: "POST",
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(formData)
+        });
+    }
+
+    // if (!accessToken) {
+    //     console.log("No access token found. Redirecting to login...");
+    //     window.location.href = "/"; // Redirect to login if no token
+    //     return;
+    // }
+
+    submitRequest(accessToken)
+        .then(response => {
+            if (response.ok) {
+                console.log("Access token is valid. Processing response...");
+                return response.json();
+            } else if (response.status === 401) {
+                console.log("Access token is invalid or expired. Attempting to refresh...");
+                return refreshAccessToken().then(newAccessToken => {
+                    console.log("Retrying request with new access token.");
+                    return submitRequest(newAccessToken).then(retryResponse => {
+                        if (retryResponse.ok) {
+                            return retryResponse.json();
+                        } else {
+                            throw new Error('Retry failed.');
+                        }
+                    });
+                });
+            } else {
+                console.log("RESPONSE DATA: " + response.data); // TODO Remove
+                throw new Error('Something went wrong with the request.');
+            }
+        })
+        .then(data => successCallback(data))
+        .catch(error => console.error('Error:', error));
+}
+
+// Function to refresh the access token
+function refreshAccessToken() {
+    const refreshToken = localStorage.getItem('refresh_token');
+    return fetch('/api/token/refresh/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh: refreshToken })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.access) {
+                console.log("New access token received:", data.access);
+                localStorage.setItem('access_token', data.access);
+                return data.access;
+            } else {
+                console.log("Failed to refresh token, redirecting to login...");
+                window.location.href = "/";
+                throw new Error('Failed to refresh token');
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing token:', error);
+            window.location.href = "/";
+            throw new Error('Error refreshing token');
+        });
+}
+
 // Handle adding input fields for Crawl Form
 const addCrawlInputBtn = document.getElementById('addCrawlInputBtn');
 const crawlUrlInputContainer = document.getElementById('crawlUrlInputContainer');
