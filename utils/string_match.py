@@ -58,7 +58,7 @@ remove_mobile_elements_js = """
 
 
 
-def scrape(starting_links: List[str], json_filename: str, search_text) -> List[str]:
+def scrape(starting_links: List[str], search_text) -> List[str]:
     """ Crawl each starting link and find websites that matches the query 
     string and links that require private access."""
 
@@ -201,10 +201,6 @@ def scrape(starting_links: List[str], json_filename: str, search_text) -> List[s
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())
-    
-    # create json output file
-    with open(json_filename, "w") as outfile:
-        json.dump(output, outfile)
 
     print(pattern)
     unique_webpages = set()
@@ -389,8 +385,17 @@ def search_without_highlighting(soup, pattern):
     return False
 
 
+def url_encode(string):
+    string = string.strip()
+    string = urllib.parse.quote(string, safe="")
+    string = re.sub(r'-', '%2D', string)
+    string = re.sub(r'\.', '%2E', string)
+    string = re.sub(r'_', '	%5F', string)
+    string = re.sub(r'~', '%7E', string)
+    return string
+
 def search(soup, pattern, url):
-    # print(soup.prettify())
+    print(soup.get_text(separator="\n"))
     # extract all text without HTML tags
     # user_agent = parse(user_agent_str)
     # browser = user_agent.browser.family 
@@ -408,7 +413,6 @@ def search(soup, pattern, url):
     options.add_argument("--start-maximized")
     options.add_argument("--headless=new")
     driver = webdriver.Chrome(options=options)
-
     driver.implicitly_wait(10)
     driver.get(url)
 
@@ -417,10 +421,8 @@ def search(soup, pattern, url):
     html = driver.page_source
     soup = BeautifulSoup(html, 'html.parser')
     # print(soup.prettify())
-    for element in soup(["title"]): # "meta", "style", "script", 
+    for element in soup(["title"]): 
         element.decompose()
-    # for mobile_nav in soup.find_all(class_='mobile-nav'):
-    #     mobile_nav.decompose()
     text = soup.get_text(separator="\n") 
     text = text.lower() 
     print(show_hidden_chars(text))
@@ -437,33 +439,32 @@ def search(soup, pattern, url):
     while match is not None:
         match_start = match.start() + index
         match_end = match.end() + index
-
-        # start = -1
-        # end = find_suffix(text, match_end, len_text)
-        # print("Found suffix!")
-        # if (end - match_end + 1) < char_limit:
-        #     start = find_prefix(text, match_start)
-        #     print("Found prefix!")
+        term = match.group(0)
+        print('match string: ', show_hidden_chars(match.group(0)))
+        if '\n' in term:
+            elements = term.split('\n')
+            frag_start = elements[0]
+            frag_end = elements[-1]
+            if frag_start and frag_end:
+                frag_start = url_encode(frag_start)
+                frag_end = url_encode(frag_end)
+                fragment = fragment_start + frag_start + ',' + frag_end
+                fragments.append(fragment)
+                index = match_end
+                match = re.search(pattern, text[match_end:], re.IGNORECASE)
+                continue
         
         start = find_prefix(text, match_start)
         print("Found prefix!")
         end = find_suffix(text, match_end, len_text)
         print("Found suffix!")
-        
-        # if end != -1 and end != match_end:
+
         if end != match_end:
             if text[match_end] == '\n':
                 suffix = text[match_end + 1: end]
             else:
                 suffix = text[match_end:end]
-            suffix = suffix.strip()
-            # print('suffix before ', suffix)
-            suffix = urllib.parse.quote(suffix, safe="")
-            suffix = re.sub(r'-', '%2D', suffix)
-            suffix = re.sub(r'\.', '%2E', suffix)
-            suffix = re.sub(r'_', '	%5F', suffix)
-            suffix = re.sub(r'~', '%7E', suffix)
-            print('suffix: ', suffix)
+            suffix = url_encode(suffix)
         else:
             suffix = ""
 
@@ -472,21 +473,14 @@ def search(soup, pattern, url):
                 prefix = text[start: match_start - 1]
             else:
                 prefix = text[start:match_start]
-            prefix = prefix.strip()
-            prefix = urllib.parse.quote(prefix, safe="")
-            prefix = re.sub(r'-', '%2D', prefix)
-            prefix = re.sub(r'\.', '%2E', prefix)
-            prefix = re.sub(r'_', '	%5F', prefix)
-            prefix = re.sub(r'~', '%7E', prefix)
-            print('prefix: ', prefix)
+            prefix = url_encode(prefix)
         else:
             prefix = ""
         
-        term = match.group()
         term = urllib.parse.quote(term)
         term = re.sub(r'-', '%2D', term)
-        term = re.sub(r'\s+', ' ', term) # Replace one or more whitespace characters with a single space
-        term = term.strip()  # Remove leading/trailing spaces
+        term = re.sub(r'\s+', ' ', term) 
+        term = term.strip() 
 
         if prefix and suffix:
             fragment = fragment_start + prefix + '-,' + term + ",-" + suffix
@@ -505,3 +499,5 @@ def search(soup, pattern, url):
     print(len(fragments))
     driver.quit()
     return fragments
+
+        
