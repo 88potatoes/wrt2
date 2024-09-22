@@ -161,15 +161,15 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
         output[start_link] = sorted(visited.keys())
 
     print(pattern)
-    # print(search_str_webpages)
-    unique_webpages = set()
-    count = 1
-    for webpage in search_str_webpages:
-        if webpage in unique_webpages:
-            continue
-        unique_webpages.add(webpage)
-        print(count, ' ', webpage)
-        count += 1
-    print('done')
+    print(search_str_webpages)
+    # unique_webpages = set()
+    # count = 1
+    # for webpage in search_str_webpages:
+    #     if webpage in unique_webpages:
+    #         continue
+    #     unique_webpages.add(webpage)
+    #     print(count, ' ', webpage)
+    #     count += 1
+    # print('done')
 
     return [search_str_webpages, requires_access]
