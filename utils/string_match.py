@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from user_agents import parse
 
 
 # A limit on the number of links crawled for each starting link
@@ -58,7 +59,7 @@ remove_mobile_elements_js = """
 
 
 
-def scrape(starting_links: List[str], search_text) -> List[str]:
+def scrape(starting_links: List[str], search_text) -> List[str]: # , user_agent_str
     """ Crawl each starting link and find websites that matches the query 
     string and links that require private access."""
 
@@ -70,6 +71,8 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
     requires_access = []
     pattern = create_pattern(search_text)
     search_str_webpages = []
+    # user_agent = parse(user_agent_str)
+    # browser = user_agent.browser.family
 
     # search for base urls
     for start_link in starting_links:
@@ -96,6 +99,10 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
         robot_rules = process_robots(robot_page.text)
 
         soup = BeautifulSoup(page.text, 'html.parser')
+
+        # if browser != 'Chrome':
+        #     if search_without_highlighting(soup, pattern):
+        #         queried_webpages.append(start_link)
         
         # see if queried text is on webpage
         # if search(soup, pattern):
@@ -332,14 +339,12 @@ def check_char(char):
 
 def find_suffix(text, index, len_text):
     prev_end = index
-    # print(text[index])
-    while re.match(r'\s+', text[index]):
+    while index < len_text and re.match(r'\s+', text[index]):
         index += 1
     num_chars = 0
     while index < len_text and check_char(text[index]) and num_chars < CHAR_LIMIT:
         if text[index] == ' ':
             prev_end = index
-        # print(text[index])
         num_chars += 1
         index += 1
     if index < len_text and not text[index].isprintable():
@@ -352,7 +357,7 @@ def find_prefix(text, index):
     prev_start = index
     index -= 1
     # print(text[index])
-    while re.match(r'\s+', text[index]):
+    while index >= 0 and re.match(r'\s+', text[index]):
         index -= 1
     num_chars = 0
     while index >= 0 and check_char(text[index]) and num_chars < CHAR_LIMIT:
@@ -395,10 +400,8 @@ def url_encode(string):
     return string
 
 def search(soup, pattern, url):
-    print(soup.get_text(separator="\n"))
+    # print(soup.get_text(separator="\n"))
     # extract all text without HTML tags
-    # user_agent = parse(user_agent_str)
-    # browser = user_agent.browser.family 
     # if browser == 'Chrome':
     #     print('is chrome')
     # options = webdriver.ChromeOptions()
