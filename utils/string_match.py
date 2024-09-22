@@ -13,14 +13,52 @@ from urllib.parse import quote
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
 # A limit on the number of links crawled for each starting link
 SAFE_PAGE_LIMIT = 1
 MAX_OPTIONS = 10
+CHAR_LIMIT = 50
+
+remove_mobile_elements_js = """
+    var mobileSelectors = [
+        '.mobile-nav',          // Mobile navigation bar
+        '.mobile-header',       // Mobile header
+        '.mobile-footer',       // Mobile footer
+        '.menu-toggle',         // Menu toggle button (hamburger)
+        '.hamburger-menu',      // Hamburger menu
+        '.responsive-nav',      // Responsive navigation bar
+        '.responsive-menu',     // Responsive menu
+        '.mobile-menu',         // Mobile-specific menu
+        '.hidden-xs',           // Bootstrap class to hide on mobile
+        '.visible-xs',          // Bootstrap class to show on mobile
+        '.visible-sm',          // Bootstrap class to show on small screens
+        '.hidden-sm',           // Bootstrap class to hide on small screens
+        '.mobile-specific',     // Any element with a 'mobile-specific' class
+        '[data-mobile]',        // Elements with data-mobile attributes
+        '[aria-hidden="true"]', // Often used to hide elements in mobile mode
+        '.mobile-banner',       // Mobile banners or ad-specific elements
+        '.mobile-popup',        // Mobile popups
+        '.mobile-ad',           // Mobile ads
+        '.offcanvas',           // Off-canvas menus (often used for mobile navigation)
+        '.drawer',              // Drawer menu elements (common in mobile navigation)
+        '.swipe',               // Swipeable elements (mobile interaction)
+        '.touch',               // Elements with touch interactions (mobile)
+        '[onclick*="mobile"]'   // Elements that have onClick behavior for mobile
+    ];
+
+    mobileSelectors.forEach(function(selector) {
+        var elements = document.querySelectorAll(selector);
+        elements.forEach(function(element) {
+            element.remove();  // Remove the mobile-specific element
+        });
+    });
+"""
 
 
-def scrape(starting_links: List[str], search_text) -> List[str]:
+
+def scrape(starting_links: List[str], json_filename: str, search_text) -> List[str]:
     """ Crawl each starting link and find websites that matches the query 
     string and links that require private access."""
 
@@ -163,12 +201,23 @@ def scrape(starting_links: List[str], search_text) -> List[str]:
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())
+    
+    # create json output file
+    with open(json_filename, "w") as outfile:
+        json.dump(output, outfile)
 
     print(pattern)
-    print(search_str_webpages)
+    unique_webpages = set()
+    count = 1
+    for webpage in search_str_webpages:
+        if webpage in unique_webpages:
+            continue
+        unique_webpages.add(webpage)
+        print(count, ' ', webpage)
+        count += 1
     print('done')
 
-    return [queried_webpages, requires_access]
+    return [search_str_webpages, requires_access]
 
 
 def validate_brackets(search_term):
@@ -291,8 +340,7 @@ def find_suffix(text, index, len_text):
     while re.match(r'\s+', text[index]):
         index += 1
     num_chars = 0
-    char_limit = 100
-    while index < len_text and check_char(text[index]) and num_chars < char_limit:
+    while index < len_text and check_char(text[index]) and num_chars < CHAR_LIMIT:
         if text[index] == ' ':
             prev_end = index
         # print(text[index])
@@ -311,8 +359,7 @@ def find_prefix(text, index):
     while re.match(r'\s+', text[index]):
         index -= 1
     num_chars = 0
-    char_limit = 100
-    while index >= 0 and check_char(text[index]) and num_chars < char_limit:
+    while index >= 0 and check_char(text[index]) and num_chars < CHAR_LIMIT:
         if text[index] == ' ':
             prev_start = index
         # print(text[index])
@@ -333,33 +380,56 @@ def show_hidden_chars(text):
     )
     return visible_text
 
+def search_without_highlighting(soup, pattern):
+    # extract all text without HTML tags
+    text = soup.get_text(separator=" ")  
+    results = re.search(pattern, text, re.IGNORECASE)
+    if results: 
+        return True
+    return False
+
 
 def search(soup, pattern, url):
+    # print(soup.prettify())
     # extract all text without HTML tags
-    driver = webdriver.Chrome()
+    # user_agent = parse(user_agent_str)
+    # browser = user_agent.browser.family 
+    # if browser == 'Chrome':
+    #     print('is chrome')
+    # options = webdriver.ChromeOptions()
+    # options.add_argument("--headless=new")
+    # # options.add_argument(f'user-agent={user_agent_str}')
+    # options.add_argument("window-size=2560,1600")
+    # driver = webdriver.Chrome(options=options)
+    # else:
+    #     return search_without_highlighting(soup, pattern)
+
+    options = webdriver.ChromeOptions()
+    options.add_argument("--start-maximized")
+    options.add_argument("--headless=new")
+    driver = webdriver.Chrome(options=options)
+
     driver.implicitly_wait(10)
     driver.get(url)
 
-    # elements = driver.find_elements_by_xpath("//*[not(self::script) and not(self::style) and not(self::meta) and not(self::title)]")
-    # visible_text = [element.text for element in elements if element.is_displayed() and element.text.strip() != '']
-    # text = '\n'.join(visible_text)
+    driver.execute_script(remove_mobile_elements_js)
 
     html = driver.page_source
     soup = BeautifulSoup(html, 'html.parser')
     # print(soup.prettify())
-
     for element in soup(["title"]): # "meta", "style", "script", 
         element.decompose()
+    # for mobile_nav in soup.find_all(class_='mobile-nav'):
+    #     mobile_nav.decompose()
     text = soup.get_text(separator="\n") 
     text = text.lower() 
-    # print(show_hidden_chars(text))
+    print(show_hidden_chars(text))
     regex = re.compile(pattern, re.IGNORECASE)
     match = re.search(regex, text)
     if not match:
         return False
     
     index = 0
-    # char_limit = 70
     fragments = []
     len_text = len(text)
     fragment_start = ":~:text="
@@ -367,12 +437,6 @@ def search(soup, pattern, url):
     while match is not None:
         match_start = match.start() + index
         match_end = match.end() + index
-
-        # parent = match.parent
-        # print('still fine before checking parent')
-        # if not parent.is_displayed():
-        #     index = match_end
-        #     match = re.search(pattern, text[match_end:], re.IGNORECASE)
 
         # start = -1
         # end = find_suffix(text, match_end, len_text)
@@ -404,7 +468,6 @@ def search(soup, pattern, url):
             suffix = ""
 
         if start != match_start:
-        # if start != -1 and start != match_start:
             if text[match_start - 1] == '\n':
                 prefix = text[start: match_start - 1]
             else:
@@ -438,12 +501,7 @@ def search(soup, pattern, url):
         fragments.append(fragment)
         index = match_end
         match = re.search(pattern, text[match_end:], re.IGNORECASE)
-
-        # if len(fragments) > 5:
-        #     break
  
     print(len(fragments))
     driver.quit()
     return fragments
-
-    
