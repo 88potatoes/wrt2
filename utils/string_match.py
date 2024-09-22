@@ -326,7 +326,7 @@ def create_pattern(search_term):
 def check_char(char):
     if not char.isprintable():
         return False
-    # Define allowed characters: Alphanumeric, safe, reserved, and typically unsafe characters
+    # allowed characters: alphanumeric, safe, reserved, and typically unsafe characters
     allowed_chars = re.compile(r'^[a-zA-Z0-9$-_.+!*\'\"(),;/?:@=&<>#%{}|\\^~\[\]` ]*$')
     return bool(allowed_chars.match(char))
 
@@ -364,15 +364,16 @@ def find_prefix(text, index):
     return prev_start
 
 
-def show_hidden_chars(text):
-    # Replace hidden characters with visible symbols for easier debugging
-    visible_text = (
-        text.replace("\n", "\\n")
-            .replace("\t", "\\t")
-            .replace("\r", "\\r")
-            .replace(" ", "[space]")  # Optional: make spaces visible too
-    )
-    return visible_text
+# def show_hidden_chars(text):
+#     # Replace hidden characters with visible symbols for easier debugging
+#     visible_text = (
+#         text.replace("\n", "\\n")
+#             .replace("\t", "\\t")
+#             .replace("\r", "\\r")
+#             .replace(" ", "[space]")  # Optional: make spaces visible too
+#     )
+#     return visible_text
+
 
 def search_without_highlighting(soup, pattern):
     # extract all text without HTML tags
@@ -392,6 +393,7 @@ def url_encode(string):
     string = re.sub(r'~', '%7E', string)
     return string
 
+
 def search(soup, pattern, url):
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
@@ -399,17 +401,18 @@ def search(soup, pattern, url):
     driver = webdriver.Chrome(options=options)
     driver.implicitly_wait(10)
     driver.get(url)
-
     driver.execute_script(remove_mobile_elements_js)
-
     html = driver.page_source
     soup = BeautifulSoup(html, 'html.parser')
+
     # print(soup.prettify())
     for element in soup(["title"]): 
         element.decompose()
+
     text = soup.get_text(separator="\n") 
     text = text.lower() 
-    print(show_hidden_chars(text))
+    # print(show_hidden_chars(text))
+
     regex = re.compile(pattern, re.IGNORECASE)
     match = re.search(regex, text)
     if not match:
@@ -419,12 +422,12 @@ def search(soup, pattern, url):
     fragments = []
     len_text = len(text)
     fragment_start = ":~:text="
-    print('found a match')
+    # print('found a match')
     while match is not None:
         match_start = match.start() + index
         match_end = match.end() + index
         term = match.group(0)
-        print('match string: ', show_hidden_chars(match.group(0)))
+        # print('match string: ', show_hidden_chars(match.group(0)))
         if '\n' in term:
             elements = term.split('\n')
             frag_start = elements[0]
@@ -475,13 +478,13 @@ def search(soup, pattern, url):
         else:
             fragment = fragment_start + term
         
-        print("fragment: ", fragment)
+        # print("fragment: ", fragment)
         fragments.append(fragment)
         index = match_end
         match = re.search(pattern, text[match_end:], re.IGNORECASE)
  
-    print(len(fragments))
+    # print(len(fragments))
     driver.quit()
     return fragments
 
-        
+    
