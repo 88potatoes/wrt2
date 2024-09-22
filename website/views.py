@@ -1,15 +1,20 @@
-from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+
+from django.http import HttpResponse
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from json import loads
-from utils.broken_links import crawl
-from utils.string_match import scrape
-from api.models import PastSearch
-import traceback
+from rest_framework.decorators import api_view
+from django.views.decorators.http import require_http_methods
 
-def login_view(request):
-    print("Login view called")
-    error = None
+@require_http_methods(["GET"])
+@login_required
+def search_term_view(request):
+    return render(request, 'wrt/search.html')
 
-    return render(request, 'wrt/login.html', {'error': error})
+@require_http_methods(["GET"])
+@login_required
+def crawl_broken_links_view(request):
+    return render(request, 'wrt/brokenLinks.html')
+
+@require_http_methods(["GET"])
+def test_view(request):
+    return HttpResponse(f"Hello {request.user.username}, you are authenticated.")
