@@ -15,11 +15,13 @@ function submitForm(event, apiUrl, formData, successCallback) {
         });
     }
 
-    // if (!accessToken) {
-    //     console.log("No access token found. Redirecting to login...");
-    //     window.location.href = "/"; // Redirect to login if no token
-    //     return;
-    // }
+    if (accessToken == null) {
+        console.log("No access token found. Redirecting to login...");
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/logout';
+        return;
+    }
 
     submitRequest(accessToken)
         .then(response => {
@@ -27,17 +29,28 @@ function submitForm(event, apiUrl, formData, successCallback) {
                 console.log("Access token is valid. Processing response...");
                 return response.json();
             } else if (response.status === 401) {
-                console.log("Access token is invalid or expired. Attempting to refresh...");
-                return refreshAccessToken().then(newAccessToken => {
-                    console.log("Retrying request with new access token.");
-                    return submitRequest(newAccessToken).then(retryResponse => {
-                        if (retryResponse.ok) {
-                            return retryResponse.json();
-                        } else {
-                            throw new Error('Retry failed.');
-                        }
+                if (isTokenExpired(accessToken)) {
+                    console.log("Access token is expired. Attempting to refresh...");
+                    return refreshAccessToken().then(newAccessToken => {
+                        console.log("Retrying request with new access token.");
+                        return submitRequest(newAccessToken).then(retryResponse => {
+                            if (retryResponse.ok) {
+                                return retryResponse.json();
+                            } else {
+                                console.error('Retry failed. Redirecting to login...');
+                                localStorage.clear(); // Clear tokens
+                                window.location.href = '/'; // Redirect to login page
+                                throw new Error('Retry failed.');
+                            }
+                        });
                     });
-                });
+                } else {
+                    // Handle the case where the session ID might be invalid
+                    console.log("Session ID might be invalid. Redirecting to login...");
+                    localStorage.clear(); // Clear tokens
+                    window.location.href = '/'; // Redirect to login page
+                    return;
+                }
             } else {
                 console.log("RESPONSE DATA: " + response.data); // TODO Remove
                 throw new Error('Something went wrong with the request.');
@@ -54,7 +67,7 @@ logoutLink.addEventListener('click', function (event) {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     console.log('Logged out, tokens cleared.');
-    window.location.href = '/';
+    window.location.href = '/logout';
 });
 
 // Function to refresh the access token
@@ -65,23 +78,27 @@ function refreshAccessToken() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh: refreshToken })
     })
-        .then(response => response.json())
-        .then(data => {
-            if (data.access) {
-                console.log("New access token received:", data.access);
-                localStorage.setItem('access_token', data.access);
-                return data.access;
-            } else {
-                console.log("Failed to refresh token, redirecting to login...");
-                window.location.href = "/";
-                throw new Error('Failed to refresh token');
-            }
-        })
-        .catch(error => {
-            console.error('Error refreshing token:', error);
-            window.location.href = "/";
-            throw new Error('Error refreshing token');
-        });
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to refresh token'); // Throw an error if the response is not OK
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.access) {
+            console.log("New access token received:", data.access);
+            localStorage.setItem('access_token', data.access);
+            return data.access;
+        } else {
+            throw new Error('No access token received');
+        }
+    })
+    .catch(error => {
+        console.error('Error refreshing token:', error);
+        localStorage.clear(); // Clear tokens on error
+        window.location.href = '/'; // Redirect to login page
+        throw new Error('Error refreshing token');
+    });
 }
 
 const searchForm = document.getElementById('searchForm');
@@ -170,3 +187,9 @@ addSearchInputBtn.addEventListener('click', function () {
     newFieldDiv.appendChild(deleteBtn);
     searchUrlInputContainer.appendChild(newFieldDiv);
 });
+
+function isTokenExpired(token) {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Date.now() / 1000; // Get current time in seconds
+    return payload.exp < currentTime; // Check if the token is expired
+}

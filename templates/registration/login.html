@@ -11,10 +11,9 @@
         <div class="container">
             <div class="columns is-centered">
                 <div class="column is-4">
-                    <form id="loginForm" method="post" action="{% url 'login' %}">
+                    <form id="loginForm" method="post">
                         {% csrf_token %}
                         <h1 class="title-has-text-centered">Login</h1>
-                        <input type="hidden" name="next" value="{{ request.GET.next|default_if_none:'' }}">
                         
                         {% if form.non_field_errors %}
                             <div class="notification is-danger">
@@ -25,14 +24,14 @@
                         {% endif %}
 
                         <div class="field">
-                            <label class="label" for="{{ form.username.id_for_label }}"">Username</label>
-                            <input id="{{ form.username.id_for_label }}" class="input" type="text" name="username" placeholder="Username" value="{{ form.username.value|default_if_none:'' }}">
+                            <label class="label" for="username">Username</label>
+                            <input id="username" class="input" type="text" name="username" placeholder="Username" required>
                         </div>
-
+                        
                         <div class="field">
-                            <label class="label" for="{{ form.password.id_for_label }}">Password</label>
+                            <label class="label" for="password">Password</label>
                             <div class="control">
-                                <input class="input" type="password" name="password" id="{{ form.password.id_for_label }}" placeholder="Password" required>
+                                <input id="password" class="input" type="password" name="password" placeholder="Password" required>
                             </div>
                         </div>
 
@@ -47,4 +46,10 @@
             </div>
         </div>
     </section> 
+    {% block script %}
+    <script src="{% static 'js/login.js' %}"></script>
+    {% endblock %}
 {% endblock %}
+
+
+
