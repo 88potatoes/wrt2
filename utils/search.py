@@ -139,12 +139,12 @@ def search(pattern, url):
     text = soup.get_text(separator="\n") 
     # change to lowercase to make it case insensitive
     text = text.lower() 
-    print(show_hidden_chars(text))
+    # print(show_hidden_chars(text))
 
     regex = re.compile(pattern, re.IGNORECASE)
     match = re.search(regex, text)
     if not match:
-        return False
+        return []
     
     index = 0
     fragments = []
@@ -224,7 +224,7 @@ def search(pattern, url):
         index = match_end
         match = re.search(pattern, text[match_end:], re.IGNORECASE)
  
-    print(len(fragments))
+    # print(len(fragments))
     driver.quit()
     return fragments
 

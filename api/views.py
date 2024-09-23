@@ -49,20 +49,18 @@ def search_text_string(request):
     if serializer.is_valid():
         search_text = serializer.validated_data['search_text']
         starting_links = serializer.validated_data['starting_links']
+        browser_info = serializer.validated_data['browser_info']
         # json_filename = serializer.validated_data['json_filename']
 
-        result = scrape(starting_links, search_text)
-        print(result)
-
-        with open("a.json", "w") as outfile: # TODO: Decide if there will still be a json file
-            json.dump(result[2], outfile)
+        result = scrape(starting_links, search_text, browser_info)
+        print("Results: ", result)
 
         # writing history to database
         queried_webpages, requires_access, output = result
 
         for seed_url in output:
             for page in output[seed_url]:
-                print(f"{seed_url}: {page}")
+                # print(f"{seed_url}: {page}")
                 past_search = PastSearch.objects.create(
                     user=request.user,
                     seed_url=seed_url,
