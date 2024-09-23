@@ -1,4 +1,3 @@
-from collections import defaultdict as dd
 import re
 
 # max number of options in alternation brackets
