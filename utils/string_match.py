@@ -74,10 +74,10 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
                 for fragment in fragments:
                     updated_url = parsed_url._replace(fragment=fragment)
                     final_url = urllib.parse.urlunparse(updated_url)
-                    search_str_webpages.append(final_url)
+                    search_str_webpages.append((search_text, final_url))
             # For non-highlighting browsers, append only the URL (without duplicating)
             else:
-                search_str_webpages.append(start_link)
+                search_str_webpages.append((search_text, start_link))
         
         # Extract all links from the current page and add them to the to-visit list
         links = soup.findAll('a')
@@ -140,10 +140,10 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
                         for fragment in fragments:
                             updated_url = parsed_url._replace(fragment=fragment)
                             final_url = urllib.parse.urlunparse(updated_url)
-                            search_str_webpages.append(final_url)
+                            search_str_webpages.append((search_text, final_url))
                     # For non-highlighting browsers, append only the URL (without duplicating)
                     else:
-                        search_str_webpages.append(link)
+                        search_str_webpages.append((search_text, link))
 
                 if link in visited:
                     print(f"Link already visited: {link}")

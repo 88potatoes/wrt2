@@ -152,10 +152,11 @@ searchForm.addEventListener('submit', function (event) {
 
             const tableBody = document.createElement('tbody');
 
-            data[0].forEach(link => {
+            data[0].forEach(result => {
+                const [searchTerm, link] = result;
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                        <td>${searchText}</td>
+                        <td>${searchTerm}</td>
                         <td><a href="${link}" target="_blank">${link}</a></td>
                     `;
                 tableBody.appendChild(row);
