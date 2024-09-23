@@ -1,8 +1,10 @@
 from collections import defaultdict as dd
 import re
 
+# max number of options in alternation brackets
 MAX_OPTIONS = 10
 
+# validate if brackets in the search term are balanced
 def validate_brackets(search_term):
     balance = 0
     in_brackets = False
@@ -31,32 +33,47 @@ def validate_brackets(search_term):
     return True
 
 
+# replace empty options within alternation brackets with word boundaries
 def replace_empty_options(match):
-    # This function will be used to replace empty options within parentheses
     content = match.group(0)
     # Replace empty options only inside the captured content
     replaced_content = re.sub(r'(?<=\|)(?=\|)|(?<=\()(?=\|)|(?<=\|)(?=\))', r'\\b', content)
     return replaced_content
 
 
+# if the alternation brackets are at the start or end of the search term,
+# replace empty options with word boundaries 
 def replace(search_term):
-    # Replace within content enclosed by parentheses
     search_term = re.sub(r'\(.*?\)', replace_empty_options, search_term)
     return search_term
 
-
+# Create the regex pattern based on the search term
 def create_pattern(search_term):
+    """
+    Wildcards are defined as below:
+    1. ?: Represents a wildcard for a single character. For example, 'student' matches 'st?de?t'.
+    2. %: Acts as a wildcard for 0 or more characters until it reaches the end of the word. 
+        For example, 'student' matches '%tu%en%'.
+    3. Alternation Brackets [a|b|c]: Represents a wildcard to match multiple options. 
+        % and ? can be used within these brackets. 
+        For example, ‘ab’,’ cd’,’ de’ all match [ab|c?|d%]. Number of options is currently limited to 10.
+        Please note that only links with the same subdomain as the input links will be crawled. 
+    """
+
+    # '%' alone will return a extremely large number matches as it matches every word 
     if search_term == '%':
         return ValueError(f"Invalid wildcard.")
     if not validate_brackets(search_term):
         raise ValueError(f"Invalid bracket syntax.")
 
+    # Replace escape characters that overlap with the wildcard syntax with placeholders
     search_term = search_term.replace(r'\%', '<PERCENT>')
     search_term = search_term.replace(r'\?', '<QUESTION_MARK>')
     search_term = search_term.replace(r'\[', '<LITERAL_OPEN_BRACKET>')
     search_term = search_term.replace(r'\]', '<LITERAL_CLOSE_BRACKET>')
     search_term = search_term.replace(r'\|', '<LITERAL_PIPE>')
 
+    # determine if a word boundary should be placed in front or at the end of the search term
     no_leading_boundary = search_term.startswith('%')
     if not no_leading_boundary:
         no_leading_boundary = search_term.startswith('(')
@@ -91,6 +108,7 @@ def create_pattern(search_term):
     search_term = search_term.replace('<LITERAL_PIPE>', r'\|')
     search_term = search_term.replace(' ', r'(?:\s|\r\n|\r|\n)*')
 
+    # if search term does not start / end with a word character, do not put a word boundary at the front / end
     if not re.match(r'^[a-zA-Z0-9?]', search_term[0]):
         no_leading_boundary = True
     if not re.match(r'^[a-zA-Z0-9?]', search_term[-1]):
