@@ -83,28 +83,29 @@ function refreshAccessToken() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh: refreshToken })
     })
-    .then(response => {
-        if (!response.ok) {
-            console.log("Failed to refresh token, redirecting to login...");
+        .then(response => {
+            if (!response.ok) {
+                console.log("Failed to refresh token, redirecting to login...");
+                window.location.href = "/";
+                throw new Error('Failed to refresh token');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.access) {
+                console.log("New access token received:", data.access);
+                localStorage.setItem('access_token', data.access);
+                return data.access;
+            } else {
+                console.log("Failed to refresh token, redirecting to login...");
+                window.location.href = "/";
+                throw new Error('Failed to refresh token');
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing token:', error);
             window.location.href = "/";
-            throw new Error('Failed to refresh token');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.access) {
-            console.log("New access token received:", data.access);
-            localStorage.setItem('access_token', data.access);
-            return data.access;
-        } else {
-            console.log("Failed to refresh token, redirecting to login...");
-            window.location.href = "/";
-            throw new Error('Failed to refresh token');
-        }
-    })
-    .catch(error => {
-        console.error('Error refreshing token:', error);
-        window.location.href = "/";
-        throw new Error('Error refreshing token');
-    });
+            throw new Error('Error refreshing token');
+        });
 }
+
