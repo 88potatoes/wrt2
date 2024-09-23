@@ -4,8 +4,10 @@ import urllib
 from bs4 import BeautifulSoup
 from selenium import webdriver
 
+# character limit for URL fragments
 CHAR_LIMIT = 50
 
+# JavaScript code to remove mobile-specific elements from the web page
 remove_mobile_elements_js = """
     var mobileSelectors = [
         '.mobile-nav',          // Mobile navigation bar
@@ -52,6 +54,7 @@ def show_hidden_chars(text):
     )
     return visible_text
 
+# check if the character is allowed in the text fragment 
 def check_char(char):
     if not char.isprintable():
         return False
@@ -59,6 +62,7 @@ def check_char(char):
     allowed_chars = re.compile(r'^[a-zA-Z0-9$-_.+!*\'\"(),;/?:@=&<>#%{}|\\^~\[\]` ]*$')
     return bool(allowed_chars.match(char))
 
+# find suffix for the text that matches the pattern
 def find_suffix(text, index, len_text):
     prev_end = index
     while index < len_text and re.match(r'\s+', text[index]):
@@ -73,6 +77,7 @@ def find_suffix(text, index, len_text):
         prev_end = index
     return prev_end
 
+# find prefix for the text that matches the pattern
 def find_prefix(text, index):
     if index == 0:
         return index
@@ -92,7 +97,8 @@ def find_prefix(text, index):
         prev_start = index
     return prev_start
 
-
+# Search text without text highlighting 
+# for browsers other than chrome
 def search_without_highlighting(soup, pattern):
     # extract all text without HTML tags
     text = soup.get_text(separator=" ")  
@@ -101,7 +107,7 @@ def search_without_highlighting(soup, pattern):
         return True
     return False
 
-
+# apply url encoding to the string 
 def url_encode(string):
     string = string.strip()
     string = urllib.parse.quote(string, safe="")
@@ -111,8 +117,9 @@ def url_encode(string):
     string = re.sub(r'~', '%7E', string)
     return string
 
-
+# search function with text highlighting
 def search(pattern, url):
+    # open the webpage to get both Javascript and HTML content
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
     options.add_argument("--headless=new")
@@ -124,10 +131,13 @@ def search(pattern, url):
     soup = BeautifulSoup(html, 'html.parser')
 
     # print(soup.prettify())
+    # remove elements that are not on the page
     for element in soup(["title"]): 
         element.decompose()
 
+    # separate each html element by the newline char
     text = soup.get_text(separator="\n") 
+    # change to lowercase to make it case insensitive
     text = text.lower() 
     print(show_hidden_chars(text))
 
@@ -141,11 +151,16 @@ def search(pattern, url):
     len_text = len(text)
     fragment_start = ":~:text="
     # print('found a match')
+
+    # loop through the entire HTML to find all matching strings 
     while match is not None:
+        # add index of previous match to make current index relative to the entire HTML
         match_start = match.start() + index
         match_end = match.end() + index
         term = match.group(0)
         # print('match string: ', show_hidden_chars(match.group(0)))
+
+        # use 'start' and 'end' syntax if the term spans multiple consecutive elements
         if '\n' in term:
             elements = term.split('\n')
             frag_start = elements[0]
@@ -155,16 +170,19 @@ def search(pattern, url):
                 frag_end = url_encode(frag_end)
                 fragment = fragment_start + frag_start + ',' + frag_end
                 fragments.append(fragment)
+                # adjust index to ending index of the current match 
                 index = match_end
                 match = re.search(pattern, text[match_end:], re.IGNORECASE)
                 continue
         
+        # find index of first character in prefix 
         start = find_prefix(text, match_start)
-        # print("Found prefix!")
+        # find index of last character in suffix
         end = find_suffix(text, match_end, len_text)
-        # print("Found suffix!")
 
+        # check if a suffix has been found
         if end != match_end:
+            # check if the suffix is in the next element of the matching string
             if text[match_end] == '\n':
                 suffix = text[match_end + 1: end]
             else:
@@ -173,7 +191,9 @@ def search(pattern, url):
         else:
             suffix = ""
 
+        # check if a prefix has been found
         if start != match_start:
+            # check if the prefix is in the previous element of the matching string
             if text[match_start - 1] == '\n':
                 prefix = text[start: match_start - 1]
             else:
@@ -182,11 +202,13 @@ def search(pattern, url):
         else:
             prefix = ""
         
+        # encode the matching string
         term = urllib.parse.quote(term)
         term = re.sub(r'-', '%2D', term)
         term = re.sub(r'\s+', ' ', term) 
         term = term.strip() 
 
+        # build the fragment
         if prefix and suffix:
             fragment = fragment_start + prefix + '-,' + term + ",-" + suffix
         elif suffix:
@@ -198,6 +220,7 @@ def search(pattern, url):
         
         print("fragment: ", fragment)
         fragments.append(fragment)
+        # adjust index to ending index of the current match 
         index = match_end
         match = re.search(pattern, text[match_end:], re.IGNORECASE)
  
