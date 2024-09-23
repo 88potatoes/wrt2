@@ -52,7 +52,18 @@ def export_to_pdf(queried_pages, requires_access, broken_links, file_path):
         pdf.set_xy(40, y_before_url)
 
         # URL column with wrapping text
-        pdf.multi_cell(160, 10, url, 1)
+        pdf.set_text_color(0, 0, 255)  # Set text color to blue
+        pdf.set_font('Times', 'U', 12)  # Set text underlined
+        url_height = pdf.multi_cell(160, 10, url, 1)  # Write link
+
+        # Get the height of the URL cell to add the clickable link
+        total_url_height = pdf.get_y() - y_before_url
+
+        # Create clickable link overlay
+        x = 40  # X position for the link
+        pdf.link(x, y_before_url, 160, total_url_height, url)  # Add clickable link overlay
+        pdf.set_text_color(0, 0, 0)  # Reset text color to black
+        pdf.set_font('Times', '', 12)  # Reset text to normal
 
     # Add Broken Links table
     pdf.ln(10)  # Add space before new section
@@ -61,7 +72,15 @@ def export_to_pdf(queried_pages, requires_access, broken_links, file_path):
 
     pdf.set_font('Times', '', 12)
     for idx, broken in enumerate(broken_links):
-        pdf.cell(190, 10, f'{idx + 1}. {broken}', 1, ln=True)
+        # Set text color to blue and underline for the clickable link
+        pdf.set_text_color(0, 0, 255)  
+        pdf.set_font('', 'U')  # Underline
+        pdf.multi_cell(190, 10, f'{idx + 1}. {broken}', 1)  # Use multi_cell for wrapping
+        y = pdf.get_y() - 10  # Adjust for the height of the cell
+        x = pdf.get_x() - 190  # Adjust for the width of the cell
+        pdf.link(x, y, 190, 10, broken)  # Add clickable link overlay
+        pdf.set_text_color(0, 0, 0)  # Reset text color to black
+        pdf.set_font('Times', '', 12)  # Reset text to not be underlined
 
     # Add Access Required Links table
     pdf.ln(10)  # Add space before new section
@@ -70,7 +89,15 @@ def export_to_pdf(queried_pages, requires_access, broken_links, file_path):
 
     pdf.set_font('Times', '', 12)
     for idx, access in enumerate(requires_access):
-        pdf.cell(190, 10, f'{idx + 1}. {access}', 1, ln=True)
+        # Set text color to blue and underline for the clickable link
+        pdf.set_text_color(0, 0, 255)  
+        pdf.set_font('', 'U')  # Underline
+        pdf.multi_cell(190, 10, f'{idx + 1}. {access}', 1)  # Use multi_cell for wrapping
+        y = pdf.get_y() - 10  # Adjust for the height of the cell
+        x = pdf.get_x() - 190  # Adjust for the width of the cell
+        pdf.link(x, y, 190, 10, access)  # Add clickable link overlay
+        pdf.set_text_color(0, 0, 0)  # Reset text color to black
+        pdf.set_font('Times', '', 12)  # Reset text to not be underlined
 
     # Save PDF to file path
     pdf.output(file_path)
