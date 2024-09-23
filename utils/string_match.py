@@ -2,42 +2,43 @@ from typing import List
 import urllib.parse
 import requests
 from .robots import process_robots, check_link_ok
-from .search import search
+from .search import search, search_without_highlighting
 from .create_pattern import create_pattern
 import re
 import urllib
-from urllib.parse import urljoin
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
-
 
 # A limit on the number of links crawled for each starting link
 SAFE_PAGE_LIMIT = 5
 MAX_OPTIONS = 10
 
-def scrape(starting_links: List[str], search_text: str) -> List[str]:
+def scrape(starting_links: List[str], search_text: str, browser_info: str) -> List[str]:
     """ Crawl each starting link and find websites that matches the query 
     string and links that require private access."""
 
     robots_item = '/robots.txt'
     to_visit = []
     broken_links = []
-    queried_webpages = []
-    output = {}
-    requires_access = []
+    queried_webpages = [] # Pages where search term was found
+    output = {}  # Crawled pages organized by the starting URL
+    requires_access = []  # Pages requiring access (401 or 403 status)
     pattern = create_pattern(search_text)
-    search_str_webpages = []
+    search_str_webpages = [] # URLs with matched fragments (for highlighting browsers)
 
-    # search for base urls
+    # Determine if the browser supports text fragments (i.e., highlighting)
+    use_highlighting = 'chrome' in browser_info.lower()
+
+    # Iterate over each starting link
     for start_link in starting_links:
         try:
             page = requests.get(start_link)
-            # catch links that require access
+
+            # Handle access-required pages or broken links
             if page.status_code == 401 or page.status_code == 403:
-                print("requires acces: ", start_link)
+                print("requires access: ", start_link)
                 requires_access.append(start_link)
                 continue
-            # catch broken links
             elif not (200 <= page.status_code <= 299):
                 broken_links.append(start_link)
                 print("new broken: ", start_link, ' code: ', page.status_code)
@@ -48,25 +49,37 @@ def scrape(starting_links: List[str], search_text: str) -> List[str]:
         pages_visited = 0
         visited = {}
         base = re.search('https?://[^/]+', start_link).group()
+
+        # Fetch and process the robots.txt rules for the domain
         robots_url = base + robots_item
         robot_page = requests.get(robots_url)
         robot_rules = process_robots(robot_page.text)
 
         soup = BeautifulSoup(page.text, 'html.parser')
         
-        # see if queried text is on webpage
-        # if search(soup, pattern):
-        #     queried_webpages.append(start_link)
-
-        fragments = search(pattern, start_link)
-        if fragments and start_link not in queried_webpages:
-            queried_webpages.append(start_link)
-            parsed_url = urllib.parse.urlparse(start_link)
-            for fragment in fragments:
-                updated_url = parsed_url._replace(fragment=fragment)
-                final_url = urllib.parse.urlunparse(updated_url)
-                search_str_webpages.append(final_url)
+        # Search for the pattern in the page (with or without text fragments)
+        fragments = []
+        if use_highlighting:
+            fragments = search(pattern, start_link)
+        elif(not search_without_highlighting(soup, pattern)):
+            fragments = None
         
+        # If search results found, store them
+        if fragments is not None and start_link not in queried_webpages:
+            queried_webpages.append(start_link)
+
+            # For highlighting browsers, append URL with fragment
+            if use_highlighting:
+                parsed_url = urllib.parse.urlparse(start_link)
+                for fragment in fragments:
+                    updated_url = parsed_url._replace(fragment=fragment)
+                    final_url = urllib.parse.urlunparse(updated_url)
+                    search_str_webpages.append(final_url)
+            # For non-highlighting browsers, append only the URL (without duplicating)
+            else:
+                search_str_webpages.append(start_link)
+        
+        # Extract all links from the current page and add them to the to-visit list
         links = soup.findAll('a')
         pages_visited += 1
 
@@ -88,7 +101,7 @@ def scrape(starting_links: List[str], search_text: str) -> List[str]:
             to_visit.append(potential_link)
         visited[start_link] = True 
         
-        # crawling
+        # Continue crawling new links
         while to_visit:
             if pages_visited >= SAFE_PAGE_LIMIT:
                 break
@@ -112,18 +125,25 @@ def scrape(starting_links: List[str], search_text: str) -> List[str]:
                 # scraping code 
                 soup = BeautifulSoup(page.text, 'html.parser')
 
-                # see if queried text is on webpage
-                # if search(soup, pattern):
-                #     queried_webpages.append(link)
+                fragments = []
+                if use_highlighting:
+                    fragments = search(pattern, link)
+                elif(not search_without_highlighting(soup, pattern)):
+                    fragments = None
 
-                fragments = search(pattern, link)
-                if fragments and link not in queried_webpages:
+                if fragments is not None and link not in queried_webpages:
                     queried_webpages.append(link)
-                    parsed_url = urllib.parse.urlparse(link)
-                    for fragment in fragments:
-                        updated_url = parsed_url._replace(fragment=fragment)
-                        final_url = urllib.parse.urlunparse(updated_url)
-                        search_str_webpages.append(final_url)
+
+                    # For highlighting browsers, append URL with fragment
+                    if use_highlighting:
+                        parsed_url = urllib.parse.urlparse(link)
+                        for fragment in fragments:
+                            updated_url = parsed_url._replace(fragment=fragment)
+                            final_url = urllib.parse.urlunparse(updated_url)
+                            search_str_webpages.append(final_url)
+                    # For non-highlighting browsers, append only the URL (without duplicating)
+                    else:
+                        search_str_webpages.append(link)
 
                 if link in visited:
                     print(f"Link already visited: {link}")
@@ -159,16 +179,4 @@ def scrape(starting_links: List[str], search_text: str) -> List[str]:
 
         output[start_link] = sorted(visited.keys())
 
-    print(pattern)
-    print(search_str_webpages)
-    # unique_webpages = set()
-    # count = 1
-    # for webpage in search_str_webpages:
-    #     if webpage in unique_webpages:
-    #         continue
-    #     unique_webpages.add(webpage)
-    #     print(count, ' ', webpage)
-    #     count += 1
-    # print('done')
-
-    return [search_str_webpages, requires_access]
+    return [search_str_webpages, requires_access, output]

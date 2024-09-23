@@ -29,36 +29,21 @@
         
         if (!accessToken) {
             // Redirect to login if not authenticated
-            window.location.href = "/login";
-        } else {
-            // Optionally, verify token with the server (for more secure validation)
-            fetch('/api/protected-endpoint/', {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + accessToken,
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
-                console.log("Response status:", response.status);  // Log the response status
-                if (!response.ok) {
-                    console.log("Token is invalid or expired, status code:", response.status);
-                    setTimeout(() => {
-                        window.location.href = "/login";
-                    }, 5000);
-                } else {
-                    return response.json();
-                }
-            })
-            .then(data => {
-                if (data) {
-                    console.log("API response data:", data);  // Log the response data if available
-                }
-            })
-            .catch(error => {
-                console.error('Error verifying token:', error);
-            });
-        }
+            window.location.href = "/";
+        } 
+    </script>
+
+    <script>
+        navigator.sayswho = (function() {
+            var N = navigator.appName, ua = navigator.userAgent, tem;
+            var M = ua.match(/(opera|chrome|safari|firefox|msie|trident)\/?\s*([\d\.]+)/i);
+            if (M && (tem = ua.match(/version\/([\.\d]+)/i)) != null) M[2] = tem[1];
+            M = M ? [M[1], M[2]] : [N, navigator.appVersion, '-?'];
+            return M.join(' ');
+        })();
+        
+        // Print in the console
+        console.log("Browser detected:", navigator.sayswho);
     </script>
 </body>
 </html>

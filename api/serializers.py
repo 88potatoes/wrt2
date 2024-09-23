@@ -24,18 +24,28 @@ def validate_starting_links(value):
             raise serializers.ValidationError(f"Invalid URL: {link}. Starting link must start with http:// or https://.")
     return value
 
+def validate_browser_info(value):
+    allowed_browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'opera']
+    if not any(browser in value.lower() for browser in allowed_browsers):
+        raise serializers.ValidationError(f"Unsupported browser detected: {value}")
+    return value
+
 class BaseSerializer(serializers.Serializer):
     starting_links = serializers.ListField(
         child=serializers.URLField(),
         required=True
     )
     json_filename = serializers.CharField(required=False, max_length=100)
+    browser_info = serializers.CharField(required=True)
 
     def validate_json_filename(self, value):
         return validate_json_filename(value)
 
     def validate_starting_links(self, value):
         return validate_starting_links(value)
+    
+    def validate_browser_info(self, value):
+        return validate_browser_info(value)
 
 class SearchTermSerializer(BaseSerializer):
     search_text = serializers.CharField(required=True)

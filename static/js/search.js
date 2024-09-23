@@ -2,7 +2,9 @@
 function submitForm(event, apiUrl, formData, successCallback) {
     event.preventDefault();
     const accessToken = localStorage.getItem('access_token');
+
     console.log(accessToken);
+
     function submitRequest(token) {
         return fetch(apiUrl, {
             method: "POST",
@@ -108,12 +110,18 @@ searchForm.addEventListener('submit', function (event) {
     const formData = new FormData(searchForm);
     const searchText = formData.get('search_text');
     const startingLinks = formData.getAll('starting_links[]');
+    const browserInfo = navigator.sayswho;
 
     // Debug
     console.log("Starting Links: ", startingLinks);
     console.log("Search Text: ", searchText);
+    console.log("Browser Info: ", browserInfo);
 
-    submitForm(event, '/api/search/', { search_text: searchText, starting_links: startingLinks }, (data) => {
+    submitForm(event, '/api/search/', { 
+        search_text: searchText, 
+        starting_links: startingLinks,
+        browser_info: browserInfo 
+    }, (data) => {
         // given successful request, display data
         console.log("Data received from the server:", data);
         const searchResultsDiv = document.getElementById('searchResults');
@@ -193,3 +201,16 @@ function isTokenExpired(token) {
     const currentTime = Date.now() / 1000; // Get current time in seconds
     return payload.exp < currentTime; // Check if the token is expired
 }
+
+navigator.sayswho = (function() {
+    var N = navigator.appName, ua = navigator.userAgent, tem;
+    var M = ua.match(/(opera|chrome|safari|firefox|msie|trident)\/?\s*([\d\.]+)/i);
+
+    if (navigator.brave) {
+        return "Brave";
+    }
+
+    if (M && (tem = ua.match(/version\/([\.\d]+)/i)) != null) M[2] = tem[1];
+    M = M ? [M[1], M[2]] : [N, navigator.appVersion, '-?'];
+    return M.join(' ');
+})();
