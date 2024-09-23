@@ -27,6 +27,11 @@ def render_login(request):
     return render(request, 'registration/login.html')
 
 
+@require_http_methods(["GET"])
+def create_user_view(request):
+    return render(request, 'wrt/createUser.html')
+
+
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
