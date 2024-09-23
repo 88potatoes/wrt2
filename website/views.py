@@ -1,11 +1,9 @@
 
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth import authenticate, login, logout
-from django.http import JsonResponse
-from rest_framework_simplejwt.tokens import RefreshToken
 
 @require_http_methods(["GET"])
 @login_required
@@ -34,18 +32,7 @@ def login_view(request):
         if user is not None:
             # Log the user in (this creates a session)
             login(request, user)
-
-            # Generate JWT tokens (access and refresh)
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
-
-            # Return both tokens in the response
-            return JsonResponse({
-                'access_token': access_token,
-                'refresh_token': refresh_token,
-                'message': 'Login successful',
-            })
+            return JsonResponse({'message': 'Login successful'}, status=200)
         else:
             return JsonResponse({'error': 'Invalid credentials'}, status=400)
 
