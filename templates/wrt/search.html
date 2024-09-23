@@ -1,32 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+{% load static %}
 
-<head>
-    {% load static %}
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+{% block title %} Search {% endblock %}
+
+{% block head %} 
     <link rel="stylesheet" href="{% static 'css/search.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- probably don't need to load in all the icons -->
+    <script src="{% static 'js/search.js' %}" defer></script> 
+{% endblock %}
 
-</head>
-
-<body>
-    <nav class="navbar">
-        <div class="navbar-menu">
-            <div class="navbar-end">
-                <a href="#" id="logoutLink" class="tabs-is-centered">Logout</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="tabs-is-centered">
-        <ul>
-            <li class="is-active"><a href="#" onclick="showTab('searchTermTab')">Search Term</a></li>
-            <li><a href="#" onclick="showTab('brokenLinksTab')">Broken Links</a></li>
-        </ul>
-    </div>
+{% block content %} 
+    {% include "partials/navbar.html" %}
 
     <div id="searchTermTab" class="tab-content">
         <h2 class="tab-title">String Search</h2>
@@ -40,7 +24,13 @@
                         <label class="label">Search Term
                             <span class="icon has-tooltip" id="tooltipIcon1">
                                 <i class="fas fa-info-circle"></i>
-                                <div class="tooltip">The search term will include spaces </div>
+                                <div class="tooltip">
+                                    <ul>
+                                        <li>?: Represents a single wildcard character</li>
+                                        <li>%: Acts as a wildcard for 0 or more characters</li>
+                                        <li>[a|b|c]: Any of the options can be matched, including % and ? wildcards</li>
+                                    </ul>
+                                </div>
                             </span>
                         </label>
                         <div class="control">
@@ -52,8 +42,13 @@
                         <label class="label">Website Range
                             <span class="icon has-tooltip" id="tooltipIcon2">
                                 <i class="fas fa-info-circle"></i>
-                                <div class="tooltip">Every searched URL follows this path,
-                                    searching any links found on this website</div>
+                                <div class="tooltip">
+                                    This website crawl starts at
+                                    these seed URLs,
+                                    scraping the text for the target string and then follows any links that lead
+                                    to
+                                    other pages within the same site.
+                                </div>
                             </span>
                         </label>
                         <div id="searchUrlInputContainer">
@@ -83,51 +78,4 @@
         </div>
     </div>
     </div>
-
-    <div id="brokenLinksTab" class="tab-content" style="display:none;">
-        <h2 class="tab-title">Broken Link Search</h2>
-        <div class="columns-is-centered">
-            <div class="column is-8">
-                <form id="crawlForm">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_type" value="search_term_form">
-
-                    <div class="field">
-                        <label class="label">Root URLS
-                            <span class="icon has-tooltip" id="tooltipIcon3">
-                                <i class="fas fa-info-circle"></i>
-                                <div class="tooltip">The search will begin with this root URL, and then also search for
-                                    any broken links on links from here</div>
-                            </span>
-                        </label>
-                        <div id="crawlUrlInputContainer">
-                            <div class="control">
-                                <input class="input" type="text" name="starting_links[]"
-                                    placeholder="Enter a URL defining the search range..." required>
-                            </div>
-                        </div>
-                        <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
-                            style="margin-top: 10px;">Add URL</button>
-                    </div>
-
-                    <div class="field">
-                        <div class="control">
-                            <button class="button is-link" type="submit">Search</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="columns is-centered" style="margin-top: 20px;">
-            <div id="crawlResults">
-                <!-- Results will be displayed here after search -->
-            </div>
-        </div>
-    </div>
-
-    <script src="{% static 'js/search.js' %}"></script>
-
-</body>
-
-</html>
+{% endblock %}

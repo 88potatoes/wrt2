@@ -7,3 +7,4 @@ __pycache__/
 .env
 staticfiles
 db.sqlite3
+a.json

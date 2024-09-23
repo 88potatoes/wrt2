@@ -1,46 +1,46 @@
 from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from django.contrib.sessions.models import Session
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.utils import timezone 
+from django.http import JsonResponse  
+import json
+from .serializers import SearchTermSerializer, BrokenLinksSerializer
+from .models import PastSearch
 from utils.broken_links import crawl
 from utils.string_match import scrape
-from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render
-from django.contrib.auth import authenticate, login, logout
-from pprint import pprint
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from .serializers import SearchTermSerializer, BrokenLinksSerializer
+
 
 """ 
-================================= Login Functions ====
+================================= Session Check Functions =================================
 """
-@api_view(['POST'])
-def api_login(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    next_url = request.data.get('next', '/')
+def session_required(view_func):
+    def _wrapped_view(request, *args, **kwargs):
+        if not is_session_valid(request):
+            return JsonResponse({'detail': 'Session expired. Please log in again.'}, status=401)
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
 
-    if not next_url:
-        next_url = '/'
-
-    user = authenticate(request, username=username, password=password)
-    if user is not None:
-        login(request, user)
-        print("User logged in successfully")
-        return Response({"message": "Login successful", "next_url": next_url}, status=status.HTTP_200_OK)
-    else:
-        print("User flopped log in")
-        return Response({"error": "Invalid username or password"}, status=status.HTTP_400_BAD_REQUEST)
+def is_session_valid(request):
+    session_key = request.COOKIES.get('sessionid')
+    if not session_key:
+        return False
+    try:
+        session = Session.objects.get(session_key=session_key)
+        return session.expire_date and session.expire_date >= timezone.now()
+    except Session.DoesNotExist:
+        return False
 
 """ 
 ================================= Search Functions =================================
 """
-@permission_classes([IsAuthenticated])
-def render_search_view(request):
-    return render(request, 'wrt/search.html')
 
 # Search Text String API
 @api_view(["POST"])
+@session_required
 @permission_classes([IsAuthenticated])
 def search_text_string(request):
     serializer = SearchTermSerializer(data=request.data)
@@ -52,6 +52,27 @@ def search_text_string(request):
         # json_filename = serializer.validated_data['json_filename']
 
         result = scrape(starting_links, search_text)
+        print(result)
+
+        with open("a.json", "w") as outfile: # TODO: Decide if there will still be a json file
+            json.dump(result[2], outfile)
+
+        # writing history to database
+        queried_webpages, requires_access, output = result
+
+        for seed_url in output:
+            for page in output[seed_url]:
+                print(f"{seed_url}: {page}")
+                past_search = PastSearch.objects.create(
+                    user=request.user,
+                    seed_url=seed_url,
+                    url_from=page,
+                    search_type='search',
+                    search_text=search_text,
+                )
+                past_search.save()
+        
+
         return Response(result, status=status.HTTP_200_OK)
     else:
         print("Serializer errors 1:", serializer.errors)
@@ -59,8 +80,9 @@ def search_text_string(request):
 
 # Broken Links API
 @api_view(["POST"])
+@session_required
 @permission_classes([IsAuthenticated])
-def search_broken_links(request):
+def search_broken_links(request): # TODO write the results to the database
     print("Request data:", request.data)
     serializer = BrokenLinksSerializer(data=request.data)
     print("Request method:", request.method)
@@ -71,6 +93,7 @@ def search_broken_links(request):
 
         result = crawl(starting_links)
         print(result) # TODO Remove
+        
         return Response(result, status=status.HTTP_200_OK)
     else:
         print("Serializer errors 2:", serializer.errors)

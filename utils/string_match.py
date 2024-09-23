@@ -1,4 +1,3 @@
-import json
 from typing import List
 import urllib.parse
 import requests
@@ -13,10 +12,10 @@ from bs4 import BeautifulSoup
 
 
 # A limit on the number of links crawled for each starting link
-SAFE_PAGE_LIMIT = 1
+SAFE_PAGE_LIMIT = 5
+MAX_OPTIONS = 10
 
-
-def scrape(starting_links: List[str], search_text) -> List[str]:
+def scrape(starting_links: List[str], search_text: str) -> List[str]:
     """ Crawl each starting link and find websites that matches the query 
     string and links that require private access."""
 
