@@ -62,7 +62,7 @@ def check_char(char):
     allowed_chars = re.compile(r'^[a-zA-Z0-9$-_.+!*\'\"(),;/?:@=&<>#%{}|\\^~\[\]` ]*$')
     return bool(allowed_chars.match(char))
 
-# find suffix for the text that matches the pattern
+# find suffix for matching string
 def find_suffix(text, index, len_text):
     prev_end = index
     while index < len_text and re.match(r'\s+', text[index]):
@@ -77,7 +77,7 @@ def find_suffix(text, index, len_text):
         prev_end = index
     return prev_end
 
-# find prefix for the text that matches the pattern
+# find prefix for matching string
 def find_prefix(text, index):
     if index == 0:
         return index
