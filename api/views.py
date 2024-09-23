@@ -8,10 +8,13 @@ from django.urls import reverse
 from django.utils import timezone 
 from django.http import JsonResponse  
 import json
+import os
+from datetime import datetime
 from .serializers import SearchTermSerializer, BrokenLinksSerializer
 from .models import PastSearch
 from utils.broken_links import crawl
 from utils.string_match import scrape
+from utils.export import export_to_excel, export_to_pdf
 
 
 """ 
@@ -70,6 +73,20 @@ def search_text_string(request):
                 )
                 past_search.save()
         
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Save the result as an Excel file in the local repo
+        # Define the path
+        file_dir = '/wrt2'
+        # excel_file_path = os.path.join(file_dir, f'scrape_results_{timestamp}.xlsx')
+        pdf_file_path = os.path.join(file_dir, f'scrape_results_{timestamp}.pdf') 
+
+        # Ensure the directory exists
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)
+
+        # export_to_excel(queried_webpages, requires_access, result[2], excel_file_path)
+        export_to_pdf(queried_webpages, requires_access, result[2], pdf_file_path)
 
         return Response(result, status=status.HTTP_200_OK)
     else:
