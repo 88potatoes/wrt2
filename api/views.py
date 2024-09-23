@@ -1,18 +1,38 @@
 from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from django.contrib.sessions.models import Session
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.utils import timezone 
+from django.http import JsonResponse  
+import json
+from .serializers import SearchTermSerializer, BrokenLinksSerializer
+from .models import PastSearch
 from utils.broken_links import crawl
 from utils.string_match import scrape
-from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render
-from django.contrib.auth import authenticate, login, logout
-from pprint import pprint
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from .serializers import SearchTermSerializer, BrokenLinksSerializer
-import json
-from .models import PastSearch
 
+
+""" 
+================================= Session Check Functions =================================
+"""
+def session_required(view_func):
+    def _wrapped_view(request, *args, **kwargs):
+        if not is_session_valid(request):
+            return JsonResponse({'detail': 'Session expired. Please log in again.'}, status=401)
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+def is_session_valid(request):
+    session_key = request.COOKIES.get('sessionid')
+    if not session_key:
+        return False
+    try:
+        session = Session.objects.get(session_key=session_key)
+        return session.expire_date and session.expire_date >= timezone.now()
+    except Session.DoesNotExist:
+        return False
 
 """ 
 ================================= Search Functions =================================
@@ -20,6 +40,7 @@ from .models import PastSearch
 
 # Search Text String API
 @api_view(["POST"])
+@session_required
 @permission_classes([IsAuthenticated])
 def search_text_string(request):
     serializer = SearchTermSerializer(data=request.data)
@@ -59,6 +80,7 @@ def search_text_string(request):
 
 # Broken Links API
 @api_view(["POST"])
+@session_required
 @permission_classes([IsAuthenticated])
 def search_broken_links(request): # TODO write the results to the database
     print("Request data:", request.data)
