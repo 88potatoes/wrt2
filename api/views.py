@@ -14,7 +14,6 @@ from utils.broken_links import crawl
 from utils.string_match import scrape
 
 
-
 """ 
 ================================= Session Check Functions =================================
 """
