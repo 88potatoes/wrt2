@@ -2,54 +2,54 @@
 {% load static %}
 
 {% block title %} Login {% endblock %}
-{% block head %} 
-    <link rel="stylesheet" href="{% static 'css/login.css' %}"> 
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
 {% endblock %}
 
-{% block content %} 
-    <section class="section">
-        <div class="container">
-            <div class="columns is-centered">
-                <div class="column is-4">
-                    <form id="loginForm" method="post">
-                        {% csrf_token %}
-                        <h1 class="title-has-text-centered">Login</h1>
-                        
-                        {% if form.non_field_errors %}
-                            <div class="notification is-danger">
-                                {% for error in form.non_field_errors %}
-                                    <p>{{ error }}</p>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-4">
+                <form id="loginForm" method="post">
+                    {% csrf_token %}
+                    <h1 class="title-has-text-centered">Login</h1>
+                    <input type="hidden" name="next" value="{{ request.GET.next|default_if_none:'' }}">
 
-                        <div class="field">
-                            <label class="label" for="username">Username</label>
-                            <input id="username" class="input" type="text" name="username" placeholder="Username" required>
-                        </div>
-                        
-                        <div class="field">
-                            <label class="label" for="password">Password</label>
-                            <div class="control">
-                                <input id="password" class="input" type="password" name="password" placeholder="Password" required>
-                            </div>
-                        </div>
+                    {% if form.non_field_errors %}
+                    <div class="notification is-danger">
+                        {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="field">
+                        <label class="label" for="username">Username</label>
+                        <input id="username" class="input" type="text" name="username" placeholder="Username" required>
+                    </div>
 
-                        <div class="field">
-                            <div class="control">
-                                <button class="button is-link" type="submit">Login</button>
-                            </div>
+                    <div class="field">
+                        <label class="label" for="password">Password</label>
+                        <div class="control">
+                            <input id="password" class="input" type="password" name="password" placeholder="Password"
+                                required>
                         </div>
+                    </div>
 
-                    </form>
-                </div>
+
+                    <div class="field">
+                        <div class="control">
+                            <button class="button is-link" type="submit">Login</button>
+                            <button class="button is-link" type="button" id="create-user-button">Create
+                                User</button>
+                        </div>
+                    </div>
+
+                </form>
             </div>
         </div>
-    </section> 
-    {% block script %}
-    <script src="{% static 'js/login.js' %}"></script>
-    {% endblock %}
+</section>
+{% block script %}
+<script src="{% static 'js/login.js' %}"></script>
 {% endblock %}
-
-
-
+{% endblock %}

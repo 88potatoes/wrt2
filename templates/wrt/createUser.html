@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} Create User {% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/createUser.css' %}">
+{% endblock %}
+
+{% block content %}
+<nav class="navbar">
+    <div class="navbar-menu">
+        <a href="#" id="logoutLink" class="tabs-is-centered">Login</a>
+    </div>
+</nav>
+
+<section class="section">
+    <h1 class="title-has-text-centered">How to Create a User</h1>
+
+    <div class="content">
+        <div class="instructions">
+            <h2 class="overview">If you don't have superuser access:</h2>
+            <ol>
+                <li>Contact the person who has superuser access. Alternatively, contact the product owner Frank A at <a
+                        href="mailto:frank.a@unimelb.edu.au">frank.a@unimelb.edu.au</a></li>
+                <li>Ask them to create an account for you.</li>
+            </ol>
+        </div>
+
+        <div class="instructions">
+            <h2 class="overview">If you do have superuser access:</h2>
+            <ol>
+                <li><a id="admin-link" target="_blank">Log into the user creation database</a>, with super user
+                    credentials and click on
+                    <strong>Users</strong>.
+                </li>
+                <li>Click on <strong>Add User</strong>.</li>
+                <li>Choose a username and password.</li>
+                <li>Click <strong>Save</strong>.</li>
+                <li>Go back to the main website.</li>
+            </ol>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.getElementById("admin-link").href = window.location.origin + "/admin/";
+
+    const logoutLink = document.getElementById('logoutLink');
+    logoutLink.addEventListener('click', function (event) {
+        event.preventDefault();
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        console.log('Logged out, tokens cleared.');
+        window.location.href = '/';
+    });
+</script>
+
+{% endblock %}
