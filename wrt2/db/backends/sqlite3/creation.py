@@ -111,7 +111,7 @@ class DatabaseCreation(BaseDatabaseCreation):
             try:
                 # Remove the SQLite database file
                 os.remove(test_database_name)
-            except Exception as e:
+            except Exception:
                 self.log("No database to delete as it's server-side.")
                 pass
 

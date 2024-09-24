@@ -1,6 +1,7 @@
 """
 libSQL backend for the sqlite3 module in the standard library.
 """
+
 import datetime
 import decimal
 import warnings
@@ -94,7 +95,6 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         "SmallAutoField": "AUTOINCREMENT",
     }
 
-
     operators = {
         "exact": "= %s",
         "iexact": "LIKE %s ESCAPE '\\'",
@@ -111,7 +111,6 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         "istartswith": "LIKE %s ESCAPE '\\'",
         "iendswith": "LIKE %s ESCAPE '\\'",
     }
-
 
     pattern_esc = r"REPLACE(REPLACE(REPLACE({}, '\', '\\'), '%%', '\%%'), '_', '\_')"
     pattern_ops = {
@@ -144,7 +143,6 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             "detect_types": Database.PARSE_DECLTYPES | Database.PARSE_COLNAMES,
             **settings_dict["OPTIONS"],
         }
-
 
         if "check_same_thread" in kwargs and kwargs["check_same_thread"]:
             warnings.warn(

@@ -35,8 +35,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'rest_framework',
-    'api',
+    "rest_framework",
+    "api",
 ]
 
 MIDDLEWARE = [
@@ -47,10 +47,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'whitenoise.middleware.WhiteNoiseMiddleware'
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
 # SESSION_COOKIE_NAME = 'sessionid'  # Name of the session cookie
 # SESSION_COOKIE_AGE = 86400 # One day
 # SESSION_COOKIE_SECURE = False  # Set to True only if you're using HTTPS
@@ -63,7 +63,9 @@ ROOT_URLCONF = "wrt2.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates",],
+        "DIRS": [
+            BASE_DIR / "templates",
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -84,20 +86,20 @@ WSGI_APPLICATION = "wrt2.wsgi.application"
 
 DATABASES = {
     "default": {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     },
     "turso": {
-        'ENGINE': 'wrt2.db.backends.sqlite3', 
-        'NAME': f"{config('TURSO_DATABASE_URL')}?authToken={config('TURSO_AUTH_TOKEN')}",
-    }
+        "ENGINE": "wrt2.db.backends.sqlite3",
+        "NAME": f"{config('TURSO_DATABASE_URL')}?authToken={config('TURSO_AUTH_TOKEN')}",
+    },
 }
 
 # Check if we are using the Turso database
-if config('USE_TURSO_DATABASE', "") == 'true':
-    DATABASES['default'] = {
-        'ENGINE': 'wrt2.db.backends.sqlite3', 
-        'NAME': f"{config('TURSO_DATABASE_URL')}?authToken={config('TURSO_AUTH_TOKEN')}",
+if config("USE_TURSO_DATABASE", "") == "true":
+    DATABASES["default"] = {
+        "ENGINE": "wrt2.db.backends.sqlite3",
+        "NAME": f"{config('TURSO_DATABASE_URL')}?authToken={config('TURSO_AUTH_TOKEN')}",
     }
 
 
@@ -120,24 +122,22 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
 }
 
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend'
-]
+AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': 'HS256',
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": "HS256",
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 # Internationalization
@@ -157,7 +157,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Ensure this points to your static folder
+    os.path.join(BASE_DIR, "static"),  # Ensure this points to your static folder
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
@@ -167,12 +167,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
+SECRET_KEY = config("DJANGO_SECRET_KEY")
+DEBUG = config("DEBUG", default=False, cast=bool)
+ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS").split(",")
 
 
-SECRET_KEY = config('DJANGO_SECRET_KEY')
-DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS").split(',')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 sentry_sdk.init(
@@ -182,12 +182,10 @@ sentry_sdk.init(
     profiles_sample_rate=1.0,
 )
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static')
-]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # login stuff
-LOGIN_URL = '/'
-LOGIN_REDIRECT_URL = '/search_term'
+LOGIN_URL = "/"
+LOGIN_REDIRECT_URL = "/search_term"
