@@ -180,7 +180,7 @@ def download_view(request, filename):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-    threading.Timer(60, delete_file).start()  # Delete after 60 seconds
+    threading.Timer(30, delete_file).start()  # Delete after 60 seconds
 
     return response
 

@@ -35,6 +35,13 @@ def export_to_excel(queried_pages, requires_access, broken_links, file_path):
 
     print(f"Excel file saved to {file_path}")
 
+def shorten_url(url, max_length=75):
+    """Shortens the URL for display purposes to a single length."""
+    if len(url) <= max_length:
+        return url
+    else:
+        return url[:max_length - 3] + '...'
+
 def export_to_pdf(queried_pages, requires_access, broken_links, file_path):
     pdf = PDF()
     pdf.set_auto_page_break(auto=True, margin=15)
@@ -43,16 +50,11 @@ def export_to_pdf(queried_pages, requires_access, broken_links, file_path):
     pdf.set_font('Times', 'B', 16)
 
     pdf.cell(190, 10, 'Scrape Results', ln=True, align='C')
-
-    # Helper function to calculate the number of lines a multi_cell() will take
-    def multi_cell_height(text, width, line_height):
-        num_lines = pdf.get_string_width(text) // width
-        return (num_lines + 1) * line_height
     
     if queried_pages:
         # Set up column headers for the Search Results
         pdf.set_font('Times', 'B', 12)
-        pdf.cell(30, 10, 'Search Term', 1, 0, 'C')  # Cell width: 30
+        pdf.cell(30, 10, 'Matched String', 1, 0, 'C')  # Cell width: 30
         pdf.cell(160, 10, 'Found URL', 1, 1, 'C')  # Cell width: 160
 
         # Add data for Search Results (with wrapping text)
@@ -61,29 +63,26 @@ def export_to_pdf(queried_pages, requires_access, broken_links, file_path):
             search_term = page[0]
             url = page[1]
 
-            y_before_url = pdf.get_y()
-            url_height = multi_cell_height(url, 160, 10)
-            search_term_height = max(10, url_height)
+            # Shorten the URL for display
+            display_url = shorten_url(url)
 
-            # Search Term column with wrapping text
-            pdf.multi_cell(30, search_term_height, search_term, 1, 'C')
+            # Print the search term and shortened URL on the same line
+            pdf.cell(30, 10, search_term, 1, 0, 'C')  # Cell for the search term
 
-            # Move cursor back to the right for the URL column
-            pdf.set_xy(40, y_before_url)
+            # Set text color and style for the URL
+            pdf.set_text_color(0, 0, 255)
+            pdf.set_font('', 'U')  # Underline for the URL
 
-            # URL column with wrapping text
-            pdf.set_text_color(0, 0, 255)  # Set text color to blue
-            pdf.set_font('Times', 'U', 12)  # Set text underlined
-            url_height = pdf.multi_cell(160, 10, url, 1)  # Write link
-
-            # Get the height of the URL cell to add the clickable link
-            total_url_height = pdf.get_y() - y_before_url
-
-            # Create clickable link overlay
-            x = 40  # X position for the link
-            pdf.link(x, y_before_url, 160, total_url_height, url)  # Add clickable link overlay
+            # Get current Y position for link overlay
+            y_after_url = pdf.get_y()
+            
+            # Add the shortened URL and create clickable link overlay
+            pdf.cell(160, 10, display_url, 1, 1)  # Show the shortened URL
+            pdf.link(40, y_after_url, 160, 10, url)  # Add clickable link overlay
+            
+            # Reset text color and font
             pdf.set_text_color(0, 0, 0)  # Reset text color to black
-            pdf.set_font('Times', '', 12)  # Reset text to normal
+            pdf.set_font('Times', '', 12)  # Reset text to not be underlined
     else:
         pdf.set_font('Times', '', 12)
         pdf.cell(190, 10, 'No search results found.', ln=True, align='C')
@@ -99,8 +98,9 @@ def export_to_pdf(queried_pages, requires_access, broken_links, file_path):
         pdf.set_font('', 'U')  # Underline
 
         for idx, broken in enumerate(broken_links):
+            shortened_link = shorten_url(broken)
             # Set text color to blue and underline for the clickable link
-            pdf.multi_cell(190, 10, f'{idx + 1}. {broken}', 1)  # Use multi_cell for wrapping
+            pdf.multi_cell(190, 10, f'{idx + 1}. {shortened_link}', 1)  # Use multi_cell for wrapping
             y = pdf.get_y() - 10  # Adjust for the height of the cell
             x = pdf.get_x() - 190  # Adjust for the width of the cell
             pdf.link(x, y, 190, 10, broken)  # Add clickable link overlay
@@ -121,8 +121,9 @@ def export_to_pdf(queried_pages, requires_access, broken_links, file_path):
         pdf.set_font('', 'U')  # Underline
 
         for idx, access in enumerate(requires_access):
+            shortened_link = shorten_url(access)
             # Set text color to blue and underline for the clickable link
-            pdf.multi_cell(190, 10, f'{idx + 1}. {access}', 1)  # Use multi_cell for wrapping
+            pdf.multi_cell(190, 10, f'{idx + 1}. {shortened_link}', 1)  # Use multi_cell for wrapping
             y = pdf.get_y() - 10  # Adjust for the height of the cell
             x = pdf.get_x() - 190  # Adjust for the width of the cell
             pdf.link(x, y, 190, 10, access)  # Add clickable link overlay

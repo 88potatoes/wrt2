@@ -170,6 +170,9 @@ searchForm.addEventListener('submit', function (event) {
 
             // Create export buttons
             const buttons = createExportButtons(data[0], data[1], data[2]);
+            console.log("Search Results:", data[0]);
+            console.log("Broken Links:", data[1]);
+            console.log("Access Required Links:", data[2]);
 
             // Select the export buttons container
             const exportButtonsDiv = document.getElementById('exportButtons');
@@ -184,6 +187,9 @@ searchForm.addEventListener('submit', function (event) {
         } else if (data[0].length == 0) {
             // Create export buttons
             const buttons = createExportButtons(data[0], data[1], data[2]);
+            console.log("Search Results:", data[0]);
+            console.log("Broken Links:", data[1]);
+            console.log("Access Required Links:", data[2]);
 
             // Select the export buttons container
             const exportButtonsDiv = document.getElementById('exportButtons');
@@ -259,7 +265,7 @@ function exportResults(searchResults, brokenLinks, accessRequired, exportType) {
     .catch(error => console.error('Error:', error));
 }
 
-function createExportButtons(searchResults, brokenLinks, accessRequired) {
+function createExportButtons(searchResults, accessRequired, brokenLinks) {
     const exportPdfButton = document.createElement('button');
     exportPdfButton.textContent = 'Export to PDF';
     exportPdfButton.classList.add('button', 'is-link', 'export-pdf');
