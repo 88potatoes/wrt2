@@ -2,6 +2,7 @@
 function submitForm(event, apiUrl, formData, successCallback) {
     event.preventDefault();
     const accessToken = localStorage.getItem('access_token');
+    const refreshToken = localStorage.getItem('refresh_token');
 
     console.log(accessToken);
 
@@ -17,8 +18,8 @@ function submitForm(event, apiUrl, formData, successCallback) {
         });
     }
 
-    if (accessToken == null) {
-        console.log("No access token found. Redirecting to login...");
+    if (accessToken == null || refreshToken == null) {
+        console.log("Tokens missing. Redirecting to login...");
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         window.location.href = '/logout';
@@ -210,7 +211,17 @@ function exportResults(searchResults, brokenLinks, accessRequired, exportType) {
         access_required_links: accessRequired,
         export_type: exportType
     };
+
     const accessToken = localStorage.getItem('access_token');
+    const refreshToken = localStorage.getItem('refresh_token');
+
+    if (accessToken == null || refreshToken == null) {
+        console.log("Tokens missing. Redirecting to login...");
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/logout';
+        return;
+    }
 
     fetch('/api/export/', {
         method: 'POST',
@@ -224,6 +235,19 @@ function exportResults(searchResults, brokenLinks, accessRequired, exportType) {
     .then(response => {
         if (response.ok) {
             return response.json(); 
+        } else if (response.status === 401) {
+            if (isTokenExpired(accessToken)) {
+                console.log("Access token is expired. Attempting to refresh...");
+                return refreshAccessToken().then(newAccessToken => {
+                    console.log("Retrying request with new access token.");
+                    return exportResults(searchResults, brokenLinks, accessRequired, exportType); // Retry with new token
+                });
+            } else {
+                console.log("Session ID might be invalid. Redirecting to login...");
+                localStorage.clear(); // Clear tokens
+                window.location.href = '/'; // Redirect to login page
+                return;
+            }
         } else {
             throw new Error('Export failed.');
         }

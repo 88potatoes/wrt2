@@ -146,6 +146,9 @@ def export_results(request):
 @session_required
 @permission_classes([IsAuthenticated])
 def download_view(request, filename):
+    # Sanitize filename
+    filename = os.path.basename(filename)
+
     # Get the directory of the current file (views.py)
     current_dir = os.path.dirname(__file__)
 
@@ -160,7 +163,14 @@ def download_view(request, filename):
         raise Http404("File not found.")
 
     # Open the file and return it in the response
-    response = FileResponse(open(file_path, 'rb'), as_attachment=True)
+    with open(file_path, 'rb') as f:
+        response = FileResponse(f, as_attachment=True)
+    
+    response['Content-Disposition'] = f'attachment; filename={filename}'
+
+    # Delete the file after sending the response
+    threading.Timer(60, lambda: os.remove(file_path) if os.path.exists(file_path) else None).start()  # Delete after 60 seconds
+
     return response
 
 @permission_classes([IsAuthenticated])
