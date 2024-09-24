@@ -146,8 +146,13 @@ def export_results(request):
 @session_required
 @permission_classes([IsAuthenticated])
 def download_view(request, filename):
-    # Sanitize filename
+    # Sanitize the filename
     filename = os.path.basename(filename)
+
+    # Verify allowed file types
+    allowed_extensions = ['.pdf', '.xlsx', '.csv']  # Add any other allowed extensions
+    if not any(filename.endswith(ext) for ext in allowed_extensions):
+        raise Http404("Invalid file type.")
 
     # Get the directory of the current file (views.py)
     current_dir = os.path.dirname(__file__)
@@ -162,14 +167,20 @@ def download_view(request, filename):
     if not os.path.exists(file_path):
         raise Http404("File not found.")
 
-    # Open the file and return it in the response
-    with open(file_path, 'rb') as f:
-        response = FileResponse(f, as_attachment=True)
+    # Open the file and return it in the response with error handling
+    try:
+        response = FileResponse(open(file_path, 'rb'), as_attachment=True)
+    except IOError:
+        raise Http404("Could not open the file.")
     
     response['Content-Disposition'] = f'attachment; filename={filename}'
 
     # Delete the file after sending the response
-    threading.Timer(60, lambda: os.remove(file_path) if os.path.exists(file_path) else None).start()  # Delete after 60 seconds
+    def delete_file():
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+    threading.Timer(60, delete_file).start()  # Delete after 60 seconds
 
     return response
 
