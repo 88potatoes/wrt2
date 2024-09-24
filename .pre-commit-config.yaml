@@ -1,0 +1,17 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 23.3.0  # Use the latest stable version
+    hooks:
+      - id: black
+  - repo: https://github.com/PyCQA/flake8.git
+    rev: 7.1.1  # Use the latest stable version
+    hooks:
+      - id: flake8
+  - repo: local
+    hooks:
+      - id: run-django-tests
+        name: Run Django Tests
+        entry: python manage.py test
+        language: system  # Use the system's Python environment
+        pass_filenames: false
+

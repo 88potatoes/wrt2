@@ -2,15 +2,19 @@ import re
 from typing import List, Pattern, Tuple
 
 
-def process_robots(robots_txt: str, agent_name: str = "*", handled_fields: List[str] = ["disallow", "allow"]) -> List[Tuple[str, int, str]]:
+def process_robots(
+    robots_txt: str,
+    agent_name: str = "*",
+    handled_fields: List[str] = ["disallow", "allow"],
+) -> List[Tuple[str, int, str]]:
     """
     Reads a robots.txt text and derives all rules for the agent, for simplicity this agent is assumed to
-    be the default user agent *, the interaction between a named agent and the wildcard agent name is not 
+    be the default user agent *, the interaction between a named agent and the wildcard agent name is not
     supported and records containing multiple agents are ignored.
 
     The return value is a list of rules.
 
-    Each rule is a tuple which has a string (either Allow or Disallow), a length and a string which is 
+    Each rule is a tuple which has a string (either Allow or Disallow), a length and a string which is
     the partial text which the rule covers.
     """
     # Pre-flight sanity checks
@@ -22,7 +26,7 @@ def process_robots(robots_txt: str, agent_name: str = "*", handled_fields: List[
     robots_lines: List[str] = robots_txt.split("\n")
     # Parse from where agent starts to where a different agent begins or the lines end.
     in_agent: bool = False
-    # Directive line from http://www.robotstxt.org/orig.html - no need to worry about exactly how this works until 
+    # Directive line from http://www.robotstxt.org/orig.html - no need to worry about exactly how this works until
     #  Regular Expressions are covered, consider it as splitting up the text into the pattern {field}: {value} skipping
     #  any comments and allowing us to easily ignore lines which don't fit this pattern. {field} is .group(1) and {value}
     #  is .group(2).
@@ -63,7 +67,7 @@ def process_robots(robots_txt: str, agent_name: str = "*", handled_fields: List[
 
 def check_link_ok(rules: List[Tuple[str, int, str]], link_to_check: str) -> bool:
     """
-    Takes a list of rules and a link to check against them. Returns True if the link is visitable and 
+    Takes a list of rules and a link to check against them. Returns True if the link is visitable and
         False if the link should not be visited by the crawling.
 
     Processing Rules:

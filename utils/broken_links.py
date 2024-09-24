@@ -1,10 +1,8 @@
-import json
 from typing import List
 
 import requests
 from .robots import process_robots, check_link_ok
 
-from collections import defaultdict as dd
 import re
 from urllib.parse import urljoin
 from urllib.parse import urlparse
@@ -13,12 +11,13 @@ from bs4 import BeautifulSoup
 # A limit on the number of links crawled for each starting link
 SAFE_PAGE_LIMIT = 5
 
+
 def crawl(starting_links: List[str]) -> List[str]:
-    """ Crawl each url in the starting_link list, and output
-    the broken links and links that require private access. All links 
+    """Crawl each url in the starting_link list, and output
+    the broken links and links that require private access. All links
     crawled stored in JSON file"""
 
-    robots_item = '/robots.txt'
+    robots_item = "/robots.txt"
     to_visit = []
     broken_links = []
     output = {}
@@ -38,30 +37,33 @@ def crawl(starting_links: List[str]) -> List[str]:
                 broken_links.append(start_link)
                 print("new broken: ", start_link)
                 continue
-        except requests.exceptions.RequestException as request_exception:
+        except requests.exceptions.RequestException:
             broken_links.append(start_link)
             continue
 
         pages_visited = 0
         visited = {}
-        base = re.search('https?://[^/]+', start_link).group()
+        base = re.search("https?://[^/]+", start_link).group()
         robots_url = base + robots_item
         robot_page = requests.get(robots_url)
         robot_rules = process_robots(robot_page.text)
 
-        soup = BeautifulSoup(page.text, 'html.parser')
+        soup = BeautifulSoup(page.text, "html.parser")
 
-        links = soup.findAll('a')
+        links = soup.findAll("a")
         pages_visited += 1
 
         # get new links
         for new_link in links:
             if "href" not in new_link.attrs:
                 continue
-            href = new_link['href']
+            href = new_link["href"]
             potential_link = urljoin(base, href)
             # only crawl standard web URLs
-            if not (potential_link.startswith('http://') or potential_link.startswith('https://')):
+            if not (
+                potential_link.startswith("http://")
+                or potential_link.startswith("https://")
+            ):
                 continue
             # check if link has the same subdomain
             if urlparse(base).netloc != urlparse(potential_link).netloc:
@@ -71,7 +73,6 @@ def crawl(starting_links: List[str]) -> List[str]:
                 continue
             to_visit.append(potential_link)
         visited[start_link] = True
-
 
         # crawling
         while to_visit:
@@ -95,7 +96,7 @@ def crawl(starting_links: List[str]) -> List[str]:
                     continue
 
                 # scraping code
-                soup = BeautifulSoup(page.text, 'html.parser')
+                soup = BeautifulSoup(page.text, "html.parser")
 
                 if link in visited:
                     print(f"Link already visited: {link}")
@@ -104,16 +105,19 @@ def crawl(starting_links: List[str]) -> List[str]:
                 # mark the item as visited, i.e., add to visited list, remove from to_visit
                 visited[link] = True
 
-                links = soup.findAll('a')
+                links = soup.findAll("a")
 
                 # get new links
                 for new_link in links:
                     if "href" not in new_link.attrs:
                         continue
-                    href = new_link['href']
+                    href = new_link["href"]
                     potential_link = urljoin(base, href)
                     # only crawl standard web URLs
-                    if not (potential_link.startswith('http://') or potential_link.startswith('https://')):
+                    if not (
+                        potential_link.startswith("http://")
+                        or potential_link.startswith("https://")
+                    ):
                         continue
                     # check if link has the same subdomain
                     if urlparse(base).netloc != urlparse(potential_link).netloc:
@@ -122,10 +126,12 @@ def crawl(starting_links: List[str]) -> List[str]:
                     if not check_link_ok(robot_rules, href):
                         continue
                     # if link has not been visited and is not to be visited
-                    if (potential_link not in visited) and (potential_link not in to_visit):
+                    if (potential_link not in visited) and (
+                        potential_link not in to_visit
+                    ):
                         to_visit.append(potential_link)
                 pages_visited += 1
-            except requests.exceptions.RequestException as request_exception:
+            except requests.exceptions.RequestException:
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())

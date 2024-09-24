@@ -4,21 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0001_initial'),
+        ("api", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='pastsearch',
-            name='search_type',
-            field=models.CharField(choices=[('search', 'Search'), ('crawl', 'Crawl')], default='search', max_length=50),
+            model_name="pastsearch",
+            name="search_type",
+            field=models.CharField(
+                choices=[("search", "Search"), ("crawl", "Crawl")],
+                default="search",
+                max_length=50,
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='pastsearch',
-            name='search_text',
+            model_name="pastsearch",
+            name="search_text",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]
