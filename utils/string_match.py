@@ -36,12 +36,12 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
 
             # Handle access-required pages or broken links
             if page.status_code == 401 or page.status_code == 403:
-                print("requires access: ", start_link)
+                # print("requires access: ", start_link)
                 requires_access.append(start_link)
                 continue
             elif not (200 <= page.status_code <= 299):
                 broken_links.append(start_link)
-                print("new broken: ", start_link, ' code: ', page.status_code)
+                # print("new broken: ", start_link, ' code: ', page.status_code)
                 continue
         except requests.exceptions.RequestException as request_exception:
             broken_links.append(start_link)
@@ -113,13 +113,13 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
 
                 # catch links that require access
                 if page.status_code == 401 or page.status_code == 403:
-                    print("requires acces: ", link)
+                    # print("requires acces: ", link)
                     requires_access.append(link)
                     continue
                 # catch broken links
                 elif not (200 <= page.status_code <= 299):
                     broken_links.append(link)
-                    print("new broken: ", link)
+                    # print("new broken: ", link)
                     continue
                 
                 # scraping code 
@@ -179,4 +179,4 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
 
         output[start_link] = sorted(visited.keys())
 
-    return [search_str_webpages, requires_access, output]
+    return [search_str_webpages, broken_links, requires_access, output]

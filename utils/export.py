@@ -1,7 +1,6 @@
 import pandas as pd
 from fpdf import FPDF
 
-# Function to export search results to Excel
 def export_to_excel(queried_pages, requires_access, broken_links, file_path):
     with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
         search_df = pd.DataFrame(queried_pages, columns=['Search Term', 'Found URL'])
@@ -12,6 +11,27 @@ def export_to_excel(queried_pages, requires_access, broken_links, file_path):
         search_df.to_excel(writer, sheet_name='Search Results', index=False)
         broken_df.to_excel(writer, sheet_name='Broken Links', index=False)
         access_df.to_excel(writer, sheet_name='Access Required Links', index=False)
+
+        # Get the xlsxwriter workbook and worksheet objects
+        workbook = writer.book
+        
+        # Adjust column widths for 'Search Results' sheet
+        search_worksheet = writer.sheets['Search Results']
+        for idx, col in enumerate(search_df):
+            max_length = max(search_df[col].astype(str).map(len).max(), len(col))
+            search_worksheet.set_column(idx, idx, max_length + 2)
+
+        # Adjust column widths for 'Broken Links' sheet
+        broken_worksheet = writer.sheets['Broken Links']
+        for idx, col in enumerate(broken_df):
+            max_length = max(broken_df[col].astype(str).map(len).max(), len(col))
+            broken_worksheet.set_column(idx, idx, max_length + 2)
+
+        # Adjust column widths for 'Access Required Links' sheet
+        access_worksheet = writer.sheets['Access Required Links']
+        for idx, col in enumerate(access_df):
+            max_length = max(access_df[col].astype(str).map(len).max(), len(col))
+            access_worksheet.set_column(idx, idx, max_length + 2)
 
     print(f"Excel file saved to {file_path}")
 
@@ -24,46 +44,49 @@ def export_to_pdf(queried_pages, requires_access, broken_links, file_path):
 
     pdf.cell(190, 10, 'Scrape Results', ln=True, align='C')
 
-    # Set up column headers for the Search Results
-    pdf.set_font('Times', 'B', 12)
-    pdf.cell(30, 10, 'Search Term', 1, 0, 'C')  # Cell width: 30
-    pdf.cell(160, 10, 'Found URL', 1, 1, 'C')  # Cell width: 160
-
-    # Add data for Search Results (with wrapping text)
-    pdf.set_font('Times', '', 12)
-
     # Helper function to calculate the number of lines a multi_cell() will take
     def multi_cell_height(text, width, line_height):
         num_lines = pdf.get_string_width(text) // width
         return (num_lines + 1) * line_height
     
-    for page in queried_pages:
-        search_term = page[0]
-        url = page[1]
+    if queried_pages:
+        # Set up column headers for the Search Results
+        pdf.set_font('Times', 'B', 12)
+        pdf.cell(30, 10, 'Search Term', 1, 0, 'C')  # Cell width: 30
+        pdf.cell(160, 10, 'Found URL', 1, 1, 'C')  # Cell width: 160
 
-        y_before_url = pdf.get_y()
-        url_height = multi_cell_height(url, 160, 10)
-        search_term_height = max(10, url_height)
+        # Add data for Search Results (with wrapping text)
+        pdf.set_font('Times', '', 12)
+        for page in queried_pages:
+            search_term = page[0]
+            url = page[1]
 
-        # Search Term column with wrapping text
-        pdf.multi_cell(30, search_term_height, search_term, 1, 'C')
+            y_before_url = pdf.get_y()
+            url_height = multi_cell_height(url, 160, 10)
+            search_term_height = max(10, url_height)
 
-        # Move cursor back to the right for the URL column
-        pdf.set_xy(40, y_before_url)
+            # Search Term column with wrapping text
+            pdf.multi_cell(30, search_term_height, search_term, 1, 'C')
 
-        # URL column with wrapping text
-        pdf.set_text_color(0, 0, 255)  # Set text color to blue
-        pdf.set_font('Times', 'U', 12)  # Set text underlined
-        url_height = pdf.multi_cell(160, 10, url, 1)  # Write link
+            # Move cursor back to the right for the URL column
+            pdf.set_xy(40, y_before_url)
 
-        # Get the height of the URL cell to add the clickable link
-        total_url_height = pdf.get_y() - y_before_url
+            # URL column with wrapping text
+            pdf.set_text_color(0, 0, 255)  # Set text color to blue
+            pdf.set_font('Times', 'U', 12)  # Set text underlined
+            url_height = pdf.multi_cell(160, 10, url, 1)  # Write link
 
-        # Create clickable link overlay
-        x = 40  # X position for the link
-        pdf.link(x, y_before_url, 160, total_url_height, url)  # Add clickable link overlay
-        pdf.set_text_color(0, 0, 0)  # Reset text color to black
-        pdf.set_font('Times', '', 12)  # Reset text to normal
+            # Get the height of the URL cell to add the clickable link
+            total_url_height = pdf.get_y() - y_before_url
+
+            # Create clickable link overlay
+            x = 40  # X position for the link
+            pdf.link(x, y_before_url, 160, total_url_height, url)  # Add clickable link overlay
+            pdf.set_text_color(0, 0, 0)  # Reset text color to black
+            pdf.set_font('Times', '', 12)  # Reset text to normal
+    else:
+        pdf.set_font('Times', '', 12)
+        pdf.cell(190, 10, 'No search results found.', ln=True, align='C')
 
     # Add Broken Links table
     pdf.ln(10)  # Add space before new section
@@ -71,16 +94,21 @@ def export_to_pdf(queried_pages, requires_access, broken_links, file_path):
     pdf.cell(190, 10, 'Broken Links', ln=True, align='C')
 
     pdf.set_font('Times', '', 12)
-    for idx, broken in enumerate(broken_links):
-        # Set text color to blue and underline for the clickable link
+    if broken_links:
         pdf.set_text_color(0, 0, 255)  
         pdf.set_font('', 'U')  # Underline
-        pdf.multi_cell(190, 10, f'{idx + 1}. {broken}', 1)  # Use multi_cell for wrapping
-        y = pdf.get_y() - 10  # Adjust for the height of the cell
-        x = pdf.get_x() - 190  # Adjust for the width of the cell
-        pdf.link(x, y, 190, 10, broken)  # Add clickable link overlay
+
+        for idx, broken in enumerate(broken_links):
+            # Set text color to blue and underline for the clickable link
+            pdf.multi_cell(190, 10, f'{idx + 1}. {broken}', 1)  # Use multi_cell for wrapping
+            y = pdf.get_y() - 10  # Adjust for the height of the cell
+            x = pdf.get_x() - 190  # Adjust for the width of the cell
+            pdf.link(x, y, 190, 10, broken)  # Add clickable link overlay
+
         pdf.set_text_color(0, 0, 0)  # Reset text color to black
         pdf.set_font('Times', '', 12)  # Reset text to not be underlined
+    else:
+        pdf.cell(190, 10, 'No broken links reached.', ln=True, align='C')
 
     # Add Access Required Links table
     pdf.ln(10)  # Add space before new section
@@ -88,16 +116,21 @@ def export_to_pdf(queried_pages, requires_access, broken_links, file_path):
     pdf.cell(190, 10, 'Access Required Links', ln=True, align='C')
 
     pdf.set_font('Times', '', 12)
-    for idx, access in enumerate(requires_access):
-        # Set text color to blue and underline for the clickable link
+    if requires_access:
         pdf.set_text_color(0, 0, 255)  
         pdf.set_font('', 'U')  # Underline
-        pdf.multi_cell(190, 10, f'{idx + 1}. {access}', 1)  # Use multi_cell for wrapping
-        y = pdf.get_y() - 10  # Adjust for the height of the cell
-        x = pdf.get_x() - 190  # Adjust for the width of the cell
-        pdf.link(x, y, 190, 10, access)  # Add clickable link overlay
+
+        for idx, access in enumerate(requires_access):
+            # Set text color to blue and underline for the clickable link
+            pdf.multi_cell(190, 10, f'{idx + 1}. {access}', 1)  # Use multi_cell for wrapping
+            y = pdf.get_y() - 10  # Adjust for the height of the cell
+            x = pdf.get_x() - 190  # Adjust for the width of the cell
+            pdf.link(x, y, 190, 10, access)  # Add clickable link overlay
+
         pdf.set_text_color(0, 0, 0)  # Reset text color to black
         pdf.set_font('Times', '', 12)  # Reset text to not be underlined
+    else:
+        pdf.cell(190, 10, 'No access-required links reached.', ln=True, align='C')
 
     # Save PDF to file path
     pdf.output(file_path)
@@ -107,7 +140,9 @@ def export_to_pdf(queried_pages, requires_access, broken_links, file_path):
 class PDF(FPDF):
     def header(self):
         # Set font for header
-        self.set_font('Times', '', 12)
+        self.set_font('Times', 'I', 12)
+        # Set text color to black
+        self.set_text_color(0, 0, 0)
         # Set position for header
         self.set_xy(180, 5)
         # Title
@@ -118,5 +153,7 @@ class PDF(FPDF):
         self.set_y(-15)
         # Set font for footer
         self.set_font('Times', 'I', 8)
+        # Set text color to black
+        self.set_text_color(0, 0, 0)
         # Page number
         self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')

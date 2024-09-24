@@ -10,7 +10,7 @@ from django.http import JsonResponse
 import json
 import os
 from datetime import datetime
-from .serializers import SearchTermSerializer, BrokenLinksSerializer
+from .serializers import SearchTermSerializer, BrokenLinksSerializer, ExportResultsSerializer
 from .models import PastSearch
 from utils.broken_links import crawl
 from utils.string_match import scrape
@@ -53,13 +53,11 @@ def search_text_string(request):
         search_text = serializer.validated_data['search_text']
         starting_links = serializer.validated_data['starting_links']
         browser_info = serializer.validated_data['browser_info']
-        # json_filename = serializer.validated_data['json_filename']
 
         result = scrape(starting_links, search_text, browser_info)
-        print("Results: ", result)
 
         # writing history to database
-        queried_webpages, requires_access, output = result
+        queried_webpages, broken_links, requires_access, output = result
 
         for seed_url in output:
             for page in output[seed_url]:
@@ -72,21 +70,6 @@ def search_text_string(request):
                     search_text=search_text,
                 )
                 past_search.save()
-        
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        # Save the result as an Excel file in the local repo
-        # Define the path
-        file_dir = '/wrt2'
-        # excel_file_path = os.path.join(file_dir, f'scrape_results_{timestamp}.xlsx')
-        pdf_file_path = os.path.join(file_dir, f'scrape_results_{timestamp}.pdf') 
-
-        # Ensure the directory exists
-        if not os.path.exists(file_dir):
-            os.makedirs(file_dir)
-
-        # export_to_excel(queried_webpages, requires_access, result[2], excel_file_path)
-        export_to_pdf(queried_webpages, requires_access, result[2], pdf_file_path)
 
         return Response(result, status=status.HTTP_200_OK)
     else:
@@ -104,7 +87,6 @@ def search_broken_links(request): # TODO write the results to the database
 
     if serializer.is_valid():
         starting_links = serializer.validated_data['starting_links']
-        # json_filename = serializer.validated_data['json_filename']
 
         result = crawl(starting_links)
         print(result) # TODO Remove
@@ -112,6 +94,50 @@ def search_broken_links(request): # TODO write the results to the database
         return Response(result, status=status.HTTP_200_OK)
     else:
         print("Serializer errors 2:", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Export Results API
+@api_view(["POST"])
+@session_required
+@permission_classes([IsAuthenticated])
+def export_results(request):
+    serializer = ExportResultsSerializer(data=request.data)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Get the directory of the current file (views.py)
+    current_dir = os.path.dirname(__file__)
+
+    # Define the temp directory path
+    # Adjusts the path to go up one level to wrt2 and then to temp
+    temp_dir = os.path.join(current_dir, '..', 'temp') 
+
+    # Ensure the temp directory exists
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+
+    if serializer.is_valid():
+        search_results = serializer.validated_data['search_results']
+        broken_links = serializer.validated_data['broken_links']
+        access_required_links = serializer.validated_data['access_required_links']
+        export_type = serializer.validated_data['export_type']
+        file_url = ''
+
+        # Export PDF file
+        if export_type == 'pdf':
+            pdf_file_path = os.path.join(temp_dir, f'scrape_results_{timestamp}.pdf') 
+            export_to_pdf(search_results, broken_links, access_required_links, pdf_file_path)
+            file_url = f'/temp/scrape_results_{timestamp}.pdf'
+
+        # Export Excel file
+        elif export_type == 'excel':
+            excel_file_path = os.path.join(temp_dir, f'scrape_results_{timestamp}.xlsx')
+            export_to_excel(search_results, broken_links, access_required_links, excel_file_path)
+            file_url = f'/temp/scrape_results_{timestamp}.pdf'
+
+        return Response({'message': 'Export successful', 'file_url': file_url}, status=status.HTTP_200_OK)
+    else:
+        print("Serializer errors 3:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @permission_classes([IsAuthenticated])
