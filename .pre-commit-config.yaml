@@ -11,7 +11,7 @@ repos:
     hooks:
       - id: run-django-tests
         name: Run Django Tests
-        entry: python manage.py test  # Adjust if necessary
+        entry: python manage.py test
         language: system  # Use the system's Python environment
-        types: [python]
+        pass_filenames: false
 
