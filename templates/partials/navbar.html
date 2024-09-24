@@ -1,6 +1,6 @@
-<nav class="navbar">
-    <div class="navbar-menu">
-        <div class="navbar-end">
+<nav class="navbar" style="width: 100%; position: relative;">
+    <div class="navbar-menu" style="position: absolute;">
+        <div class=">
             <a href="#" id="logoutLink" class="tabs-is-centered">Logout</a>
         </div>
     </div>
@@ -13,13 +13,11 @@
             console.log('Logged out, tokens cleared.');
             window.location.href = '/logout';
         });
-    </script>
+        </script>
+    <div class="tabs-is-centered">
+        <ul>
+            <li><a href="{% url 'search_term' %}">Search Term</a></li>
+            <li><a href="{% url 'crawl_broken_links' %}" >Broken Links</a></li>
+        </ul>
+    </div>
 </nav>
-
-<div class="tabs-is-centered">
-    <ul>
-        <li><a href="{% url 'search_term' %}">Search Term</a></li>
-        <li><a href="{% url 'crawl_broken_links' %}" >Broken Links</a></li>
-        <!-- TODO add a history page -->
-    </ul>
-</div>
