@@ -30,6 +30,12 @@ def validate_browser_info(value):
         raise serializers.ValidationError(f"Unsupported browser detected: {value}")
     return value
 
+def validate_export_type(value):
+    allowed_export_types = ['csv', 'pdf', 'excel']
+    if not any(export_types in value.lower() for export_types in allowed_export_types):
+        raise serializers.ValidationError(f"Unsupported export type detected: {value}")
+    return value
+
 class BaseSerializer(serializers.Serializer):
     starting_links = serializers.ListField(
         child=serializers.URLField(),
@@ -55,3 +61,29 @@ class SearchTermSerializer(BaseSerializer):
 
 class BrokenLinksSerializer(BaseSerializer):
     pass
+
+class ExportResultsSerializer(serializers.Serializer):
+    search_results = serializers.ListField(
+        child=serializers.ListField(child=serializers.CharField(max_length=255)),
+        required=True
+    )
+    broken_links = serializers.ListField(
+        child=serializers.URLField(),
+        required=True
+    )
+    access_required_links = serializers.ListField(
+        child=serializers.URLField(),
+        required=True
+    )
+    export_type = serializers.ChoiceField(
+        choices=['pdf', 'excel', 'csv'],
+        required=True
+    )
+
+    def validate_search_results(self, value):
+        if not all(isinstance(item, list) and len(item) == 2 for item in value):
+            raise serializers.ValidationError("Each search result must be a list containing two elements: search term and found URL.")
+        return value
+
+    def validate_export_type(self, value):
+        return validate_export_type(value)

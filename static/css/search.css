@@ -184,6 +184,29 @@ body {
     background-color: #000B34;
 }
 
+.export-pdf {
+    background-color: #ABC1A7;
+    color: #000B34;
+    padding: 12px 75px; 
+    font-size: 16px; 
+    border-radius: 5px; 
+    margin-right: 10px; 
+}
+
+.export-excel {
+    background-color: #D1E7DD; 
+    color: #000B34;
+    padding: 12px 75px; 
+    font-size: 16px;
+    border-radius: 5px;
+}
+
+.export-pdf:hover,
+.export-excel:hover {
+    background-color: #000B34; 
+    color: white; 
+}
+
 .delete-btn {
     position: absolute;
     right: 0;

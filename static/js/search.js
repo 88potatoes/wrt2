@@ -2,6 +2,7 @@
 function submitForm(event, apiUrl, formData, successCallback) {
     event.preventDefault();
     const accessToken = localStorage.getItem('access_token');
+    const refreshToken = localStorage.getItem('refresh_token');
 
     console.log(accessToken);
 
@@ -17,8 +18,8 @@ function submitForm(event, apiUrl, formData, successCallback) {
         });
     }
 
-    if (accessToken == null) {
-        console.log("No access token found. Redirecting to login...");
+    if (accessToken == null || refreshToken == null) {
+        console.log("Tokens missing. Redirecting to login...");
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         window.location.href = '/logout';
@@ -138,40 +139,152 @@ searchForm.addEventListener('submit', function (event) {
             const table = document.createElement('table');
             table.classList.add('table', 'is-bordered', 'is-fullwidth', 'is-hoverable');
             table.innerHTML = `
-                    <thead>
-                        <tr>
-                            <th>Matched String</th>
-                            <th>Page URL</th>
-                        </tr>
-
-                        <tr class="urlRange">
-                            <th colspan="2">Results for Website Range "${startingLinks[0]}"</th>
-                        </tr>
-                    </thead>
-                `;
+                <thead>
+                    <tr>
+                        <th>Matched String</th>
+                        <th>Page URL</th>
+                    </tr>
+                    <tr class="urlRange">
+                        <th colspan="2">Results for Website Range "${startingLinks[0]}"</th>
+                    </tr>
+                </thead>
+            `;
 
             const tableBody = document.createElement('tbody');
-
-            data[0].forEach(link => {
+            data[0].forEach(result => {
+                const [searchTerm, link] = result;
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                        <td>${searchText}</td>
-                        <td><a href="${link}" target="_blank">${link}</a></td>
-                    `;
+                    <td>${searchTerm}</td>
+                    <td><a href="${link}" target="_blank">${link}</a></td>
+                `;
                 tableBody.appendChild(row);
             });
 
+            console.log('Table of Results shown');
+
             table.appendChild(tableBody);
             searchResultsDiv.appendChild(table);
+
+            console.log('Now adding buttons:');
+
+            // Create export buttons
+            const buttons = createExportButtons(data[0], data[1], data[2]);
+            console.log("Search Results:", data[0]);
+            console.log("Broken Links:", data[1]);
+            console.log("Access Required Links:", data[2]);
+
+            // Select the export buttons container
+            const exportButtonsDiv = document.getElementById('exportButtons');
+
+            // Clear any existing buttons before adding new ones
+            exportButtonsDiv.innerHTML = '';
+
+            // Append buttons to the export buttons div
+            exportButtonsDiv.appendChild(buttons[0]);
+            exportButtonsDiv.appendChild(buttons[1]);
+            console.log('Buttons added to the export buttons div');
         } else if (data[0].length == 0) {
+            // Create export buttons
+            const buttons = createExportButtons(data[0], data[1], data[2]);
+            console.log("Search Results:", data[0]);
+            console.log("Broken Links:", data[1]);
+            console.log("Access Required Links:", data[2]);
+
+            // Select the export buttons container
+            const exportButtonsDiv = document.getElementById('exportButtons');
+
+            // Clear any existing buttons before adding new ones
+            exportButtonsDiv.innerHTML = '';
+
+            // Append buttons to the export buttons div
+            exportButtonsDiv.appendChild(buttons[0]);
+            exportButtonsDiv.appendChild(buttons[1]);
+            
             searchResultsDiv.innerHTML = `
-                <p>No results found!</p>
+                <p>No match found!</p>
                 `;
         } else if (data.message) {
             searchResultsDiv.innerHTML = `<p>${data.message}</p>`;
         }
     })
 });
+
+function exportResults(searchResults, brokenLinks, accessRequired, exportType) {
+    const requestBody = {
+        search_results: searchResults,
+        broken_links: brokenLinks,
+        access_required_links: accessRequired,
+        export_type: exportType
+    };
+
+    const accessToken = localStorage.getItem('access_token');
+    const refreshToken = localStorage.getItem('refresh_token');
+
+    if (accessToken == null || refreshToken == null) {
+        console.log("Tokens missing. Redirecting to login...");
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/logout';
+        return;
+    }
+
+    fetch('/api/export/', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}' // Include CSRF token
+        },
+        body: JSON.stringify(requestBody)
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json(); 
+        } else if (response.status === 401) {
+            if (isTokenExpired(accessToken)) {
+                console.log("Access token is expired. Attempting to refresh...");
+                return refreshAccessToken().then(newAccessToken => {
+                    console.log("Retrying request with new access token.");
+                    return exportResults(searchResults, brokenLinks, accessRequired, exportType); // Retry with new token
+                });
+            } else {
+                console.log("Session ID might be invalid. Redirecting to login...");
+                localStorage.clear(); // Clear tokens
+                window.location.href = '/'; // Redirect to login page
+                return;
+            }
+        } else {
+            throw new Error('Export failed.');
+        }
+    })
+    .then(data => {
+        const filename = data.file_url.split('/').pop();
+        window.location.href = `/api/download/${filename}/`;
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function createExportButtons(searchResults, accessRequired, brokenLinks) {
+    const exportPdfButton = document.createElement('button');
+    exportPdfButton.textContent = 'Export to PDF';
+    exportPdfButton.classList.add('button', 'is-link', 'export-pdf');
+    exportPdfButton.style.marginRight = '10px';
+    exportPdfButton.addEventListener('click', () => {
+        console.log('Export to PDF button clicked');
+        exportResults(searchResults, brokenLinks, accessRequired, 'pdf');
+    });
+
+    const exportExcelButton = document.createElement('button');
+    exportExcelButton.textContent = 'Export to Excel';
+    exportExcelButton.classList.add('button', 'is-link', 'export-excel');
+    exportExcelButton.addEventListener('click', () => {
+        console.log('Export to Excel button clicked');
+        exportResults(searchResults, brokenLinks, accessRequired, 'excel');
+    });
+
+    return [exportPdfButton, exportExcelButton];
+}
 
 // Handle adding input fields for Search Form
 const addSearchInputBtn = document.getElementById('addSearchInputBtn');
