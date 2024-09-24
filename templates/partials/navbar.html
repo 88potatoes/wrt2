@@ -4,6 +4,16 @@
             <a href="#" id="logoutLink" class="tabs-is-centered">Logout</a>
         </div>
     </div>
+    <script>
+        const logoutLink = document.getElementById('logoutLink');
+        logoutLink.addEventListener('click', function (event) {
+            event.preventDefault();
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            console.log('Logged out, tokens cleared.');
+            window.location.href = '/logout';
+        });
+    </script>
 </nav>
 
 <div class="tabs-is-centered">

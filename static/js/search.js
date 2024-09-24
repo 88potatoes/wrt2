@@ -63,16 +63,6 @@ function submitForm(event, apiUrl, formData, successCallback) {
         .catch(error => console.error('Error:', error));
 }
 
-// Logout functionality
-const logoutLink = document.getElementById('logoutLink');
-logoutLink.addEventListener('click', function (event) {
-    event.preventDefault();
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    console.log('Logged out, tokens cleared.');
-    window.location.href = '/logout';
-});
-
 // Function to refresh the access token
 function refreshAccessToken() {
     const refreshToken = localStorage.getItem('refresh_token');
