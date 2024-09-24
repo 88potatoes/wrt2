@@ -115,6 +115,7 @@ searchForm.addEventListener('submit', function (event) {
     // Debug
     console.log("Starting Links: ", startingLinks);
     console.log("Search Text: ", searchText);
+    console.log("Browser Info: ", browserInfo);
 
     submitForm(event, '/api/search/', { 
         search_text: searchText, 
@@ -222,11 +223,14 @@ function exportResults(searchResults, brokenLinks, accessRequired, exportType) {
     })
     .then(response => {
         if (response.ok) {
-            // Handle successful response if needed
-            console.log('Export successful!');
+            return response.json(); 
         } else {
             throw new Error('Export failed.');
         }
+    })
+    .then(data => {
+        const filename = data.file_url.split('/').pop();
+        window.location.href = `/api/download/${filename}/`;
     })
     .catch(error => console.error('Error:', error));
 }
@@ -280,8 +284,6 @@ function isTokenExpired(token) {
     const currentTime = Date.now() / 1000; // Get current time in seconds
     return payload.exp < currentTime; // Check if the token is expired
 }
-
-console.log(navigator.sayswho);
 
 navigator.sayswho = (function() {
     var N = navigator.appName, ua = navigator.userAgent, tem;

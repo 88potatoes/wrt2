@@ -3,19 +3,17 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.contrib.sessions.models import Session
-from django.shortcuts import render, redirect
-from django.urls import reverse
+from django.shortcuts import render
 from django.utils import timezone 
-from django.http import JsonResponse  
-import json
-import os
+from django.http import JsonResponse, FileResponse, Http404  
 from datetime import datetime
 from .serializers import SearchTermSerializer, BrokenLinksSerializer, ExportResultsSerializer
 from .models import PastSearch
 from utils.broken_links import crawl
 from utils.string_match import scrape
 from utils.export import export_to_excel, export_to_pdf
-
+import os
+import threading
 
 """ 
 ================================= Session Check Functions =================================
@@ -38,7 +36,7 @@ def is_session_valid(request):
         return False
 
 """ 
-================================= Search Functions =================================
+================================= Search APIS =================================
 """
 
 # Search Text String API
@@ -96,6 +94,10 @@ def search_broken_links(request): # TODO write the results to the database
         print("Serializer errors 2:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+""" 
+================================= Export and Download APIS =================================
+"""
+
 # Export Results API
 @api_view(["POST"])
 @session_required
@@ -133,12 +135,33 @@ def export_results(request):
         elif export_type == 'excel':
             excel_file_path = os.path.join(temp_dir, f'scrape_results_{timestamp}.xlsx')
             export_to_excel(search_results, broken_links, access_required_links, excel_file_path)
-            file_url = f'/temp/scrape_results_{timestamp}.pdf'
+            file_url = f'/temp/scrape_results_{timestamp}.xlsx'
 
         return Response({'message': 'Export successful', 'file_url': file_url}, status=status.HTTP_200_OK)
     else:
         print("Serializer errors 3:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(["GET"])
+@session_required
+@permission_classes([IsAuthenticated])
+def download_view(request, filename):
+    # Get the directory of the current file (views.py)
+    current_dir = os.path.dirname(__file__)
+
+    # Define the temp directory path
+    temp_dir = os.path.join(current_dir, '..', 'temp')
+
+    # Construct the full file path
+    file_path = os.path.join(temp_dir, filename)
+
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        raise Http404("File not found.")
+
+    # Open the file and return it in the response
+    response = FileResponse(open(file_path, 'rb'), as_attachment=True)
+    return response
 
 @permission_classes([IsAuthenticated])
 def temp_view(request):
