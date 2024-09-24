@@ -31,7 +31,8 @@ jobs:
 
         - name: Run Flake8
           run: |
-            flake8 your_package_or_module  # Change this to your package or module path
+            pwd
+            flake8 wrt2
   build:
 
     runs-on: ubuntu-latest
