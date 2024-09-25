@@ -63,6 +63,7 @@ def search_text_string(request):
         search_text = serializer.validated_data["search_text"]
         starting_links = serializer.validated_data["starting_links"]
         browser_info = serializer.validated_data["browser_info"]
+        browser_info = 'Brave'
 
         result = scrape(starting_links, search_text, browser_info)
 
