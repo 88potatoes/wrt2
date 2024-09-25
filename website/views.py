@@ -32,6 +32,9 @@ def create_user_view(request):
 
 
 def login_view(request):
+    if request.user.is_authenticated:
+        return JsonResponse({"message": "Already logged in, redirecting to main site"}, status=200)
+    
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")

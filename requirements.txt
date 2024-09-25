@@ -77,4 +77,5 @@ virtualenv==20.26.5
 websocket-client==1.8.0
 whitenoise==6.7.0
 wsproto==1.2.0
+XlsxWriter==3.2.0
 yarl==1.11.1
