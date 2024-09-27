@@ -453,7 +453,13 @@ class UnitTests(TestCase):
     def test_create_pattern_for_percentage_and_question_mark_in_brackets(self):
         self.assertEqual(create_pattern("h[?|%]yyy"), r"\bh(.|\w*)yyy\b")
         self.assertEqual(create_pattern("[?|%]ee[?|%|t!]"), r"(.|\w*)ee(.|\w*|t!)")
-
+    
+    def test_number_of_options(self):
+        with self.assertRaises(ValueError):
+            create_pattern("[|||||||||]")
+        with self.assertRaises(ValueError):
+            create_pattern("[?|%|][|s||a][||b|c|]")
+            
     def test_url_encode(self):
         self.assertEqual(url_encode("(beep+boop)"), "%28beep%2Bboop%29")
         self.assertEqual(url_encode("-~._"), "%2D%7E%2E%5F")
@@ -505,7 +511,6 @@ class UnitTests(TestCase):
     def test_check_char_invalid_characters(self):
         self.assertFalse(check_char("\u2603"))  # Unicode snowman (non-ASCII)
         self.assertFalse(check_char("😊")) # Emoji (non-ASCII)
-
 
 
 # integration tests (internal)
