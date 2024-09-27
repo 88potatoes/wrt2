@@ -465,6 +465,9 @@ class UnitTests(TestCase):
         self.assertEqual(find_prefix(text, 21), 16)
         text = "\n"
         self.assertEqual(find_prefix(text, 1), 1)
+        # test char limit
+        text = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit.\n"
+        self.assertEqual(find_prefix(text, len(text)-1), 11)
 
     def test_find_suffix(self):
         text = "\nhey i am awesome\nyay!"
@@ -473,6 +476,9 @@ class UnitTests(TestCase):
         self.assertEqual(find_suffix(text, 0, len(text)), 16)
         text = "\n"
         self.assertEqual(find_suffix(text, 0, len(text)), 0)
+        # test char limit
+        text = "\nLorem ipsum dolor sit amet, consectetuer adipiscing elit."
+        self.assertEqual(find_suffix(text, 0, len(text)), 41)
 
     def test_check_char_alphanumeric(self):
         self.assertTrue(check_char("A"))
@@ -499,6 +505,7 @@ class UnitTests(TestCase):
     def test_check_char_invalid_characters(self):
         self.assertFalse(check_char("\u2603"))  # Unicode snowman (non-ASCII)
         self.assertFalse(check_char("😊")) # Emoji (non-ASCII)
+
 
 
 # integration tests (internal)
