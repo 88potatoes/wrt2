@@ -458,8 +458,12 @@ class UnitTests(TestCase):
         with self.assertRaises(ValueError):
             create_pattern("[|||||||||]")
         with self.assertRaises(ValueError):
+            create_pattern("[||||][|||||]")
+        with self.assertRaises(ValueError):
             create_pattern("[?|%|][|s||a][||b|c|]")
-            
+        with self.assertRaises(ValueError):
+            create_pattern("[||][|||||][||||]")
+
     def test_url_encode(self):
         self.assertEqual(url_encode("(beep+boop)"), "%28beep%2Bboop%29")
         self.assertEqual(url_encode("-~._"), "%2D%7E%2E%5F")

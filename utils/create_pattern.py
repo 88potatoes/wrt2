@@ -104,7 +104,7 @@ def create_pattern(search_term):
     
     # prevent search term that only consists of empty options
     if options[0] == '(' and options[-1] == ')':
-        if all(not option for option in options[1:len_options - 1]):
+        if all(not option or options == ')|(' for option in options[1:len_options - 1]):
             raise ValueError(f"Cannot have all options empty.")
     if len_options > 0:
         if search_term[0] == "(" or search_term[-1] == ")":
