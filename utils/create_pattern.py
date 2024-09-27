@@ -99,7 +99,7 @@ def create_pattern(search_term):
     search_term = re.sub(r"\[([^\]]+)\]", lambda m: f"({m.group(1)})", search_term)
     options = search_term.split("|")
     len_options = len(options)
-    if len_options > MAX_OPTIONS:
+    if max(len_options, len_options + search_term.count('(') - 1) > MAX_OPTIONS:
         raise ValueError(f"Too many options in alternation. Limit is {MAX_OPTIONS}.")
     
     # prevent search term that only consists of empty options
