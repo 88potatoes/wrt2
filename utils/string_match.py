@@ -11,7 +11,6 @@ from bs4 import BeautifulSoup
 
 # A limit on the number of links crawled for each starting link
 SAFE_PAGE_LIMIT = 5
-MAX_OPTIONS = 10
 
 
 def scrape(starting_links: List[str], search_text: str, browser_info: str) -> List[str]:
@@ -34,7 +33,6 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
     for start_link in starting_links:
         try:
             page = requests.get(start_link)
-
             # Handle access-required pages or broken links
             if page.status_code == 401 or page.status_code == 403:
                 # print("requires access: ", start_link)
