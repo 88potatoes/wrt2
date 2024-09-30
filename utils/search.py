@@ -120,7 +120,7 @@ def url_encode(string):
     string = urllib.parse.quote(string, safe="")
     string = re.sub(r"-", "%2D", string)
     string = re.sub(r"\.", "%2E", string)
-    string = re.sub(r"_", "	%5F", string)
+    string = re.sub(r"_", "%5F", string)
     string = re.sub(r"~", "%7E", string)
     return string
 
@@ -130,7 +130,7 @@ def search(pattern, url):
     response = requests.get(url)
     
     # Ensure the request was successful
-    if response.status_code != 200:
+    if not (200 <= response.status_code <= 299):
         return []
 
     # Parse the HTML with BeautifulSoup

@@ -93,14 +93,19 @@ def create_pattern(search_term):
     search_term = search_term.replace("?", ".")
 
     # replace unescaped % with regex equivalent (any sequence of characters)
-    search_term = search_term.replace("%", r"\w+")
+    search_term = search_term.replace("%", r"\w*")
 
     # handle alternation for multiple options with any characters
     search_term = re.sub(r"\[([^\]]+)\]", lambda m: f"({m.group(1)})", search_term)
     options = search_term.split("|")
     len_options = len(options)
-    if len_options > MAX_OPTIONS:
+    if max(len_options, len_options + search_term.count('(') - 1) > MAX_OPTIONS:
         raise ValueError(f"Too many options in alternation. Limit is {MAX_OPTIONS}.")
+    
+    # prevent search term that only consists of empty options
+    if options[0] == '(' and options[-1] == ')':
+        if all(not option or options == ')|(' for option in options[1:len_options - 1]):
+            raise ValueError(f"Cannot have all options empty.")
     if len_options > 0:
         if search_term[0] == "(" or search_term[-1] == ")":
             search_term = replace(search_term)
@@ -114,9 +119,9 @@ def create_pattern(search_term):
     search_term = search_term.replace(" ", r"(?:\s|\r\n|\r|\n)*")
 
     # if search term does not start / end with a word character, do not put a word boundary at the front / end
-    if not re.match(r"^[a-zA-Z0-9?]", search_term[0]):
+    if not re.match(r"^[a-zA-Z0-9.]", search_term[0]):
         no_leading_boundary = True
-    if not re.match(r"^[a-zA-Z0-9?]", search_term[-1]):
+    if not re.match(r"^[a-zA-Z0-9.]", search_term[-1]):
         no_trailing_boundary = True
 
     print("NO LEADING \\b: ", no_leading_boundary)
