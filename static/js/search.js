@@ -121,10 +121,33 @@ searchForm.addEventListener('submit', function (event) {
             // clears previous results
             searchResultsDiv.innerHTML = '';
 
+            const resultsHeaderDiv = document.createElement('div');
+            resultsHeaderDiv.classList.add('table-header');
+
             const resultsTitle = document.createElement('h2');
+            resultsTitle.id = 'resultsTable'
             resultsTitle.classList.add('results');
             resultsTitle.textContent = 'Results - Strings Matched';
-            searchResultsDiv.appendChild(resultsTitle);
+            resultsHeaderDiv.appendChild(resultsTitle);
+
+            // create buttons div
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.classList.add('button-group');
+
+            // Create export buttons
+            const buttons = createExportButtons(data[0], data[1], data[2]);
+            console.log("Search Results:", data[0]);
+            console.log("Broken Links:", data[1]);
+            console.log("Access Required Links:", data[2]);
+
+            // Append buttons to the export buttons div
+            buttonsDiv.appendChild(buttons[0]);
+            buttonsDiv.appendChild(buttons[1]);
+            console.log('Buttons added to the buttons div');
+
+            resultsHeaderDiv.appendChild(buttonsDiv);
+
+            searchResultsDiv.appendChild(resultsHeaderDiv);
 
             const table = document.createElement('table');
             table.classList.add('table', 'is-bordered', 'is-fullwidth', 'is-hoverable');
@@ -158,22 +181,6 @@ searchForm.addEventListener('submit', function (event) {
 
             console.log('Now adding buttons:');
 
-            // Create export buttons
-            const buttons = createExportButtons(data[0], data[1], data[2]);
-            console.log("Search Results:", data[0]);
-            console.log("Broken Links:", data[1]);
-            console.log("Access Required Links:", data[2]);
-
-            // Select the export buttons container
-            const exportButtonsDiv = document.getElementById('exportButtons');
-
-            // Clear any existing buttons before adding new ones
-            exportButtonsDiv.innerHTML = '';
-
-            // Append buttons to the export buttons div
-            exportButtonsDiv.appendChild(buttons[0]);
-            exportButtonsDiv.appendChild(buttons[1]);
-            console.log('Buttons added to the export buttons div');
         } else if (data[0].length == 0) {
             // Create export buttons
             const buttons = createExportButtons(data[0], data[1], data[2]);
