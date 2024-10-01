@@ -19,7 +19,7 @@ crawlForm.addEventListener('submit', function (event) {
 
             const resultsTitle = document.createElement('h2');
             resultsTitle.classList.add('results');
-            resultsTitle.textContent = 'Results - Strings Matched';
+            resultsTitle.textContent = 'Broken Links Discovered';
             crawlResultsDiv.appendChild(resultsTitle);
 
             const table = document.createElement('table');
@@ -27,7 +27,7 @@ crawlForm.addEventListener('submit', function (event) {
             table.innerHTML = `
                 <thead>
                     <tr>
-                        <th>Matched String</th>
+                        <th>Broken Link</th>
                         <th>Page URL</th>
                     </tr>
 

@@ -21,7 +21,7 @@
                     <input type="hidden" name="form_type" value="search_term_form">
 
                     <div class="field">
-                        <label class="label">Root URLS
+                        <label class="label">Root URLs
                             <span class="icon has-tooltip" id="tooltipIcon3">
                                 <i class="fas fa-info-circle"></i>
                                 <div class="tooltip">This tool scans a website for broken links and pages that require
@@ -39,13 +39,18 @@
                         <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
                             style="margin-top: 10px;">Add URL</button>
                     </div>
+
+                    <div class="field"></div>
+                        <div class="control">
+                            <button class="button is-link" type="submit">Search</button>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
 
         <div class="columns is-centered" style="margin-top: 20px;">
             <div class="column is-8">
-                <h2 class="subtitle">Crawl Results:</h2>
                 <div id="crawlResults">
                     <!-- Results will be displayed here after search -->
                 </div>
