@@ -16,6 +16,10 @@ def search_term_view(request):
 def crawl_broken_links_view(request):
     return render(request, "wrt/brokenLinks.html")
 
+@require_http_methods(["GET"])
+@login_required
+def history(request):
+    return render(request, "wrt/history.html")
 
 @require_http_methods(["GET"])
 def test_view(request):
