@@ -16,10 +16,12 @@ def search_term_view(request):
 def crawl_broken_links_view(request):
     return render(request, "wrt/brokenLinks.html")
 
+
 @require_http_methods(["GET"])
 @login_required
 def history(request):
     return render(request, "wrt/history.html")
+
 
 @require_http_methods(["GET"])
 def test_view(request):
@@ -37,8 +39,10 @@ def create_user_view(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return JsonResponse({"message": "Already logged in, redirecting to main site"}, status=200)
-    
+        return JsonResponse(
+            {"message": "Already logged in, redirecting to main site"}, status=200
+        )
+
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
