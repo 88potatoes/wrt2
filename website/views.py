@@ -6,8 +6,7 @@ from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth import authenticate, login, logout, views as auth_views
-from rest_framework_simplejwt.tokens import AccessToken
+from django.contrib.auth import authenticate, login, logout
 
 from api.serializers import ExportResultsSerializer, SearchTermSerializer
 from api.utils.export import export_to_excel, export_to_pdf
@@ -196,21 +195,3 @@ def download_view(request, filename):
     threading.Timer(30, delete_file).start()  # Delete after 60 seconds
 
     return response
-
-
-class CustomLoginView(
-    auth_views.LoginView
-):  # may not need to use this because we have no custom functionaliyt?
-    def form_valid(self, form):
-        # Call the original form_valid method to log in the user
-        response = super().form_valid(form)
-
-        user = self.request.user
-        if not user:  # handling the no user error
-            return response
-
-        # generating access token for the user # TODO maybe remove if this is not necessary
-        token = AccessToken.for_user(user)
-        print(f"Access token: {token}")
-
-        return response
