@@ -1,3 +1,4 @@
+import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -57,7 +58,13 @@ def is_session_valid(request):
 @session_required
 @permission_classes([IsAuthenticated])
 def search_text_string(request):
-    serializer = SearchTermSerializer(data=request.data)
+    return find_text_string(request)
+
+
+def find_text_string(request, from_website=False):  # used by the website app
+    data = request.body if from_website else request.data
+    serializer = SearchTermSerializer(data=json.loads(data))
+    print("Request data:", data)
     print("Request method:", request.method)
 
     if serializer.is_valid():
@@ -66,10 +73,18 @@ def search_text_string(request):
         browser_info = serializer.validated_data["browser_info"]
         result = scrape(starting_links, search_text, browser_info)
 
-        return Response(result, status=status.HTTP_200_OK)
+        return (
+            Response(result, status=status.HTTP_200_OK)
+            if not from_website
+            else (result, 200)
+        )
     else:
         print("Serializer errors 1:", serializer.errors)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return (
+            Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if not from_website
+            else (serializer.errors, 400)
+        )
 
 
 # Broken Links API
@@ -77,20 +92,33 @@ def search_text_string(request):
 @session_required
 @permission_classes([IsAuthenticated])
 def search_broken_links(request):  # TODO write the results to the database
-    print("Request data:", request.data)
-    serializer = BrokenLinksSerializer(data=request.data)
+    return find_broken_links(request)
+
+
+def find_broken_links(request, from_website=False):  # used by the website app
+    data = request.body if from_website else request.data
+    serializer = BrokenLinksSerializer(data=json.loads(data))
+    print("Request data:", data)
     print("Request method:", request.method)
 
     if serializer.is_valid():
         starting_links = serializer.validated_data["starting_links"]
 
         result = crawl(starting_links)
-        print(result)  # TODO Remove
+        print(result)
 
-        return Response(result, status=status.HTTP_200_OK)
+        return (
+            Response(result, status=status.HTTP_200_OK)
+            if not from_website
+            else (result, 200)
+        )
     else:
         print("Serializer errors 2:", serializer.errors)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return (
+            Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if not from_website
+            else (serializer.errors, 400)
+        )
 
 
 """

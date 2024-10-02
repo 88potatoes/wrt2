@@ -3,15 +3,12 @@ from . import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    # path('', views.login_view, name='login'),    # Login page # TODO remove this line because there is another login view
     path("search_term", views.search_term_view, name="search_term"),  # Search term
-    path("history", views.history, name="history"),  # Search term
+    path("history", views.history, name="history"),  # History
     path(
         "crawl_broken_links", views.crawl_broken_links_view, name="crawl_broken_links"
     ),  # Broken links
     path("", auth_views.LoginView.as_view(), name="login_page"),
-    # path("", views.render_login, name="login_page"),
-    # path("login", views.login_view, name="login_form"),
     path("logout", views.logout_view, name="logout"),
     path(
         "accounts/password_reset/",

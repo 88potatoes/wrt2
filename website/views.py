@@ -9,13 +9,10 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth import authenticate, login, logout
 
 from api.serializers import (
-    BrokenLinksSerializer,
-    ExportResultsSerializer,
-    SearchTermSerializer,
+    ExportResultsSerializer
 )
-from api.utils.broken_links import crawl
 from api.utils.export import export_to_excel, export_to_pdf
-from api.utils.string_match import scrape
+from api.views import find_broken_links, find_text_string
 from website.models import PastSearch
 
 
@@ -25,21 +22,12 @@ def search_term_view(request):
     if request.method == "GET":
         return render(request, "wrt/search.html")
     else:  # POST method # TODO Make it link up with the api function / view so then parker just has to work on the api
-        print(f"DATA: {request.body}")
-        serializer = SearchTermSerializer(
-            data=json.loads(request.body)
-        )  # Use request.POST for form data
-        if serializer.is_valid():
-            search_text = serializer.validated_data["search_text"]
-            starting_links = serializer.validated_data["starting_links"]
-            browser_info = serializer.validated_data["browser_info"]
+        data, status = find_text_string(request, from_website=True)
 
-            # Call your scraping function here
-            result = scrape(starting_links, search_text, browser_info)
-            print(f"Result: {result}")
-
-            # Writing history to database as before
-            queried_webpages, broken_links, requires_access, output = result
+        if status == 200:
+            # TODO test that the writing works
+            queried_webpages, broken_links, requires_access, output = data
+            print(data)
 
             # writing to database
             for seed_url in output:
@@ -49,34 +37,40 @@ def search_term_view(request):
                         seed_url=seed_url,
                         url_from=page,
                         search_type="search",
-                        search_text=search_text,
+                        search_text=queried_webpages[0][0],
                     )
                     past_search.save()
-
-            return JsonResponse(result, status=200, safe=False)  # TODO make safe True
-        else:
-            print("Serializer errors 1:", serializer.errors)
-            return HttpResponse(serializer.errors, status=400)
+            return JsonResponse(data, status=200, safe=False) # TODO make it safe 
+        elif status == 400: # return the errors
+            return JsonResponse(data, status=400)
+        
 
 
 @require_http_methods(["GET", "POST"])
 @login_required
-def crawl_broken_links_view(request):  # TODO make it sync with the api
+def crawl_broken_links_view(request):
     if request.method == "GET":
         return render(request, "wrt/brokenLinks.html")
     elif request.method == "POST":
-        print(request.body)
-        serializer = BrokenLinksSerializer(data=json.loads(request.body))
-        if serializer.is_valid():
-            starting_links = serializer.validated_data["starting_links"]
+        data, status = find_broken_links(request, from_website=True)
+        if status == 200:
+            # TODO test that the writing works
+            broken_links, requires_access, output = data
+            print(data)
 
-            result = crawl(starting_links)
-            print(result)  # TODO Remove
-
-            return JsonResponse(result, status=200, safe=False)  # TODO make it safe
-        else:
-            print("Serializer errors 2:", serializer.errors)
-            return HttpResponse(serializer.errors, status=400)
+            # writing to database
+            for seed_url in output:
+                for page in output[seed_url]:
+                    past_search = PastSearch.objects.create(
+                        user=request.user,
+                        seed_url=seed_url,
+                        url_from=page,
+                        search_type="search"
+                    )
+                    past_search.save() 
+            return JsonResponse(data, status=200, safe=False) # TODO make it safe 
+        elif status == 400: # return the errors
+            return JsonResponse(data, status=400)
 
 
 @require_http_methods(["GET"])
