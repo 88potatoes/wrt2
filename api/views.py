@@ -64,23 +64,7 @@ def search_text_string(request):
         search_text = serializer.validated_data["search_text"]
         starting_links = serializer.validated_data["starting_links"]
         browser_info = serializer.validated_data["browser_info"]
-
         result = scrape(starting_links, search_text, browser_info)
-
-        # writing history to database
-        queried_webpages, broken_links, requires_access, output = result
-
-        # for seed_url in output:
-        #     for page in output[seed_url]:
-        #         # print(f"{seed_url}: {page}")
-        #         past_search = PastSearch.objects.create(
-        #             user=request.user,
-        #             seed_url=seed_url,
-        #             url_from=page,
-        #             search_type="search",
-        #             search_text=search_text,
-        #         )
-        #         past_search.save()
 
         return Response(result, status=status.HTTP_200_OK)
     else:
