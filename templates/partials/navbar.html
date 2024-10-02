@@ -1,19 +1,30 @@
 <nav class="navbar" style="width: 100%; position: relative;">
-    <div class="navbar-menu" style="position: absolute;">
-        <div class=">
-            <a href="#" id="logoutLink" class="tabs-is-centered">Logout</a>
+
+    <div class="navbar-brand">
+        <div class="navbar-item">
+            Website Review Tool
         </div>
     </div>
+
+    <div class="navbar-menu">
+        <div class="navbar-start">
+            <a href="{% url 'logout' %}" class="navbar-item">
+                String Search
+            </a>
+            <a href="{% url 'crawl_broken_links' %}" class="navbar-item">
+                Broken Links
+            </a>
+        </div>
+
+
+        <div class="navbar-end pr-5">
+            <a href="#" id="logoutLink" class="button">
+                Logout
+            </a>
+        </div>
+    </div>
+
     <script>
-        const logoutLink = document.getElementById('logoutLink');
-        logoutLink.addEventListener('click', function (event) {
-            event.preventDefault();
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            console.log('Logged out, tokens cleared.');
-            window.location.href = '/logout';
-        });
-        </script>
     <div class="tabs-is-centered">
         <ul>
             <li><a href="{% url 'search_term' %}">Search Term</a></li>
@@ -21,4 +32,5 @@
             <li><a href="{% url 'history' %}" >History</a></li>
         </ul>
     </div>
+    </script>
 </nav>

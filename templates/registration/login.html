@@ -13,7 +13,7 @@
             <div class="column is-4">
                 <form id="loginForm" method="post">
                     {% csrf_token %}
-                    <h1 class="title-has-text-centered">Login</h1>
+                    <h1 class="title has-text-centered">Login</h1>
                     <input type="hidden" name="next" value="{{ request.GET.next|default_if_none:'' }}">
 
                     {% if form.non_field_errors %}
@@ -23,12 +23,12 @@
                         {% endfor %}
                     </div>
                     {% endif %}
-                    <div class="field">
+                    <div class="field mb-5">
                         <label class="label" for="username">Username</label>
                         <input id="username" class="input" type="text" name="username" placeholder="Username" required>
                     </div>
 
-                    <div class="field">
+                    <div class="field mb-5">
                         <label class="label" for="password">Password</label>
                         <div class="control">
                             <input id="password" class="input" type="password" name="password" placeholder="Password"
@@ -39,14 +39,18 @@
 
                     <div class="field">
                         <div class="control">
-                            <button class="button is-link" type="submit">Login</button>
                             <a href="{% url 'create_user' %}">
-
                                 <button class="button is-link" type="button" id="create-user-button">Create User</button>
-                                </a>
+                            </a>
+                            <button class="button is-link" type="submit">Login</button>
                         </div>
                     </div>
 
+                    <div class="field">
+                        <div class="control">
+                            <div id="errorMessage" class="has-text-danger"></div>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>

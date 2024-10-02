@@ -55,7 +55,6 @@
                                 <input class="input" type="text" name="starting_links[]"
                                     placeholder="Enter a URL defining the search range..." required></input>
                             </div>
-
                         </div>
                         <button id="addSearchInputBtn" type="button" class="button is-link is-light"
                             style="margin-top: 10px;">Add URL</button>
@@ -70,15 +69,12 @@
             </div>
         </div>
 
-        <div class="container" style="margin-top: 20px;">
-            <div id="exportButtons" class="buttons" style="margin-top: 20px; justify-content: center;">
-                <!-- Export buttons will be added here -->
-            </div>
+        <div id="searchResultsContainer" class="container" style="margin-top: 20px;">
             <div id="searchResults">
                 <!-- Results will be displayed here after search -->
+                <!-- Export buttons will also be added here -->
             </div>
         </div>
-    </div>
     </div>
 {% endblock %}
 
