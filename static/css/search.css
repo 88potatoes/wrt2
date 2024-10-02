@@ -1,8 +1,9 @@
 html,
 body {
-    height: 100%;
+    min-height: 100%;
     margin: 0;
     padding: 0;
+    background-color: white;
 }
 
 #main-content {
@@ -20,11 +21,24 @@ body {
 .navbar {
     background-color: #000B34;
     position: fixed;
+    align-items: center;
     justify-content: flex-end;
     z-index: 9999;
 }
 
-.navbar .navbar-menu {
+.navbar-brand {
+    color: white;
+    font-size: 25px;
+    padding-left: 20px;
+    padding-right: 40px;
+}
+
+.navbar-start {
+    color: white;
+    font-size: 18px;
+}
+
+.navbar.navbar-menu {
     background-color: #000B34;
     display: flex;
     justify-content: flex-end;
@@ -32,13 +46,19 @@ body {
 }
 
 #logoutLink {
-    background-color: #000B34;
-    color: white;
-    padding: 10px 15px;
-    text-decoration: none;
+    background-color: #ABC1A7;
+    color: #000B34;
+    border-radius: 0;
+    width: 80px;
+    height: 35px;
+    flex-shrink: 0;
+    border: none;
     font-size: 16px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
+}
+
+#logoutLink:hover {
+    background-color: #000B34; 
+    color: white; 
 }
 
 .navbar-item {
@@ -150,7 +170,7 @@ body {
     width: 100%;
     max-width: 100%;
     position: relative;
-    height: 51px;
+    height: 45px;
     color: #000;
     border: none;
     border-radius: 0;
@@ -158,29 +178,40 @@ body {
 }
 
 .tab-title {
-    font-size: 24px;
-    font-weight: 50;
-    font-weight: bold;
+    font-size: 26px;
+    font-weight: 400;
     color: #000B34;
     margin-bottom: 4rem;
     text-align: left;
 }
 
-.label {
-    color: #000B34
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
 }
 
-.button.is-link {
-    background-color: #000B34;
-    width: 90px;
-    height: 39px;
-    border-radius: 0;
-    margin-top: 1rem;
-    border: none;
+.button-group {
+    display: flex;
+}
+
+h2 {
+    font-size: 26px;
+    font-weight: 400;
+    color: #000B34;
+    text-align: left; 
+}
+
+.label {
+    color: #000B34;
+    font-size: 18px;
+    font-weight: 400;
 }
 
 .button.is-link:hover {
     background-color: #000B34;
+    color: white;
 }
 
 .export-pdf {
@@ -188,7 +219,6 @@ body {
     color: #000B34;
     padding: 12px 75px; 
     font-size: 16px; 
-    border-radius: 5px; 
     margin-right: 10px; 
 }
 
@@ -197,7 +227,6 @@ body {
     color: #000B34;
     padding: 12px 75px; 
     font-size: 16px;
-    border-radius: 5px;
 }
 
 .export-pdf:hover,
@@ -238,7 +267,6 @@ body {
     width: 90px;
     height: 39px;
     border-radius: 0;
-    margin-top: 1rem;
     border: none;
 }
 
@@ -263,29 +291,37 @@ body {
     }
 }
 
-.table {
+.table.is-fullwidth{
     font-family: 'Roboto', sans-serif;
-    font-weight: 500;
+    font-weight: 200;
+    width: 100%;
+    word-break: break-all;
 }
 
 .table tr {
     border: 3px solid #FFFFFF;
+    word-wrap: break-word;
 }
 
 .table th {
-    border: 4px solid #FFFFFF;
+    border: 3px solid #FFFFFF;
+    word-wrap: break-word;
 }
 
 .table thead tr:first-child th {
     background-color: #404B74;
     color: #FFFFFF;
     font-weight: 500;
+    word-wrap: break-word;
+    border: 3px solid #FFFFFF;
 }
 
 .table thead tr.urlRange th {
     background-color: #8087A2;
     color: #FFFFFF;
     font-weight: 500;
+    word-wrap: break-word;
+    border: 3px solid #FFFFFF;
 }
 
 .results {
@@ -300,4 +336,9 @@ body {
     color: #000B34;
     font-weight: 500;
     border: 3px solid #FFFFFF;
+    word-wrap: break-word;
+}
+
+.table.is-bordered td {
+    border: 3px solid white;
 }
