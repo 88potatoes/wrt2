@@ -8,9 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth import authenticate, login, logout
 
-from api.serializers import (
-    ExportResultsSerializer
-)
+from api.serializers import ExportResultsSerializer
 from api.utils.export import export_to_excel, export_to_pdf
 from api.views import find_broken_links, find_text_string
 from website.models import PastSearch
@@ -40,10 +38,9 @@ def search_term_view(request):
                         search_text=queried_webpages[0][0],
                     )
                     past_search.save()
-            return JsonResponse(data, status=200, safe=False) # TODO make it safe 
-        elif status == 400: # return the errors
+            return JsonResponse(data, status=200, safe=False)  # TODO make it safe
+        elif status == 400:  # return the errors
             return JsonResponse(data, status=400)
-        
 
 
 @require_http_methods(["GET", "POST"])
@@ -65,11 +62,11 @@ def crawl_broken_links_view(request):
                         user=request.user,
                         seed_url=seed_url,
                         url_from=page,
-                        search_type="search"
+                        search_type="search",
                     )
-                    past_search.save() 
-            return JsonResponse(data, status=200, safe=False) # TODO make it safe 
-        elif status == 400: # return the errors
+                    past_search.save()
+            return JsonResponse(data, status=200, safe=False)  # TODO make it safe
+        elif status == 400:  # return the errors
             return JsonResponse(data, status=400)
 
 
