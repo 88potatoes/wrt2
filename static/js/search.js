@@ -204,60 +204,60 @@
 //     })
 // });
 
-function exportResults(searchResults, brokenLinks, accessRequired, exportType) {
-    const requestBody = {
-        search_results: searchResults,
-        broken_links: brokenLinks,
-        access_required_links: accessRequired,
-        export_type: exportType
-    };
+// function exportResults(searchResults, brokenLinks, accessRequired, exportType) {
+//     const requestBody = {
+//         search_results: searchResults,
+//         broken_links: brokenLinks,
+//         access_required_links: accessRequired,
+//         export_type: exportType
+//     };
 
-    const accessToken = localStorage.getItem('access_token');
-    const refreshToken = localStorage.getItem('refresh_token');
+//     const accessToken = localStorage.getItem('access_token');
+//     const refreshToken = localStorage.getItem('refresh_token');
 
-    if (accessToken == null || refreshToken == null) {
-        console.log("Tokens missing. Redirecting to login...");
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/logout';
-        return;
-    }
+//     if (accessToken == null || refreshToken == null) {
+//         console.log("Tokens missing. Redirecting to login...");
+//         localStorage.removeItem('access_token');
+//         localStorage.removeItem('refresh_token');
+//         window.location.href = '/logout';
+//         return;
+//     }
 
-    fetch('/api/export/', {
-        method: 'POST',
-        headers: {
-            'Authorization': 'Bearer ' + accessToken,
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}' // Include CSRF token
-        },
-        body: JSON.stringify(requestBody)
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.json(); 
-        } else if (response.status === 401) {
-            if (isTokenExpired(accessToken)) {
-                console.log("Access token is expired. Attempting to refresh...");
-                return refreshAccessToken().then(newAccessToken => {
-                    console.log("Retrying request with new access token.");
-                    return exportResults(searchResults, brokenLinks, accessRequired, exportType); // Retry with new token
-                });
-            } else {
-                console.log("Session ID might be invalid. Redirecting to login...");
-                localStorage.clear(); // Clear tokens
-                window.location.href = '/'; // Redirect to login page
-                return;
-            }
-        } else {
-            throw new Error('Export failed.');
-        }
-    })
-    .then(data => {
-        const filename = data.file_url.split('/').pop();
-        window.location.href = `/api/download/${filename}/`;
-    })
-    .catch(error => console.error('Error:', error));
-}
+//     fetch('/api/export/', {
+//         method: 'POST',
+//         headers: {
+//             'Authorization': 'Bearer ' + accessToken,
+//             'Content-Type': 'application/json',
+//             'X-CSRFToken': '{{ csrf_token }}' // Include CSRF token
+//         },
+//         body: JSON.stringify(requestBody)
+//     })
+//     .then(response => {
+//         if (response.ok) {
+//             return response.json(); 
+//         } else if (response.status === 401) {
+//             if (isTokenExpired(accessToken)) {
+//                 console.log("Access token is expired. Attempting to refresh...");
+//                 return refreshAccessToken().then(newAccessToken => {
+//                     console.log("Retrying request with new access token.");
+//                     return exportResults(searchResults, brokenLinks, accessRequired, exportType); // Retry with new token
+//                 });
+//             } else {
+//                 console.log("Session ID might be invalid. Redirecting to login...");
+//                 localStorage.clear(); // Clear tokens
+//                 window.location.href = '/'; // Redirect to login page
+//                 return;
+//             }
+//         } else {
+//             throw new Error('Export failed.');
+//         }
+//     })
+//     .then(data => {
+//         const filename = data.file_url.split('/').pop();
+//         window.location.href = `/api/download/${filename}/`;
+//     })
+//     .catch(error => console.error('Error:', error));
+// }
 
 function createExportButtons(searchResults, accessRequired, brokenLinks) {
     const exportPdfButton = document.createElement('button');
@@ -303,11 +303,11 @@ function createExportButtons(searchResults, accessRequired, brokenLinks) {
 //     searchUrlInputContainer.appendChild(newFieldDiv);
 // });
 
-function isTokenExpired(token) {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const currentTime = Date.now() / 1000; // Get current time in seconds
-    return payload.exp < currentTime; // Check if the token is expired
-}
+// function isTokenExpired(token) {
+//     const payload = JSON.parse(atob(token.split('.')[1]));
+//     const currentTime = Date.now() / 1000; // Get current time in seconds
+//     return payload.exp < currentTime; // Check if the token is expired
+// }
 
 navigator.sayswho = (function() {
     var N = navigator.appName, ua = navigator.userAgent, tem;

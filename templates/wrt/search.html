@@ -6,7 +6,7 @@
 {% block head %} 
     <link rel="stylesheet" href="{% static 'css/search.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- probably don't need to load in all the icons -->
-    <!-- <script src="{% static 'js/search.js' %}" defer></script>  -->
+    <!-- <script src="{% static 'js/search.js' %}" defer></script>  TODO remove this -->
 {% endblock %}
 
 {% block content %} 
@@ -224,5 +224,83 @@
         newFieldDiv.appendChild(deleteBtn);
         searchUrlInputContainer.appendChild(newFieldDiv);
     });
+
+    function exportResults(searchResults, brokenLinks, accessRequired, exportType) {
+        const requestBody = {
+            search_results: searchResults,
+            broken_links: brokenLinks,
+            access_required_links: accessRequired,
+            export_type: exportType
+        };
+
+        console.log(requestBody);
+
+        // const accessToken = localStorage.getItem('access_token');
+        // const refreshToken = localStorage.getItem('refresh_token');
+
+        // if (accessToken == null || refreshToken == null) {
+        //     console.log("Tokens missing. Redirecting to login...");
+        //     localStorage.removeItem('access_token');
+        //     localStorage.removeItem('refresh_token');
+        //     window.location.href = '/logout';
+        //     return;
+        // }
+
+        fetch("{% url 'download' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}' // Include CSRF token
+            },
+            body: JSON.stringify(requestBody)
+        })
+        .then(response => {
+            return response.json();
+            // if (response.ok) {
+            //     return response.json(); 
+            // } else if (response.status === 401) {
+            //     if (isTokenExpired(accessToken)) {
+            //         console.log("Access token is expired. Attempting to refresh...");
+            //         return refreshAccessToken().then(newAccessToken => {
+            //             console.log("Retrying request with new access token.");
+            //             return exportResults(searchResults, brokenLinks, accessRequired, exportType); // Retry with new token
+            //         });
+            //     } else {
+            //         console.log("Session ID might be invalid. Redirecting to login...");
+            //         localStorage.clear(); // Clear tokens
+            //         window.location.href = '/'; // Redirect to login page
+            //         return;
+            //     }
+            // } else {
+            //     throw new Error('Export failed.');
+            // }
+        })
+        .then(data => {
+            const filename = data.file_url.split('/').pop();
+            window.location.href = `/download/${filename}/`;
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function createExportButtons(searchResults, accessRequired, brokenLinks) {
+        const exportPdfButton = document.createElement('button');
+        exportPdfButton.textContent = 'Export to PDF';
+        exportPdfButton.classList.add('button', 'is-link', 'export-pdf');
+        exportPdfButton.style.marginRight = '10px';
+        exportPdfButton.addEventListener('click', () => {
+            console.log('Export to PDF button clicked');
+            exportResults(searchResults, brokenLinks, accessRequired, 'pdf');
+        });
+
+        const exportExcelButton = document.createElement('button');
+        exportExcelButton.textContent = 'Export to Excel';
+        exportExcelButton.classList.add('button', 'is-link', 'export-excel');
+        exportExcelButton.addEventListener('click', () => {
+            console.log('Export to Excel button clicked');
+            exportResults(searchResults, brokenLinks, accessRequired, 'excel');
+        });
+
+        return [exportPdfButton, exportExcelButton];
+    }
 </script>
 {% endblock %}

@@ -20,4 +20,6 @@ urlpatterns = [
     ),
     path("test", views.test_view, name="test_view"),
     path("create_user", views.create_user_view, name="create_user"),
+    path("download", views.download, name="download"),
+    path("download/<str:filename>/", views.download_view, name="download_from_website"),
 ]
