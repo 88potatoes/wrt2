@@ -4,11 +4,20 @@ from .utils.broken_links import crawl
 from .utils.string_match import scrape
 from .utils.robots import process_robots, check_link_ok
 from .utils.create_pattern import create_pattern, validate_brackets, replace
-from .utils.search import check_char, find_prefix, find_suffix, url_encode, search, search_without_highlighting
+from .utils.search import (
+    check_char,
+    find_prefix,
+    find_suffix,
+    url_encode,
+    search,
+    search_without_highlighting,
+)
 from bs4 import BeautifulSoup
-import json
+
+# import json
 import requests
-import re
+
+# import re
 
 
 class UnitTests(TestCase):
@@ -35,7 +44,9 @@ class UnitTests(TestCase):
                 "http://example.com/page2",
             ],
         )
-        self.assertNotIn("https://othersite.com/page3", result[-1]["http://example.com"])
+        self.assertNotIn(
+            "https://othersite.com/page3", result[-1]["http://example.com"]
+        )
 
         result = crawl(["http://example.com"])
         self.assertEqual(result[0], [])
@@ -48,7 +59,9 @@ class UnitTests(TestCase):
                 "http://example.com/page2",
             ],
         )
-        self.assertNotIn("https://othersite.com/page3", result[-1]["http://example.com"])
+        self.assertNotIn(
+            "https://othersite.com/page3", result[-1]["http://example.com"]
+        )
 
     @patch("requests.get")
     def test_malformed_url(self, mock_get):
@@ -63,7 +76,7 @@ class UnitTests(TestCase):
         result = scrape(
             ["https://research.unimelb.edu.au", "https://www.unimelb.edu.au"],
             "search text",
-            "brave"
+            "brave",
         )
         self.assertIn("https://research.unimelb.edu.au", result[-1])
         self.assertIn("https://www.unimelb.edu.au", result[-1])
@@ -97,7 +110,11 @@ class UnitTests(TestCase):
         self.assertTrue(search_without_highlighting(soup, "This"))
         self.assertTrue(search_without_highlighting(soup, "test string"))
         self.assertFalse(search_without_highlighting(soup, "no string"))
-        self.assertFalse(search_without_highlighting(BeautifulSoup("<html></html>", "html.parser"), "test"))
+        self.assertFalse(
+            search_without_highlighting(
+                BeautifulSoup("<html></html>", "html.parser"), "test"
+            )
+        )
 
     @patch("requests.get")
     def test_timeout(self, mock_get):
@@ -161,7 +178,8 @@ class UnitTests(TestCase):
             result[-1]["https://handbook.unimelb.edu.au/"],
         )
         self.assertEqual(
-            result[:-1], [[], [], ["https://handbook.unimelb.edu.au/2024/courses/staff"]]
+            result[:-1],
+            [[], [], ["https://handbook.unimelb.edu.au/2024/courses/staff"]],
         )
 
     @patch("requests.get")
@@ -223,7 +241,8 @@ class UnitTests(TestCase):
             result[-1]["https://handbook.unimelb.edu.au/"],
         )
         self.assertEqual(
-            result[:-1], [["https://handbook.unimelb.edu.au/2024/courses/arts-link"], []]
+            result[:-1],
+            [["https://handbook.unimelb.edu.au/2024/courses/arts-link"], []],
         )
 
         mock_get.side_effect = side_effect
@@ -237,7 +256,10 @@ class UnitTests(TestCase):
             "https://handbook.unimelb.edu.au/2024/courses/arts-link",
             result[-1]["https://handbook.unimelb.edu.au/"],
         )
-        self.assertEqual(result[:-1], [[], ['https://handbook.unimelb.edu.au/2024/courses/arts-link'], []])
+        self.assertEqual(
+            result[:-1],
+            [[], ["https://handbook.unimelb.edu.au/2024/courses/arts-link"], []],
+        )
 
     # broken link as input
     @patch("requests.get")
@@ -409,51 +431,65 @@ class UnitTests(TestCase):
     def test_validate_brackets_nested(self):
         with self.assertRaises(ValueError):
             validate_brackets("[[abc]]")
-    
+
     def test_replace_no_empty_options(self):
-        self.assertEqual(replace(r'(||)'), r"(\b|\b|\b)")
-        self.assertEqual(replace(r'(a|b|c)'), r"(a|b|c)")
-        self.assertEqual(replace(r'(a)'), r"(a)")
-    
+        self.assertEqual(replace(r"(||)"), r"(\b|\b|\b)")
+        self.assertEqual(replace(r"(a|b|c)"), r"(a|b|c)")
+        self.assertEqual(replace(r"(a)"), r"(a)")
+
     def test_create_pattern_for_word_search(self):
         self.assertEqual(create_pattern("beep"), r"\bbeep\b")
-        self.assertEqual(create_pattern("hello world"), r"\bhello(?:\s|\r\n|\r|\n)*world\b")
-    
+        self.assertEqual(
+            create_pattern("hello world"), r"\bhello(?:\s|\r\n|\r|\n)*world\b"
+        )
+
     def test_create_pattern_for_percentage(self):
         self.assertEqual(create_pattern("%llo wor%"), r"\w*llo(?:\s|\r\n|\r|\n)*wor\w*")
-        self.assertEqual(create_pattern("h%llo wor%d"), r"\bh\w*llo(?:\s|\r\n|\r|\n)*wor\w*d\b")
-    
+        self.assertEqual(
+            create_pattern("h%llo wor%d"), r"\bh\w*llo(?:\s|\r\n|\r|\n)*wor\w*d\b"
+        )
+
     def test_create_pattern_for_question_mark(self):
-        self.assertEqual(create_pattern("?ello worl?"), r"\b.ello(?:\s|\r\n|\r|\n)*worl.\b")
-        self.assertEqual(create_pattern("h?llo wor?d"), r"\bh.llo(?:\s|\r\n|\r|\n)*wor.d\b")
-    
+        self.assertEqual(
+            create_pattern("?ello worl?"), r"\b.ello(?:\s|\r\n|\r|\n)*worl.\b"
+        )
+        self.assertEqual(
+            create_pattern("h?llo wor?d"), r"\bh.llo(?:\s|\r\n|\r|\n)*wor.d\b"
+        )
+
     def test_create_pattern_for_alternation_brackets(self):
-        self.assertEqual(create_pattern("[H|b]ello worl[d|!]"), r"(H|b)ello(?:\s|\r\n|\r|\n)*worl(d|!)")
-        self.assertEqual(create_pattern("Hello [w|m|r]orld"), r"\bHello(?:\s|\r\n|\r|\n)*(w|m|r)orld\b")
+        self.assertEqual(
+            create_pattern("[H|b]ello worl[d|!]"),
+            r"(H|b)ello(?:\s|\r\n|\r|\n)*worl(d|!)",
+        )
+        self.assertEqual(
+            create_pattern("Hello [w|m|r]orld"),
+            r"\bHello(?:\s|\r\n|\r|\n)*(w|m|r)orld\b",
+        )
         with self.assertRaises(ValueError):
             create_pattern("[||||]")
-    
+
     def test_create_pattern_for_actual_percentage_sign(self):
         self.assertEqual(create_pattern("\%"), r"%")
-    
+
     def test_create_pattern_for_actual_question_mark(self):
         self.assertEqual(create_pattern("\?"), r"\?")
-    
+
     def test_create_pattern_for_actual_square_brackets(self):
         self.assertEqual(create_pattern("\[\]"), r"\[\]")
 
     def test_create_pattern_for_percentage_in_brackets(self):
         self.assertEqual(create_pattern("h[%|e]yyy"), r"\bh(\w*|e)yyy\b")
         self.assertEqual(create_pattern("[%|y]ee[%|t]"), r"(\w*|y)ee(\w*|t)")
-    
+
     def test_create_pattern_for_question_mark_in_brackets(self):
         self.assertEqual(create_pattern("h[?|eyyy]yyy"), r"\bh(.|eyyy)yyy\b")
         self.assertEqual(create_pattern("[?|y]ee[?|t!]"), r"(.|y)ee(.|t!)")
-    
+
     def test_create_pattern_for_percentage_and_question_mark_in_brackets(self):
         self.assertEqual(create_pattern("h[?|%]yyy"), r"\bh(.|\w*)yyy\b")
         self.assertEqual(create_pattern("[?|%]ee[?|%|t!]"), r"(.|\w*)ee(.|\w*|t!)")
-    
+
     def test_number_of_options(self):
         with self.assertRaises(ValueError):
             create_pattern("[|||||||||]")
@@ -467,7 +503,7 @@ class UnitTests(TestCase):
     def test_url_encode(self):
         self.assertEqual(url_encode("(beep+boop)"), "%28beep%2Bboop%29")
         self.assertEqual(url_encode("-~._"), "%2D%7E%2E%5F")
-    
+
     def test_find_prefix(self):
         text = "hey i am awesome\nyay!\n"
         self.assertEqual(find_prefix(text, 22), 16)
@@ -477,7 +513,7 @@ class UnitTests(TestCase):
         self.assertEqual(find_prefix(text, 1), 1)
         # test char limit
         text = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit.\n"
-        self.assertEqual(find_prefix(text, len(text)-1), 11)
+        self.assertEqual(find_prefix(text, len(text) - 1), 11)
 
     def test_find_suffix(self):
         text = "\nhey i am awesome\nyay!"
@@ -494,17 +530,17 @@ class UnitTests(TestCase):
         self.assertTrue(check_char("A"))
         self.assertTrue(check_char("z"))
         self.assertTrue(check_char("5"))
-    
+
     def test_check_char_special_char(self):
         self.assertTrue(check_char("-"))
         self.assertTrue(check_char("_"))
         self.assertTrue(check_char("@"))
         self.assertTrue(check_char("!"))
-    
+
     def test_check_char_disallowed(self):
-        self.assertFalse(check_char("\t")) 
-        self.assertFalse(check_char("\n"))  
-        self.assertFalse(check_char("\r"))  
+        self.assertFalse(check_char("\t"))
+        self.assertFalse(check_char("\n"))
+        self.assertFalse(check_char("\r"))
 
     def test_check_char_non_printable(self):
         self.assertFalse(check_char("\x00"))  # Null byte
@@ -514,7 +550,7 @@ class UnitTests(TestCase):
 
     def test_check_char_invalid_characters(self):
         self.assertFalse(check_char("\u2603"))  # Unicode snowman (non-ASCII)
-        self.assertFalse(check_char("😊")) # Emoji (non-ASCII)
+        self.assertFalse(check_char("😊"))  # Emoji (non-ASCII)
 
 
 # integration tests (internal)
@@ -682,9 +718,7 @@ class StringMatchTest(TestCase):
 
         mock_get.side_effect = side_effect
         result = scrape(
-            ["https://handbook.unimelb.edu.au/2024/courses/b-arts"],
-            "aRtS",
-            "brave"
+            ["https://handbook.unimelb.edu.au/2024/courses/b-arts"], "aRtS", "brave"
         )
         print("CONTAINS SEARCH TERM", result)
         self.assertIn("https://handbook.unimelb.edu.au/2024/courses/b-arts", result[-1])
@@ -699,7 +733,7 @@ class StringMatchTest(TestCase):
             result[0],
             [
                 ("aRtS", "https://handbook.unimelb.edu.au/2024/courses/b-arts"),
-                ("aRtS", "https://handbook.unimelb.edu.au/2024/courses/arts-link")
+                ("aRtS", "https://handbook.unimelb.edu.au/2024/courses/arts-link"),
             ],
         )
         self.assertCountEqual(
@@ -743,9 +777,7 @@ class StringMatchTest(TestCase):
 
         mock_get.side_effect = side_effect
         result = scrape(
-            ["https://handbook.unimelb.edu.au/2024/courses/b-arts"],
-            "Yeet",
-            "brave"
+            ["https://handbook.unimelb.edu.au/2024/courses/b-arts"], "Yeet", "brave"
         )
         self.assertIn("https://handbook.unimelb.edu.au/2024/courses/b-arts", result[-1])
         self.assertEqual(
@@ -756,8 +788,10 @@ class StringMatchTest(TestCase):
             ],
         )
         self.assertEqual(
-            result[:-1], [[], [], ["https://handbook.unimelb.edu.au/2024/courses/staff"]]
+            result[:-1],
+            [[], [], ["https://handbook.unimelb.edu.au/2024/courses/staff"]],
         )
+
 
 class SearchTest(TestCase):
     @patch("requests.get")
@@ -778,13 +812,18 @@ class SearchTest(TestCase):
             """,
                 )
             return Mock(status_code=200, text="User-agent: *\nDisallow: /private/\n")
-        
-        mock_get.side_effect = side_effect 
-        search_term = 'test'
+
+        mock_get.side_effect = side_effect
+        search_term = "test"
         pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'\btest\b')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E"])
+        self.assertEqual(pattern, r"\btest\b")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E"],
+        )
 
     @patch("requests.get")
     def test_one_word_search(self, mock_get):
@@ -804,13 +843,18 @@ class SearchTest(TestCase):
             """,
                 )
             return Mock(status_code=200, text="User-agent: *\nDisallow: /private/\n")
-        
-        mock_get.side_effect = side_effect 
-        search_term = 'test page'
+
+        mock_get.side_effect = side_effect
+        search_term = "test page"
         pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'\btest(?:\s|\r\n|\r|\n)*page\b')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [":~:text=this%20is%20a-,test%20page,-for%20the%20bachelor%20of%20arts%2E"])
+        self.assertEqual(pattern, r"\btest(?:\s|\r\n|\r|\n)*page\b")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [":~:text=this%20is%20a-,test%20page,-for%20the%20bachelor%20of%20arts%2E"],
+        )
 
     @patch("requests.get")
     def test_word_search_span_multiple_elements(self, mock_get):
@@ -830,12 +874,16 @@ class SearchTest(TestCase):
             """,
                 )
             return Mock(status_code=200, text="User-agent: *\nDisallow: /private/\n")
-        
-        mock_get.side_effect = side_effect 
-        search_term = 'degree this is'
+
+        mock_get.side_effect = side_effect
+        search_term = "degree this is"
         pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'\bdegree(?:\s|\r\n|\r|\n)*this(?:\s|\r\n|\r|\n)*is\b')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
+        self.assertEqual(
+            pattern, r"\bdegree(?:\s|\r\n|\r|\n)*this(?:\s|\r\n|\r|\n)*is\b"
+        )
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
         self.assertEqual(fragments, [":~:text=degree,this%20is"])
 
     @patch("requests.get")
@@ -856,30 +904,45 @@ class SearchTest(TestCase):
             """,
                 )
             return Mock(status_code=200, text="User-agent: *\nDisallow: /private/\n")
-        
-        mock_get.side_effect = side_effect 
-        search_term = 'te%'
-        pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'\bte\w*')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E"])
 
-        search_term = '%ts'
+        mock_get.side_effect = side_effect
+        search_term = "te%"
         pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'\w*ts\b')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [
-            ":~:text=arts,-degree", 
-            ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E",
-            ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,arts,-link",
-        ])
+        self.assertEqual(pattern, r"\bte\w*")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E"],
+        )
 
-        search_term = 't%t'
+        search_term = "%ts"
         pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'\bt\w*t\b')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E"])
-    
+        self.assertEqual(pattern, r"\w*ts\b")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [
+                ":~:text=arts,-degree",
+                ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E",
+                ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,arts,-link",
+            ],
+        )
+
+        search_term = "t%t"
+        pattern = create_pattern(search_term)
+        self.assertEqual(pattern, r"\bt\w*t\b")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E"],
+        )
+
     @patch("requests.get")
     def test_question_mark_wildcard(self, mock_get):
         def side_effect(url, *args, **kwargs):
@@ -898,23 +961,33 @@ class SearchTest(TestCase):
             """,
                 )
             return Mock(status_code=200, text="User-agent: *\nDisallow: /private/\n")
-        
-        mock_get.side_effect = side_effect 
-        search_term = 'te?t'
-        pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'\bte.t\b')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E"])
 
-        search_term = '?rt?'
+        mock_get.side_effect = side_effect
+        search_term = "te?t"
         pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'\b.rt.\b')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [
-            ":~:text=arts,-degree", 
-            ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E",
-            ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,arts,-link",
-        ])
+        self.assertEqual(pattern, r"\bte.t\b")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E"],
+        )
+
+        search_term = "?rt?"
+        pattern = create_pattern(search_term)
+        self.assertEqual(pattern, r"\b.rt.\b")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [
+                ":~:text=arts,-degree",
+                ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E",
+                ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,arts,-link",
+            ],
+        )
 
     @patch("requests.get")
     def test_alternation_brackets_wildcard(self, mock_get):
@@ -936,27 +1009,37 @@ class SearchTest(TestCase):
             """,
                 )
             return Mock(status_code=200, text="User-agent: *\nDisallow: /private/\n")
-        
-        mock_get.side_effect = side_effect 
-        search_term = 'te[s|x|l]t'
-        pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'\bte(s|x|l)t\b')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [
-            ":~:text=some-,text,-%2E",
-            ":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E"
-        ])
 
-        search_term = '[A|Ba]rt[s|]'
+        mock_get.side_effect = side_effect
+        search_term = "te[s|x|l]t"
         pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'(A|Ba)rt(s|\b)')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [
-            ":~:text=arts,-degree", 
-            ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E",
-            ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,barts,-link",
-            ":~:text=barts%20link-,bart,-link"
-        ])
+        self.assertEqual(pattern, r"\bte(s|x|l)t\b")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [
+                ":~:text=some-,text,-%2E",
+                ":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E",
+            ],
+        )
+
+        search_term = "[A|Ba]rt[s|]"
+        pattern = create_pattern(search_term)
+        self.assertEqual(pattern, r"(A|Ba)rt(s|\b)")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [
+                ":~:text=arts,-degree",
+                ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E",
+                ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,barts,-link",
+                ":~:text=barts%20link-,bart,-link",
+            ],
+        )
 
     @patch("requests.get")
     def test_other_wildcards_in_alternation_brackets(self, mock_get):
@@ -979,52 +1062,66 @@ class SearchTest(TestCase):
             """,
                 )
             return Mock(status_code=200, text="User-agent: *\nDisallow: /private/\n")
-        
-        mock_get.side_effect = side_effect 
-        search_term = 'te[s|x|%]t'
+
+        mock_get.side_effect = side_effect
+        search_term = "te[s|x|%]t"
         pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'\bte(s|x|\w*)t\b')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [
-            ":~:text=some-,tesomerandomtextinthemiddlet,-%2E",
-            ":~:text=some-,text,-%2E",
-            ":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E"
-        ])
+        self.assertEqual(pattern, r"\bte(s|x|\w*)t\b")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [
+                ":~:text=some-,tesomerandomtextinthemiddlet,-%2E",
+                ":~:text=some-,text,-%2E",
+                ":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E",
+            ],
+        )
 
-        search_term = 'te[?|%]t'
+        search_term = "te[?|%]t"
         pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'\bte(.|\w*)t\b')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [
-            ":~:text=some-,tesomerandomtextinthemiddlet,-%2E",
-            ":~:text=some-,text,-%2E",
-            ":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E"
-        ])
+        self.assertEqual(pattern, r"\bte(.|\w*)t\b")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [
+                ":~:text=some-,tesomerandomtextinthemiddlet,-%2E",
+                ":~:text=some-,text,-%2E",
+                ":~:text=this%20is%20a-,test,-page%20for%20the%20bachelor%20of%20arts%2E",
+            ],
+        )
 
-        search_term = '[?|B?]rt[?|]'
+        search_term = "[?|B?]rt[?|]"
         pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'(.|B.)rt(.|\b)')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [
-            ":~:text=arts,-degree", 
-            ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E",
-            ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,barts,-link",
-            ":~:text=barts%20link-,bart,-link"
-        ])
+        self.assertEqual(pattern, r"(.|B.)rt(.|\b)")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [
+                ":~:text=arts,-degree",
+                ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E",
+                ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,barts,-link",
+                ":~:text=barts%20link-,bart,-link",
+            ],
+        )
 
-        search_term = '[?|%]rt[?|%|]'
+        search_term = "[?|%]rt[?|%|]"
         pattern = create_pattern(search_term)
-        self.assertEqual(pattern, r'(.|\w*)rt(.|\w*|\b)')
-        fragments = search(pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts")
-        self.assertEqual(fragments, [
-            ":~:text=arts,-degree", 
-            ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E",
-            ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,barts,-link",
-            ":~:text=barts%20link-,bart,-link"
-        ])
-
-
-
-
-
-
+        self.assertEqual(pattern, r"(.|\w*)rt(.|\w*|\b)")
+        fragments = search(
+            pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
+        )
+        self.assertEqual(
+            fragments,
+            [
+                ":~:text=arts,-degree",
+                ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E",
+                ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,barts,-link",
+                ":~:text=barts%20link-,bart,-link",
+            ],
+        )

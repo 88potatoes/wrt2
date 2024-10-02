@@ -9,9 +9,9 @@ urlpatterns = [
     path(
         "crawl_broken_links", views.crawl_broken_links_view, name="crawl_broken_links"
     ),  # Broken links
-    # path('', views.history_view, name='login'),    # History
-    path("", views.render_login, name="login_page"),
-    path("login", views.login_view, name="login_form"),
+    path("", views.CustomLoginView.as_view(), name="login_page"),
+    # path("", views.render_login, name="login_page"),
+    # path("login", views.login_view, name="login_form"),
     path("logout", views.logout_view, name="logout"),
     path(
         "accounts/password_reset/",
