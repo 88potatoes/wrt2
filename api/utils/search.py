@@ -3,7 +3,8 @@ import re
 import urllib
 import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
+
+# from selenium import webdriver
 
 # character limit for URL fragments
 CHAR_LIMIT = 50
@@ -124,11 +125,12 @@ def url_encode(string):
     string = re.sub(r"~", "%7E", string)
     return string
 
+
 # Search function with text highlighting, using requests and BeautifulSoup
 def search(pattern, url):
     # Fetch the webpage content using requests
     response = requests.get(url)
-    
+
     # Ensure the request was successful
     if not (200 <= response.status_code <= 299):
         return []
@@ -212,6 +214,7 @@ def search(pattern, url):
 
     return fragments
 
+
 # # search function with text highlighting
 # def search(pattern, url):
 #     # open the webpage to get both Javascript and HTML content
@@ -220,7 +223,7 @@ def search(pattern, url):
 #     options.add_argument("--headless")
 #     options.add_argument("--enable-logging")
 #     driver = webdriver.Chrome(options=options)
-    
+
 #     driver.implicitly_wait(10)
 #     driver.get(url)
 #     driver.execute_script(remove_mobile_elements_js)

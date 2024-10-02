@@ -1,10 +1,10 @@
 from django.test import TestCase
 from unittest.mock import Mock, patch
-from utils.broken_links import crawl
-from utils.string_match import scrape
-from utils.robots import process_robots, check_link_ok
-from utils.create_pattern import create_pattern, validate_brackets, replace
-from utils.search import check_char, find_prefix, find_suffix, url_encode, search, search_without_highlighting
+from .utils.broken_links import crawl
+from .utils.string_match import scrape
+from .utils.robots import process_robots, check_link_ok
+from .utils.create_pattern import create_pattern, validate_brackets, replace
+from .utils.search import check_char, find_prefix, find_suffix, url_encode, search, search_without_highlighting
 from bs4 import BeautifulSoup
 import json
 import requests

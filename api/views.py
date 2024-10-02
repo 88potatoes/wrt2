@@ -12,10 +12,11 @@ from .serializers import (
     BrokenLinksSerializer,
     ExportResultsSerializer,
 )
-from .models import PastSearch
-from utils.broken_links import crawl
-from utils.string_match import scrape
-from utils.export import export_to_excel, export_to_pdf
+
+# from .models import PastSearch
+from .utils.broken_links import crawl
+from .utils.string_match import scrape
+from .utils.export import export_to_excel, export_to_pdf
 import os
 import threading
 
@@ -69,17 +70,17 @@ def search_text_string(request):
         # writing history to database
         queried_webpages, broken_links, requires_access, output = result
 
-        for seed_url in output:
-            for page in output[seed_url]:
-                # print(f"{seed_url}: {page}")
-                past_search = PastSearch.objects.create(
-                    user=request.user,
-                    seed_url=seed_url,
-                    url_from=page,
-                    search_type="search",
-                    search_text=search_text,
-                )
-                past_search.save()
+        # for seed_url in output:
+        #     for page in output[seed_url]:
+        #         # print(f"{seed_url}: {page}")
+        #         past_search = PastSearch.objects.create(
+        #             user=request.user,
+        #             seed_url=seed_url,
+        #             url_from=page,
+        #             search_type="search",
+        #             search_text=search_text,
+        #         )
+        #         past_search.save()
 
         return Response(result, status=status.HTTP_200_OK)
     else:
