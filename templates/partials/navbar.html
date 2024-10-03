@@ -8,11 +8,14 @@
 
     <div class="navbar-menu">
         <div class="navbar-start">
-            <a href="{% url 'logout' %}" class="navbar-item">
+            <a href="{% url 'search_term' %}" class="navbar-item">
                 String Search
             </a>
             <a href="{% url 'crawl_broken_links' %}" class="navbar-item">
                 Broken Links
+            </a>
+            <a href="{% url 'history' %}" class="navbar-item">
+                Search History
             </a>
         </div>
 

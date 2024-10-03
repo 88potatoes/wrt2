@@ -38,17 +38,13 @@
                             <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
                                 style="margin-top: 10px;">Add URL</button>
                         </div>
-                        <div>
-                            <button id="submit_button" type="submit" class="button is-link is-light"
-                                style="margin-top: 10px;">Search</button>
-                        </div>
                     </div>
 
                     <div class="field"></div>
                         <div class="control">
                             <button class="button is-link" type="submit">Search</button>
                         </div>
-                    </div>
+                    </div> 
                 </form>
             </div>
         </div>
@@ -131,7 +127,7 @@
 
                 table.appendChild(tableBody);
                 crawlResultsDiv.appendChild(table);
-            } else if (data[0].length == 0) {
+            } else if (data[0] && data[0].length == 0) {
                 crawlResultsDiv.innerHTML = `
                 <p>No results found!</p>
                 `;
