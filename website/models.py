@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 
 # Create your models here.
-class PastSearch(models.Model):
+class PastSearch(models.Model): # TODO delete this model
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     search_text = models.CharField(
         max_length=255, blank=True, null=True
@@ -22,30 +22,30 @@ class PastSearch(models.Model):
 
     def __str__(self):
         return f"{self.search_text} - {self.created_at}"
-    
+
+
 class SearchQuery(models.Model):
     class QueryType(models.TextChoices):
-        SEARCH = 'Search', 'Search'
-        CRAWL = 'Crawl', 'Crawl'
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="search_queries")
+        SEARCH = "Search", "Search"
+        CRAWL = "Crawl", "Crawl"
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="search_queries"
+    )
     type = models.CharField(
-        max_length=6,
-        choices=QueryType.choices,
-        default=QueryType.SEARCH)
+        max_length=6, choices=QueryType.choices, default=QueryType.SEARCH
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+
 
 class SearchResult(models.Model):
-    searchquery = models.ForeignKey(SearchQuery, on_delete=models.CASCADE, related_name="results")
-    url = models.CharField(max_length=255, default="")
-    url_to = models.CharField(
-        max_length=255, null=True, blank=True
-    ) 
-    created_at = models.DateTimeField(auto_now_add=True)
-    starting_link = models.CharField(
-        max_length=255, null=True, blank=True
+    searchquery = models.ForeignKey(
+        SearchQuery, on_delete=models.CASCADE, related_name="results"
     )
-
-
+    url = models.CharField(max_length=255, default="")
+    url_to = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    starting_link = models.CharField(max_length=255, null=True, blank=True)
 
 
 # - id
