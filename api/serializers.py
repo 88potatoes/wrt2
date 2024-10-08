@@ -84,6 +84,7 @@ class ExportResultsSerializer(serializers.Serializer):
     export_type = serializers.ChoiceField(
         choices=["pdf", "excel", "csv"], required=True
     )
+    search_type = serializers.CharField(max_length=50, required=True)
 
     def validate_search_results(self, value):
         if not all(isinstance(item, list) and len(item) == 2 for item in value):
@@ -94,3 +95,9 @@ class ExportResultsSerializer(serializers.Serializer):
 
     def validate_export_type(self, value):
         return validate_export_type(value)
+    
+    def validate_search_type(self, value):
+        valid_search_types = ["search_term", "broken_links"]
+        if value not in valid_search_types:
+            raise serializers.ValidationError("Invalid search type provided.")
+        return value
