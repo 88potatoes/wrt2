@@ -45,18 +45,6 @@ def search_term_view(request):
                     searchquery=new_search, url=url, search_text=search_term
                 )
 
-            # for seed_url in output:
-            #     for page in output[seed_url]:
-
-            # TODO replace this with the new schema
-            # past_search = PastSearch.objects.create(
-            #     user=request.user,
-            #     seed_url=seed_url,
-            #     url_from=page,
-            #     search_type="search",
-            #     search_text=queried_webpages[0][0],
-            # )
-            # past_search.save()
             return JsonResponse(data, status=200, safe=False)  # TODO make it safe
         elif status == 400:  # return the errors
             return JsonResponse(data, status=400)
