@@ -51,6 +51,9 @@
 
         <div class="columns is-centered" style="margin-top: 20px;">
             <div class="column is-8">
+                <div id="exportButtons">
+                    <!-- Export buttons will be added here after the search -->
+                </div>
                 <div id="crawlResults">
                     <!-- Results will be displayed here after search -->
                 </div>
@@ -91,12 +94,12 @@
             const crawlResultsDiv = document.getElementById('crawlResults');
 
             if (data.length > 0 && data[0].length > 0) {
-                // clears previous results
+                // Clears previous results
                 crawlResultsDiv.innerHTML = '';
 
                 const resultsTitle = document.createElement('h2');
                 resultsTitle.classList.add('results');
-                resultsTitle.textContent = 'Results - Strings Matched';
+                resultsTitle.textContent = 'Results - Broken Links';
                 crawlResultsDiv.appendChild(resultsTitle);
 
                 const table = document.createElement('table');
@@ -104,12 +107,8 @@
                 table.innerHTML = `
                     <thead>
                         <tr>
-                            <th>Matched String</th>
+                            <th>Broken Link</th>
                             <th>Page URL</th>
-                        </tr>
-
-                        <tr class="urlRange">
-                            <th colspan="2">Results for Website Range "${starting_links[0]}"</th>
                         </tr>
                     </thead>
                 `;
@@ -119,7 +118,7 @@
                 data[0].forEach(link => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${searchText}</td>
+                        <td>${link}</td>
                         <td><a href="${link}" target="_blank">${link}</a></td>
                     `;
                     tableBody.appendChild(row);
@@ -127,9 +126,16 @@
 
                 table.appendChild(tableBody);
                 crawlResultsDiv.appendChild(table);
+
+                // Call the export buttons functionality
+                const buttons = createExportButtons([], data[0], data[1], 'broken_links');
+                const exportButtonsDiv = document.getElementById('exportButtons');
+                exportButtonsDiv.innerHTML = '';
+                exportButtonsDiv.appendChild(buttons[0]);
+                exportButtonsDiv.appendChild(buttons[1]);
             } else if (data[0] && data[0].length == 0) {
                 crawlResultsDiv.innerHTML = `
-                <p>No results found!</p>
+                <p>No broken links found!</p>
                 `;
             } else if (data.message) {
                 crawlResultsDiv.innerHTML = `<p>${data.message}</p>`;

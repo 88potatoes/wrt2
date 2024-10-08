@@ -15,6 +15,52 @@
     {% block content %}{% endblock %}
     {% block script %}{% endblock %}
     <script>
+        // Function to create export buttons
+        function createExportButtons(searchResults, accessRequired, brokenLinks, searchType) {
+            const exportPdfButton = document.createElement('button');
+            exportPdfButton.textContent = 'Export to PDF';
+            exportPdfButton.classList.add('button', 'is-link', 'export-pdf');
+            exportPdfButton.style.marginRight = '10px';
+            exportPdfButton.addEventListener('click', () => {
+                exportResults(searchResults, brokenLinks, accessRequired, 'pdf', searchType);
+            });
+
+            const exportExcelButton = document.createElement('button');
+            exportExcelButton.textContent = 'Export to Excel';
+            exportExcelButton.classList.add('button', 'is-link', 'export-excel');
+            exportExcelButton.addEventListener('click', () => {
+                exportResults(searchResults, brokenLinks, accessRequired, 'excel', searchType);
+            });
+
+            return [exportPdfButton, exportExcelButton];
+        }
+
+        // Function to handle exporting results
+        function exportResults(searchResults, brokenLinks, accessRequired, exportType, searchType) {
+            const requestBody = {
+                search_results: searchResults,
+                broken_links: brokenLinks,
+                access_required_links: accessRequired,
+                export_type: exportType,
+                search_type: searchType 
+            };
+
+            fetch("{% url 'download' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const filename = data.file_url.split('/').pop();
+                window.location.href = `/download/${filename}/`;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
         function enableTooltips() {
             const tooltipIcons = document.querySelectorAll('.has-tooltip');  // Select all elements with the 'has-tooltip' class
 
