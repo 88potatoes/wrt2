@@ -11,7 +11,8 @@ from django.contrib.auth import authenticate, login, logout
 from api.serializers import ExportResultsSerializer
 from api.utils.export import export_to_excel, export_to_pdf
 from api.views import find_broken_links, find_text_string
-from website.models import PastSearch
+
+# from website.models import PastSearch
 
 
 @require_http_methods(["GET", "POST"])
@@ -30,14 +31,16 @@ def search_term_view(request):
             # writing to database
             for seed_url in output:
                 for page in output[seed_url]:
-                    past_search = PastSearch.objects.create(
-                        user=request.user,
-                        seed_url=seed_url,
-                        url_from=page,
-                        search_type="search",
-                        search_text=queried_webpages[0][0],
-                    )
-                    past_search.save()
+                    pass
+                    # TODO replace this with the new schema
+                    # past_search = PastSearch.objects.create(
+                    #     user=request.user,
+                    #     seed_url=seed_url,
+                    #     url_from=page,
+                    #     search_type="search",
+                    #     search_text=queried_webpages[0][0],
+                    # )
+                    # past_search.save()
             return JsonResponse(data, status=200, safe=False)  # TODO make it safe
         elif status == 400:  # return the errors
             return JsonResponse(data, status=400)
@@ -58,13 +61,15 @@ def crawl_broken_links_view(request):
             # writing to database
             for seed_url in output:
                 for page in output[seed_url]:
-                    past_search = PastSearch.objects.create(
-                        user=request.user,
-                        seed_url=seed_url,
-                        url_from=page,
-                        search_type="search",
-                    )
-                    past_search.save()
+                    pass
+                    # TODO replace this with the new schema
+                    # past_search = PastSearch.objects.create(
+                    #     user=request.user,
+                    #     seed_url=seed_url,
+                    #     url_from=page,
+                    #     search_type="search",
+                    # )
+                    # past_search.save()
             return JsonResponse(data, status=200, safe=False)  # TODO make it safe
         elif status == 400:  # return the errors
             return JsonResponse(data, status=400)
