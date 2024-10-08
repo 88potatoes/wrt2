@@ -22,6 +22,11 @@ urlpatterns = [
     path("download", views.download, name="download"),
     path("download/<str:filename>/", views.download_view, name="download_from_website"),
 
+    # History
+    path(
+        "query/<int:query_id>/results/", views.query_results_view, name="query_results"
+    ),  # for history
+  
     # Test
     path("test", views.test_view, name="test_view"),
 ]
