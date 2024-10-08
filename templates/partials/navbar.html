@@ -8,7 +8,7 @@
 
     <div class="navbar-menu">
         <div class="navbar-start">
-            <a href="{% url 'logout' %}" class="navbar-item">
+            <a href="{% url 'search_term' %}" class="navbar-item">
                 String Search
             </a>
             <a href="{% url 'crawl_broken_links' %}" class="navbar-item">
@@ -18,7 +18,7 @@
 
 
         <div class="navbar-end pr-5">
-            <a href="#" id="logoutLink" class="button">
+            <a href="{% url 'logout' %}" id="logoutLink" class="button">
                 Logout
             </a>
         </div>
