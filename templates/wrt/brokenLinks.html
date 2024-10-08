@@ -44,7 +44,7 @@
                         <div class="control">
                             <button class="button is-link" type="submit">Search</button>
                         </div>
-                    </div>
+                    </div> 
                 </form>
             </div>
         </div>
@@ -127,7 +127,7 @@
 
                 table.appendChild(tableBody);
                 crawlResultsDiv.appendChild(table);
-            } else if (data[0].length == 0) {
+            } else if (data[0] && data[0].length == 0) {
                 crawlResultsDiv.innerHTML = `
                 <p>No results found!</p>
                 `;
