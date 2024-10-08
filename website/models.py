@@ -37,6 +37,9 @@ class SearchQuery(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"Query by {self.user.username} - Type: {self.get_type_display()} - Created at: {self.created_at}"
+
 
 class SearchResult(models.Model):
     searchquery = models.ForeignKey(
@@ -47,6 +50,9 @@ class SearchResult(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     starting_link = models.CharField(max_length=255, null=True, blank=True)
     search_text = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"Result for Query ID: {self.searchquery.id} - URL: {self.url} - Created at: {self.created_at}"
 
 
 # - id

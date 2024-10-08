@@ -19,4 +19,7 @@ urlpatterns = [
     path("create_user", views.create_user_view, name="create_user"),
     path("download", views.download, name="download"),
     path("download/<str:filename>/", views.download_view, name="download_from_website"),
+    path(
+        "query/<int:query_id>/results/", views.query_results_view, name="query_results"
+    ),  # for history
 ]
