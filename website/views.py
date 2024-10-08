@@ -146,13 +146,14 @@ def download(request):
         broken_links = serializer.validated_data["broken_links"]
         access_required_links = serializer.validated_data["access_required_links"]
         export_type = serializer.validated_data["export_type"]
+        search_type = serializer.validated_data["search_type"]
         file_url = ""
 
         # Export PDF file
         if export_type == "pdf":
             pdf_file_path = os.path.join(temp_dir, f"scrape_results_{timestamp}.pdf")
             export_to_pdf(
-                search_results, broken_links, access_required_links, pdf_file_path
+                search_results, broken_links, access_required_links, pdf_file_path, search_type
             )
             file_url = f"/temp/scrape_results_{timestamp}.pdf"
 
@@ -160,7 +161,7 @@ def download(request):
         elif export_type == "excel":
             excel_file_path = os.path.join(temp_dir, f"scrape_results_{timestamp}.xlsx")
             export_to_excel(
-                search_results, broken_links, access_required_links, excel_file_path
+                search_results, broken_links, access_required_links, excel_file_path, search_type
             )
             file_url = f"/temp/scrape_results_{timestamp}.xlsx"
 
@@ -170,7 +171,6 @@ def download(request):
     else:
         print("Serializer errors 3:", serializer.errors)
         return HttpResponse(serializer.errors, status=400)
-
 
 def download_view(request, filename):
     # Sanitize the filename
@@ -207,6 +207,6 @@ def download_view(request, filename):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-    threading.Timer(30, delete_file).start()  # Delete after 60 seconds
+    threading.Timer(10, delete_file).start()  # Delete after 10 seconds
 
     return response
