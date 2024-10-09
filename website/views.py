@@ -2,8 +2,14 @@ from datetime import datetime
 import json
 import os
 import threading
-from django.http import FileResponse, Http404, HttpResponse, JsonResponse
-from django.shortcuts import render, redirect
+from django.http import (
+    FileResponse,
+    Http404,
+    HttpResponse,
+    HttpResponseForbidden,
+    JsonResponse,
+)
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth import authenticate, login, logout
@@ -11,7 +17,9 @@ from django.contrib.auth import authenticate, login, logout
 from api.serializers import ExportResultsSerializer
 from api.utils.export import export_to_excel, export_to_pdf
 from api.views import find_broken_links, find_text_string
-from website.models import PastSearch
+from django.core.paginator import Paginator
+
+from website.models import SearchQuery, SearchResult
 
 
 @require_http_methods(["GET", "POST"])
@@ -19,7 +27,7 @@ from website.models import PastSearch
 def search_term_view(request):
     if request.method == "GET":
         return render(request, "wrt/search.html")
-    else:  # POST method # TODO Make it link up with the api function / view so then parker just has to work on the api
+    else:
         data, status = find_text_string(request, from_website=True)
 
         if status == 200:
@@ -28,16 +36,15 @@ def search_term_view(request):
             print(data)
 
             # writing to database
-            for seed_url in output:
-                for page in output[seed_url]:
-                    past_search = PastSearch.objects.create(
-                        user=request.user,
-                        seed_url=seed_url,
-                        url_from=page,
-                        search_type="search",
-                        search_text=queried_webpages[0][0],
-                    )
-                    past_search.save()
+            new_search = SearchQuery.objects.create(
+                user=request.user, type=SearchQuery.QueryType.SEARCH
+            )
+
+            for search_term, url in queried_webpages:
+                SearchResult.objects.create(
+                    searchquery=new_search, url=url, search_text=search_term
+                )
+
             return JsonResponse(data, status=200, safe=False)  # TODO make it safe
         elif status == 400:  # return the errors
             return JsonResponse(data, status=400)
@@ -58,13 +65,15 @@ def crawl_broken_links_view(request):
             # writing to database
             for seed_url in output:
                 for page in output[seed_url]:
-                    past_search = PastSearch.objects.create(
-                        user=request.user,
-                        seed_url=seed_url,
-                        url_from=page,
-                        search_type="search",
-                    )
-                    past_search.save()
+                    pass
+                    # TODO replace this with the new schema
+                    # past_search = PastSearch.objects.create(
+                    #     user=request.user,
+                    #     seed_url=seed_url,
+                    #     url_from=page,
+                    #     search_type="search",
+                    # )
+                    # past_search.save()
             return JsonResponse(data, status=200, safe=False)  # TODO make it safe
         elif status == 400:  # return the errors
             return JsonResponse(data, status=400)
@@ -73,7 +82,16 @@ def crawl_broken_links_view(request):
 @require_http_methods(["GET"])
 @login_required
 def history(request):
-    return render(request, "wrt/history.html")
+    all_queries = SearchQuery.objects.filter(user=request.user)[:20]
+    paginator = Paginator(all_queries, 5)
+
+    page_number = request.GET.get(
+        "page"
+    )  # Get the current page number from the query parameters
+    queries = paginator.get_page(page_number)  # Get the corresponding page of results
+
+    context = {"queries": queries}
+    return render(request, "wrt/history.html", context)
 
 
 @require_http_methods(["GET"])
@@ -141,13 +159,14 @@ def download(request):
         broken_links = serializer.validated_data["broken_links"]
         access_required_links = serializer.validated_data["access_required_links"]
         export_type = serializer.validated_data["export_type"]
+        search_type = serializer.validated_data["search_type"]
         file_url = ""
 
         # Export PDF file
         if export_type == "pdf":
             pdf_file_path = os.path.join(temp_dir, f"scrape_results_{timestamp}.pdf")
             export_to_pdf(
-                search_results, broken_links, access_required_links, pdf_file_path
+                search_results, broken_links, access_required_links, pdf_file_path, search_type
             )
             file_url = f"/temp/scrape_results_{timestamp}.pdf"
 
@@ -155,7 +174,7 @@ def download(request):
         elif export_type == "excel":
             excel_file_path = os.path.join(temp_dir, f"scrape_results_{timestamp}.xlsx")
             export_to_excel(
-                search_results, broken_links, access_required_links, excel_file_path
+                search_results, broken_links, access_required_links, excel_file_path, search_type
             )
             file_url = f"/temp/scrape_results_{timestamp}.xlsx"
 
@@ -165,7 +184,6 @@ def download(request):
     else:
         print("Serializer errors 3:", serializer.errors)
         return HttpResponse(serializer.errors, status=400)
-
 
 def download_view(request, filename):
     # Sanitize the filename
@@ -202,6 +220,30 @@ def download_view(request, filename):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-    threading.Timer(30, delete_file).start()  # Delete after 60 seconds
+    threading.Timer(10, delete_file).start()  # Delete after 10 seconds
 
     return response
+
+
+@require_http_methods(["GET"])
+@login_required
+def query_results_view(request, query_id):
+    # Fetch the specific SearchQuery using the provided ID
+    search_query = get_object_or_404(SearchQuery, id=query_id)
+    if search_query.user != request.user:
+        return HttpResponseForbidden(
+            "You do not have permission to view this search query."
+        )
+    # Get all results related to this search query
+    results: SearchResult = (
+        search_query.results.all()
+    )  # Using the related_name defined in the model
+    search_terms = list(set(result.search_text for result in results))
+    context = {
+        "search_query": search_query,
+        "results": results,
+        "search_terms": search_terms,
+    }
+    return render(
+        request, "wrt/query_results.html", context
+    )  # Render a template for displaying results

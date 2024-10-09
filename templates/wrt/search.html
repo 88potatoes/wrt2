@@ -70,9 +70,11 @@
         </div>
 
         <div id="searchResultsContainer" class="container" style="margin-top: 20px;">
+            <div id="exportButtons">
+                <!-- Export buttons will be added here after the search -->
+            </div>
             <div id="searchResults">
                 <!-- Results will be displayed here after search -->
-                <!-- Export buttons will also be added here -->
             </div>
         </div>
     </div>
@@ -152,42 +154,33 @@
 
                 console.log('Now adding buttons:');
 
-                // Create export buttons
-                const buttons = createExportButtons(data[0], data[1], data[2]);
-                console.log("Search Results:", data[0]);
-                console.log("Broken Links:", data[1]);
-                console.log("Access Required Links:", data[2]);
-
-                // Select the export buttons container
+                // Call the export buttons functionality
+                const buttons = createExportButtons(data[0], data[1], data[2], 'search_term');
                 const exportButtonsDiv = document.getElementById('exportButtons');
-
-                // Clear any existing buttons before adding new ones
                 exportButtonsDiv.innerHTML = '';
-
-                // Append buttons to the export buttons div
                 exportButtonsDiv.appendChild(buttons[0]);
                 exportButtonsDiv.appendChild(buttons[1]);
                 console.log('Buttons added to the export buttons div');
+
             } else if (data[0].length == 0) {
-                // Create export buttons
-                const buttons = createExportButtons(data[0], data[1], data[2]);
-                console.log("Search Results:", data[0]);
-                console.log("Broken Links:", data[1]);
-                console.log("Access Required Links:", data[2]);
+                if (data[1].length > 0 || data[2].length > 0) {
+                    // Call the export buttons functionality
+                    const buttons = createExportButtons(data[0], data[1], data[2]);
+                    const exportButtonsDiv = document.getElementById('exportButtons');
+                    exportButtonsDiv.innerHTML = '';
+                    exportButtonsDiv.appendChild(buttons[0]);
+                    exportButtonsDiv.appendChild(buttons[1]);
 
-                // Select the export buttons container
-                const exportButtonsDiv = document.getElementById('exportButtons');
-
-                // Clear any existing buttons before adding new ones
-                exportButtonsDiv.innerHTML = '';
-
-                // Append buttons to the export buttons div
-                exportButtonsDiv.appendChild(buttons[0]);
-                exportButtonsDiv.appendChild(buttons[1]);
-                
-                searchResultsDiv.innerHTML = `
+                    searchResultsDiv.innerHTML = `
+                    <p>No match found, broken/access required links encountered!</p>
+                    `;
+                }
+                else {
+                    searchResultsDiv.innerHTML = `
                     <p>No match found!</p>
                     `;
+                }
+                
             } else if (data.message) {
                 searchResultsDiv.innerHTML = `<p>${data.message}</p>`;
             }
@@ -219,54 +212,5 @@
         newFieldDiv.appendChild(deleteBtn);
         searchUrlInputContainer.appendChild(newFieldDiv);
     });
-
-    function exportResults(searchResults, brokenLinks, accessRequired, exportType) {
-        const requestBody = {
-            search_results: searchResults,
-            broken_links: brokenLinks,
-            access_required_links: accessRequired,
-            export_type: exportType
-        };
-
-        console.log(requestBody);
-
-        fetch("{% url 'download' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}' // Include CSRF token
-            },
-            body: JSON.stringify(requestBody)
-        })
-        .then(response => {
-            return response.json();
-        })
-        .then(data => {
-            const filename = data.file_url.split('/').pop();
-            window.location.href = `/download/${filename}/`;
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
-    function createExportButtons(searchResults, accessRequired, brokenLinks) {
-        const exportPdfButton = document.createElement('button');
-        exportPdfButton.textContent = 'Export to PDF';
-        exportPdfButton.classList.add('button', 'is-link', 'export-pdf');
-        exportPdfButton.style.marginRight = '10px';
-        exportPdfButton.addEventListener('click', () => {
-            console.log('Export to PDF button clicked');
-            exportResults(searchResults, brokenLinks, accessRequired, 'pdf');
-        });
-
-        const exportExcelButton = document.createElement('button');
-        exportExcelButton.textContent = 'Export to Excel';
-        exportExcelButton.classList.add('button', 'is-link', 'export-excel');
-        exportExcelButton.addEventListener('click', () => {
-            console.log('Export to Excel button clicked');
-            exportResults(searchResults, brokenLinks, accessRequired, 'excel');
-        });
-
-        return [exportPdfButton, exportExcelButton];
-    }
 </script>
 {% endblock %}

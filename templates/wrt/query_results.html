@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} Search {% endblock %}
+
+{% block head %} 
+    <link rel="stylesheet" href="{% static 'css/search.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Two equal columns */
+            gap: 10px; /* Spacing between cells */
+            padding: 20px; /* Container padding */
+            background-color: #f8f9fa; /* Background color */
+        }
+
+        .header {
+            font-weight: bold;
+            background-color: #343a40; /* Dark background for header */
+            color: white; /* White text */
+            padding: 10px; /* Padding for header */
+            text-align: center; /* Center align text */
+        }
+
+        .row {
+            display: contents; /* Use contents to keep grid layout */
+        }
+
+        .cell {
+            background-color: #e9ecef; /* Light background for cells */
+            padding: 15px; /* Padding for cells */
+            text-align: center; /* Center align text */
+            border: 1px solid #ced4da; /* Border around cells */
+            text-decoration: none; /* Remove link underline */
+            color: #212529; /* Text color */
+        }
+
+        .cell:hover {
+            background-color: #adb5bd; /* Change background on hover */
+        }
+
+        .search_terms {
+            background-color: #f8f9fa;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search_terms_list {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %} 
+    {% include "partials/navbar.html" %}
+    <h1>Results for: {{ search_query }}</h1>
+    <div class="search_terms">
+        <h2>Search Term(s)</h2>
+        <ul class="search_terms_list">
+            {% for search_term in search_terms %}
+                <li>{{search_term}}</li>  <!-- TODO Customize this -->
+            {% empty %}
+                <li>No Search Terms</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <ul class="container">
+        <div class="header">Matched String</div>
+        <div class="header">Page URL</div>
+        {% for result in results %}
+            <div class="row">
+                <div class="cell">{{result.search_text}}</div>
+                <div class="cell">{{result.url}}</div>
+            </div> <!-- TODO Customize this -->
+        {% empty %}
+            <li>No results found for this query.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
