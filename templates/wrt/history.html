@@ -7,87 +7,129 @@
     <link rel="stylesheet" href="{% static 'css/search.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- probably don't need to load in all the icons -->
     <style>
-        .container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* Two equal columns */
-            gap: 10px; /* Spacing between cells */
-            padding: 20px; /* Container padding */
-            background-color: #f8f9fa; /* Background color */
+
+        .tab-content {
+            height: -webkit-fill-available;
+            background-color: white;
+            flex: 1;
         }
 
-        .header {
-            font-weight: bold;
-            background-color: #343a40; /* Dark background for header */
-            color: white; /* White text */
-            padding: 10px; /* Padding for header */
-            text-align: center; /* Center align text */
+        .table.is-bordered.is-fullwidth.is-hoverable {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 200;
+            width: 100%;
+            border: 3px;
         }
 
-        .row {
-            display: contents; /* Use contents to keep grid layout */
+        .table.is-bordered.is-fullwidth.is-hoverable th {
+            border: 3px solid #FFFFFF;
+            font-weight: 400;
+            font-size: 17px;
         }
 
-        .cell {
-            background-color: #e9ecef; /* Light background for cells */
-            padding: 15px; /* Padding for cells */
-            text-align: center; /* Center align text */
-            border: 1px solid #ced4da; /* Border around cells */
-            text-decoration: none; /* Remove link underline */
-            color: #212529; /* Text color */
+        .table thead tr th {
+            background-color: #404B74;
         }
 
-        .cell:hover {
-            background-color: #adb5bd; /* Change background on hover */
+        .table tbody tr td {
+            background-color: #BFC3D1;
+            color: #000B34;
+            font-weight: 500;
+            border: 3px solid #FFFFFF;
         }
 
-        .search_terms {
-            background-color: #f8f9fa;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
+        .table.is-bordered.is-fullwidth.is-hoverable tbody tr:hover td {
+            background-color: #8087A2;
+            color: #FFFFFF;
         }
 
-        .search_terms_list {
-            list-style-type: disc;
-            padding-left: 20px;
+        .inactive {
+            color: #9C9C9C;
         }
+
+        .active {
+            color: #000B34;
+        }
+
+        .current {
+            color: #000B34;
+        }
+
+        .pagination-left {
+            margin-right: 10px; /* Adjust the value as needed */
+        }
+
+        .pagination-right {
+            margin-left: 10px; /* Adjust the value as needed */
+        }
+
+        .step-links {
+            font-size: 16px;
+            font-weight: 450;
+        }
+
     </style>
 {% endblock %}
 
 {% block content %} 
     {% include "partials/navbar.html" %}
+    <div class="tab-content">
+        <h2 class="tab-title">Search History</h2>
+        <div class="columns-is-centered">
 
-    <ul class="container">
-        <div class="header">View</div>
-        <div class="header">Time and Date</div>
-        <div class="header">Search Type</div>
-        {% for query in queries %}
-            <div class="row">
-                <a href="{% url 'query_results' query.id %}"><div class="cell">View</div></a>
-                <div class="cell">{{query.created_at}}</div>
-                <div class="cell">{{query.type}}</div>
-            </div> <!-- TODO Customize this -->
-        {% empty %}
-            <li>No Queries Found</li>
-        {% endfor %}
-    </ul>
+            <table class="table is-bordered is-fullwidth is-hoverable">
+                <thead>
+                    <tr>
+                        <th class="is-narrow">Link</th>
+                        <th style="width: 250px;">Time and Date</th>
+                        <th style="width: 150px;">Search Type</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for query in queries %}
+                        <tr>
+                            <td><a href="{% url 'query_results' query.id %}">view</a></td>
+                            <td>{{query.created_at}}</td>
+                            <td>{{query.type}}</td>
+                            <td>details</td>
+                        </tr>
+                    {% empty %}
+                        <h3>No Queries Found</h3>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-    <!-- Pagination controls -->
-    <div class="pagination">
-        <span class="step-links">
-            {% if queries.has_previous %}
-                <a href="?page=1">&laquo; first</a>
-                <a href="?page={{ queries.previous_page_number }}">previous</a>
-            {% endif %}
+            
+            <!-- Pagination controls -->
+            <nav class="pagination">
+                <span class="step-links">
+                    <span class="current">
+                        page {{ queries.number }} of {{ queries.paginator.num_pages }}
+                    </span>
 
-            <span class="current">
-                Page {{ queries.number }} of {{ queries.paginator.num_pages }}.
-            </span>
+                    {% if queries.has_previous %}
+                        <a class="active pagination-right" href="?page=1">first</a>
+                        <a class="active pagination-left" href="?page={{ queries.previous_page_number }}">&lt;</a>
+                    {% else %}
+                        <span class="inactive pagination-right">first</span>
+                        <span class="inactive pagination-left">&lt;</span>
+                    {% endif %}
 
-            {% if queries.has_next %}
-                <a href="?page={{ queries.next_page_number }}">next</a>
-                <a href="?page={{ queries.paginator.num_pages }}">last &raquo;</a>
-            {% endif %}
-        </span>
+
+                    {% if queries.has_next %}
+                        <a class="active pagination-right" href="?page={{ queries.next_page_number }}">&gt;</a>
+                        <a class="active" href="?page={{ queries.paginator.num_pages }}">last</a>
+                    {% else %}
+                        <span class="inactive pagination-right">&gt;</span>
+                        <span class="inactive">last</span>
+                    {% endif %}
+                </span>
+            </nav>
+
+        </div>
     </div>
+
+
+
 {% endblock %}
