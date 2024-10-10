@@ -12,6 +12,7 @@ from .utils.search import (
     search,
     search_without_highlighting,
 )
+from .utils.response import BrokenLinksResponse, StringMatchResponse
 from bs4 import BeautifulSoup
 
 # import json
@@ -34,10 +35,10 @@ class UnitTests(TestCase):
         </html>
         """
         result = scrape(["http://example.com"], "search text", "brave")
-        self.assertEqual(result[0], [])
-        self.assertIn("http://example.com", result[-1])
+        self.assertEqual(result.search_str_webpages, [])
+        self.assertIn("http://example.com", result.output)
         self.assertEqual(
-            result[-1]["http://example.com"],
+            result.output["http://example.com"],
             [
                 "http://example.com",
                 "http://example.com/page1",
@@ -45,14 +46,14 @@ class UnitTests(TestCase):
             ],
         )
         self.assertNotIn(
-            "https://othersite.com/page3", result[-1]["http://example.com"]
+            "https://othersite.com/page3", result.output["http://example.com"]
         )
 
         result = crawl(["http://example.com"])
-        self.assertEqual(result[0], [])
-        self.assertIn("http://example.com", result[-1])
+        self.assertEqual(result.broken_links, [])
+        self.assertIn("http://example.com", result.output)
         self.assertEqual(
-            result[-1]["http://example.com"],
+            result.output["http://example.com"],
             [
                 "http://example.com",
                 "http://example.com/page1",
@@ -60,7 +61,7 @@ class UnitTests(TestCase):
             ],
         )
         self.assertNotIn(
-            "https://othersite.com/page3", result[-1]["http://example.com"]
+            "https://othersite.com/page3", result.output["http://example.com"]
         )
 
     @patch("requests.get")
@@ -68,9 +69,9 @@ class UnitTests(TestCase):
         mock_response = mock_get.return_value
         mock_response.status_code = 404
         result = scrape(["invalid-url"], "search text", "brave")
-        self.assertEqual(result[0], [])
+        self.assertEqual(result.search_str_webpages, [])
         result = crawl(["invalid-url"])
-        self.assertEqual(result[0], ["invalid-url"])
+        self.assertEqual(result.broken_links, ["invalid-url"])
 
     def test_multiple_start_links(self):
         result = scrape(
@@ -78,25 +79,28 @@ class UnitTests(TestCase):
             "search text",
             "brave",
         )
-        self.assertIn("https://research.unimelb.edu.au", result[-1])
-        self.assertIn("https://www.unimelb.edu.au", result[-1])
-        self.assertEqual(result[0], [])
+        self.assertIn("https://research.unimelb.edu.au", result.output)
+        self.assertIn("https://www.unimelb.edu.au", result.output)
+        self.assertEqual(result.search_str_webpages, [])
 
         result = crawl(
             ["https://research.unimelb.edu.au", "https://www.unimelb.edu.au"],
         )
-        self.assertIn("https://research.unimelb.edu.au", result[-1])
-        self.assertIn("https://www.unimelb.edu.au", result[-1])
-        self.assertEqual(result[0], [])
+        self.assertIn("https://research.unimelb.edu.au", result.output)
+        self.assertIn("https://www.unimelb.edu.au", result.output)
+        self.assertEqual(result.broken_links, [])
 
     def test_no_start_links(self):
         result = scrape([], "search text", "brave")
-        self.assertEqual(result[-1], {})
-        self.assertEqual(result, [[], [], [], {}])
+        self.assertEqual(result.output, {})
+        self.assertEqual(result.search_str_webpages, [])
+        self.assertEqual(result.broken_links, [])
+        self.assertEqual(result.requires_access, [])
 
         result = crawl([])
-        self.assertEqual(result[-1], {})
-        self.assertEqual(result, [[], [], {}])
+        self.assertEqual(result.output, {})
+        self.assertEqual(result.broken_links, [])
+        self.assertEqual(result.requires_access, [])
 
     def test_robots_txt(self):
         robot_rules = process_robots("User-agent: *\nDisallow: /private/\n")
@@ -120,17 +124,17 @@ class UnitTests(TestCase):
     def test_timeout(self, mock_get):
         mock_get.side_effect = requests.exceptions.Timeout
         result = crawl(["https://example.com"])
-        self.assertEqual(result[0], ["https://example.com"])
+        self.assertEqual(result.broken_links, ["https://example.com"])
         result = scrape(["https://example.com"], "yeet", "brave")
-        self.assertEqual(result[0], [])
+        self.assertEqual(result.search_str_webpages, [])
 
     @patch("requests.get")
     def test_connection_error(self, mock_get):
         mock_get.side_effect = requests.exceptions.ConnectionError
         result = crawl(["https://example.com"])
-        self.assertEqual(result[0], ["https://example.com"])
+        self.assertEqual(result.broken_links, ["https://example.com"])
         result = scrape(["https://example.com"], "yeet", "brave")
-        self.assertEqual(result[0], [])
+        self.assertEqual(result.search_str_webpages, [])
 
     @patch("requests.get")
     def test_private_access_links(self, mock_get):
@@ -154,33 +158,31 @@ class UnitTests(TestCase):
 
         mock_get.side_effect = side_effect
         result = crawl(["https://handbook.unimelb.edu.au/"])
-        self.assertIn("https://handbook.unimelb.edu.au/", result[-1])
+        self.assertIn("https://handbook.unimelb.edu.au/", result.output)
         self.assertEqual(
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
             ["https://handbook.unimelb.edu.au/"],
         )
         self.assertNotIn(
             "https://handbook.unimelb.edu.au/2024/courses/staff",
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
         )
-        self.assertEqual(
-            result[:-1], [[], ["https://handbook.unimelb.edu.au/2024/courses/staff"]]
-        )
+        self.assertEqual(result.broken_links, [])
+        self.assertEqual(result.requires_access, ["https://handbook.unimelb.edu.au/2024/courses/staff"])
 
         result = scrape(["https://handbook.unimelb.edu.au/"], "hey", "brave")
-        self.assertIn("https://handbook.unimelb.edu.au/", result[-1])
+        self.assertIn("https://handbook.unimelb.edu.au/", result.output)
         self.assertEqual(
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
             ["https://handbook.unimelb.edu.au/"],
         )
         self.assertNotIn(
             "https://handbook.unimelb.edu.au/2024/courses/staff",
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
         )
-        self.assertEqual(
-            result[:-1],
-            [[], [], ["https://handbook.unimelb.edu.au/2024/courses/staff"]],
-        )
+        self.assertEqual(result.search_str_webpages, [])
+        self.assertEqual(result.broken_links, [])
+        self.assertEqual(result.requires_access, ["https://handbook.unimelb.edu.au/2024/courses/staff"])
 
     @patch("requests.get")
     def test_private_access_input(self, mock_get):
@@ -205,9 +207,9 @@ class UnitTests(TestCase):
 
         mock_get.side_effect = side_effect
         result = crawl(["https://handbook.unimelb.edu.au/"])
-        self.assertEqual(result[1], ["https://handbook.unimelb.edu.au/"])
+        self.assertEqual(result.requires_access, ["https://handbook.unimelb.edu.au/"])
         result = scrape(["https://handbook.unimelb.edu.au/"], "hey", "brave")
-        self.assertEqual(result[2], ["https://handbook.unimelb.edu.au/"])
+        self.assertEqual(result.requires_access, ["https://handbook.unimelb.edu.au/"])
 
     @patch("requests.get")
     def test_get_broken_links(self, mock_get):
@@ -231,35 +233,32 @@ class UnitTests(TestCase):
 
         mock_get.side_effect = side_effect
         result = crawl(["https://handbook.unimelb.edu.au/"])
-        self.assertIn("https://handbook.unimelb.edu.au/", result[-1])
+        self.assertIn("https://handbook.unimelb.edu.au/", result.output)
         self.assertEqual(
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
             ["https://handbook.unimelb.edu.au/"],
         )
         self.assertNotIn(
             "https://handbook.unimelb.edu.au/2024/courses/arts-link",
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
         )
-        self.assertEqual(
-            result[:-1],
-            [["https://handbook.unimelb.edu.au/2024/courses/arts-link"], []],
-        )
+        self.assertEqual(result.broken_links, ["https://handbook.unimelb.edu.au/2024/courses/arts-link"])
+        self.assertEqual(result.requires_access, [])
 
         mock_get.side_effect = side_effect
         result = scrape(["https://handbook.unimelb.edu.au/"], "hey", "brave")
-        self.assertIn("https://handbook.unimelb.edu.au/", result[-1])
+        self.assertIn("https://handbook.unimelb.edu.au/", result.output)
         self.assertEqual(
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
             ["https://handbook.unimelb.edu.au/"],
         )
         self.assertNotIn(
             "https://handbook.unimelb.edu.au/2024/courses/arts-link",
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
         )
-        self.assertEqual(
-            result[:-1],
-            [[], ["https://handbook.unimelb.edu.au/2024/courses/arts-link"], []],
-        )
+        self.assertEqual(result.search_str_webpages, [])
+        self.assertEqual(result.broken_links, ["https://handbook.unimelb.edu.au/2024/courses/arts-link"])
+        self.assertEqual(result.requires_access, [])
 
     # broken link as input
     @patch("requests.get")
@@ -282,14 +281,20 @@ class UnitTests(TestCase):
 
         mock_get.side_effect = side_effect
         result = crawl(["https://handbook.unimelb.edu.au"])
-        self.assertEqual(result[-1], {})
-        self.assertNotIn("https://handbook.unimelb.edu.au", result[-1])
-        self.assertEqual(result, [["https://handbook.unimelb.edu.au"], [], {}])
+        self.assertEqual(result.output, {})
+        self.assertNotIn("https://handbook.unimelb.edu.au", result.output)
+        self.assertEqual(result.output, {})
+        self.assertEqual(result.broken_links, ["https://handbook.unimelb.edu.au"])
+        self.assertEqual(result.requires_access, [])
 
         result = scrape(["https://handbook.unimelb.edu.au"], "Arts", "brave")
-        self.assertEqual(result[-1], {})
-        self.assertNotIn("https://handbook.unimelb.edu.au", result[-1])
-        self.assertEqual(result, [[], ["https://handbook.unimelb.edu.au"], [], {}])
+        self.assertEqual(result.output, {})
+        self.assertNotIn("https://handbook.unimelb.edu.au", result.output)
+        self.assertEqual(result.search_str_webpages, [])
+        self.assertEqual(result.output, {})
+        self.assertEqual(result.broken_links, ["https://handbook.unimelb.edu.au"])
+        self.assertEqual(result.requires_access, [])
+
 
     # test that links that have already been crawled are not crawled again
     @patch("requests.get")
@@ -326,9 +331,9 @@ class UnitTests(TestCase):
 
         mock_get.side_effect = side_effect
         result = crawl(["https://handbook.unimelb.edu.au/"])
-        self.assertIn("https://handbook.unimelb.edu.au/", result[-1])
+        self.assertIn("https://handbook.unimelb.edu.au/", result.output)
         self.assertEqual(
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
             [
                 "https://handbook.unimelb.edu.au/",
                 "https://handbook.unimelb.edu.au/2024/courses",
@@ -337,9 +342,9 @@ class UnitTests(TestCase):
         )
 
         result = scrape(["https://handbook.unimelb.edu.au/"], "hey", "brave")
-        self.assertIn("https://handbook.unimelb.edu.au/", result[-1])
+        self.assertIn("https://handbook.unimelb.edu.au/", result.output)
         self.assertEqual(
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
             [
                 "https://handbook.unimelb.edu.au/",
                 "https://handbook.unimelb.edu.au/2024/courses",
@@ -386,9 +391,9 @@ class UnitTests(TestCase):
 
         mock_get.side_effect = side_effect
         result = crawl(["https://handbook.unimelb.edu.au/"])
-        self.assertIn("https://handbook.unimelb.edu.au/", result[-1])
+        self.assertIn("https://handbook.unimelb.edu.au/", result.output)
         self.assertEqual(
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
             [
                 "https://handbook.unimelb.edu.au/",
                 "https://handbook.unimelb.edu.au/2024/courses",
@@ -399,9 +404,9 @@ class UnitTests(TestCase):
         )
 
         result = scrape(["https://handbook.unimelb.edu.au/"], "hey", "brave")
-        self.assertIn("https://handbook.unimelb.edu.au/", result[-1])
+        self.assertIn("https://handbook.unimelb.edu.au/", result.output)
         self.assertEqual(
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
             [
                 "https://handbook.unimelb.edu.au/",
                 "https://handbook.unimelb.edu.au/2024/courses",
@@ -599,9 +604,9 @@ class BrokenLinkTest(TestCase):
 
         mock_get.side_effect = side_effect
         result = crawl(["https://handbook.unimelb.edu.au/"])
-        self.assertIn("https://handbook.unimelb.edu.au/", result[-1])
+        self.assertIn("https://handbook.unimelb.edu.au/", result.output)
         self.assertEqual(
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
             [
                 "https://handbook.unimelb.edu.au/",
                 "https://handbook.unimelb.edu.au/2024/courses",
@@ -609,19 +614,14 @@ class BrokenLinkTest(TestCase):
         )
         self.assertNotIn(
             "https://handbook.unimelb.edu.au/2024/courses/arts-link",
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
         )
         self.assertNotIn(
             "https://handbook.unimelb.edu.au/2024/courses/staff",
-            result[-1]["https://handbook.unimelb.edu.au/"],
+            result.output["https://handbook.unimelb.edu.au/"],
         )
-        self.assertEqual(
-            result[:-1],
-            [
-                ["https://handbook.unimelb.edu.au/2024/courses/arts-link"],
-                ["https://handbook.unimelb.edu.au/2024/courses/staff"],
-            ],
-        )
+        self.assertEqual(result.broken_links, ["https://handbook.unimelb.edu.au/2024/courses/arts-link"])
+        self.assertEqual(result.requires_access, ["https://handbook.unimelb.edu.au/2024/courses/staff"])
 
     # valid input, no broken links, private access link, links that have been crawled
     @patch("requests.get")
@@ -661,9 +661,9 @@ class BrokenLinkTest(TestCase):
 
         mock_get.side_effect = side_effect
         result = crawl(["https://handbook.unimelb.edu.au"])
-        self.assertIn("https://handbook.unimelb.edu.au", result[-1])
+        self.assertIn("https://handbook.unimelb.edu.au", result.output)
         self.assertEqual(
-            result[-1]["https://handbook.unimelb.edu.au"],
+            result.output["https://handbook.unimelb.edu.au"],
             [
                 "https://handbook.unimelb.edu.au",
                 "https://handbook.unimelb.edu.au/2024/courses",
@@ -672,11 +672,10 @@ class BrokenLinkTest(TestCase):
         )
         self.assertNotIn(
             "https://handbook.unimelb.edu.au/2024/courses/staff",
-            result[-1]["https://handbook.unimelb.edu.au"],
+            result.output["https://handbook.unimelb.edu.au"],
         )
-        self.assertEqual(
-            result[:-1], [[], ["https://handbook.unimelb.edu.au/2024/courses/staff"]]
-        )
+        self.assertEqual(result.broken_links, [])
+        self.assertEqual(result.requires_access, ["https://handbook.unimelb.edu.au/2024/courses/staff"])
 
 
 # integration tests (internal)
@@ -721,23 +720,23 @@ class StringMatchTest(TestCase):
             ["https://handbook.unimelb.edu.au/2024/courses/b-arts"], "aRtS", "brave"
         )
         print("CONTAINS SEARCH TERM", result)
-        self.assertIn("https://handbook.unimelb.edu.au/2024/courses/b-arts", result[-1])
+        self.assertIn("https://handbook.unimelb.edu.au/2024/courses/b-arts", result.output)
         self.assertEqual(
-            result[-1]["https://handbook.unimelb.edu.au/2024/courses/b-arts"],
+            result.output["https://handbook.unimelb.edu.au/2024/courses/b-arts"],
             [
                 "https://handbook.unimelb.edu.au/2024/courses/arts-link",
                 "https://handbook.unimelb.edu.au/2024/courses/b-arts",
             ],
         )
         self.assertCountEqual(
-            result[0],
+            result.search_str_webpages,
             [
                 ("aRtS", "https://handbook.unimelb.edu.au/2024/courses/b-arts"),
                 ("aRtS", "https://handbook.unimelb.edu.au/2024/courses/arts-link"),
             ],
         )
         self.assertCountEqual(
-            result[2], ["https://handbook.unimelb.edu.au/2024/courses/staff"]
+            result.requires_access, ["https://handbook.unimelb.edu.au/2024/courses/staff"]
         )
 
     # valid input, no websites with the search term, private access link, repeated links
@@ -779,18 +778,17 @@ class StringMatchTest(TestCase):
         result = scrape(
             ["https://handbook.unimelb.edu.au/2024/courses/b-arts"], "Yeet", "brave"
         )
-        self.assertIn("https://handbook.unimelb.edu.au/2024/courses/b-arts", result[-1])
+        self.assertIn("https://handbook.unimelb.edu.au/2024/courses/b-arts", result.output)
         self.assertEqual(
-            result[-1]["https://handbook.unimelb.edu.au/2024/courses/b-arts"],
+            result.output["https://handbook.unimelb.edu.au/2024/courses/b-arts"],
             [
                 "https://handbook.unimelb.edu.au/2024/courses/arts-link",
                 "https://handbook.unimelb.edu.au/2024/courses/b-arts",
             ],
         )
-        self.assertEqual(
-            result[:-1],
-            [[], [], ["https://handbook.unimelb.edu.au/2024/courses/staff"]],
-        )
+        self.assertEqual(result.broken_links, [])
+        self.assertEqual(result.search_str_webpages, [])
+        self.assertEqual(result.requires_access, ["https://handbook.unimelb.edu.au/2024/courses/staff"])
 
 
 class SearchTest(TestCase):
