@@ -183,9 +183,6 @@ sentry_sdk.init(
     profiles_sample_rate=1.0,
 )
 
-STATIC_URL = "/static/"
-
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # login stuff
 LOGIN_URL = "/"

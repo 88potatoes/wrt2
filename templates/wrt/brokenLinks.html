@@ -3,43 +3,43 @@
 
 {% block title %} Search {% endblock %}
 
-{% block head %} 
-    <link rel="stylesheet" href="{% static 'css/search.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- probably don't need to load in all the icons -->
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/search.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<!-- probably don't need to load in all the icons -->
 {% endblock %}
-{% block content %} 
-    {% include "partials/navbar.html" %}
+{% block content %}
+{% include "partials/navbar.html" %}
 
-    <div id="brokenLinksTab" class="tab-content">
-        <h2 class="tab-title">Broken Link Search</h2>
-        <div class="columns-is-centered">
-            <div class="column is-8">
-                <form id="crawlForm">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_type" value="search_term_form">
+<div id="brokenLinksTab" class="tab-content">
+    <h2 class="tab-title">Broken Link Search</h2>
+    <div class="columns-is-centered">
+        <div class="column is-8">
+            <form id="crawlForm">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="search_term_form">
 
-                    <div class="field">
-                        <label class="label">Root URLs
-                            <span class="icon has-tooltip" id="tooltipIcon3">
-                                <i class="fas fa-info-circle"></i>
-                                <div class="tooltip">This tool scans a website for broken links and pages that require
-                                    login access, like those using Okta. It checks the seed URLs and all the
-                                    internal links with the same prefix URL.
-                                </div>
-                            </span>
-                        </label>
-                        <div id="crawlUrlInputContainer">
-                            <div class="control">
-                                <input class="input" type="text" name="starting_links[]"
-                                    placeholder="Enter a URL defining the search range..." required>
+                <div class="field">
+                    <label class="label">Root URLs
+                        <span class="icon has-tooltip" id="tooltipIcon3">
+                            <i class="fas fa-info-circle"></i>
+                            <div class="tooltip">This tool scans a website for broken links and pages that require
+                                login access, like those using Okta. It checks the seed URLs and all the
+                                internal links with the same prefix URL.
                             </div>
-                        </div>
-                        <div>
-                            <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
-                                style="margin-top: 10px;">Add URL</button>
+                        </span>
+                    </label>
+                    <div id="crawlUrlInputContainer">
+                        <div class="control">
+                            <input class="input" type="text" name="starting_links[]"
+                                placeholder="Enter a URL defining the search range..." required>
                         </div>
                     </div>
-
+                    <div>
+                        <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
+                            style="margin-top: 10px;">Add URL</button>
+                    </div>
+                </div>
                     <div class="field"></div>
                         <div class="control">
                             <button class="button is-link" type="submit">Search</button>
@@ -55,9 +55,9 @@
                 </div>
             </div>
         </div>
-
-        
     </div>
+</div>
+</div>
 
 {% endblock %}
 
@@ -66,11 +66,15 @@
 
     // Handle CrawlForm submission
     const crawlForm = document.getElementById('crawlForm');
+    const crawlResultsDiv = document.getElementById('crawlResults');
+
     crawlForm.addEventListener('submit', function (event) {
         event.preventDefault();
         const formData = new FormData(crawlForm);
         const starting_links = formData.getAll('starting_links[]');
         const browser_info = navigator.userAgent;
+
+        crawlResultsDiv.innerHTML = `<p>Scraping in progress... Please wait.</p>`;
 
         // Debug
         console.log("Starting Links: ", starting_links);
@@ -86,6 +90,7 @@
                 browser_info
             })
         })
+
         .then(response => response.json())
         .then((data) => {
             console.log("data: " + data); 
@@ -134,14 +139,15 @@
                     </thead>
                 `;
 
-                const tableBody = document.createElement('tbody');
+                    const tableBody = document.createElement('tbody');
 
-                data[0].forEach(link => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
+                    data[0].forEach(link => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
                         <td>${link}</td>
                         <td><a href="${link}" target="_blank">${link}</a></td>
                     `;
+
                     tableBody.appendChild(row);
                 });
 
@@ -160,19 +166,27 @@
             }
         });
     });
-    
+
     // Handle adding input fields for Crawl Form
     const addCrawlInputBtn = document.getElementById('addCrawlInputBtn');
     const crawlUrlInputContainer = document.getElementById('crawlUrlInputContainer');
-    
+
     addCrawlInputBtn.addEventListener('click', function () {
         const newFieldDiv = document.createElement('div');
         newFieldDiv.classList.add('control');
         newFieldDiv.style.marginTop = '10px';
-        
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = "X";
+        deleteBtn.classList.add("delete-btn");
+        deleteBtn.addEventListener('click', () => {
+            newFieldDiv.remove();
+        })
+
         newFieldDiv.innerHTML = `
         <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
         `;
+        newFieldDiv.appendChild(deleteBtn);
         crawlUrlInputContainer.appendChild(newFieldDiv);
     });
 </script>
