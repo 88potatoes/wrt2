@@ -11,23 +11,13 @@
 {% block content %}
 {% include "partials/navbar.html" %}
 
-<<<<<<< HEAD
-<div id="brokenLinksTab" class="tab-content"">
-        <h2 class=" tab-title">Broken Link Search</h2>
+<div id="brokenLinksTab" class="tab-content">
+    <h2 class="tab-title">Broken Link Search</h2>
     <div class="columns-is-centered">
         <div class="column is-8">
             <form id="crawlForm">
                 {% csrf_token %}
                 <input type="hidden" name="form_type" value="search_term_form">
-=======
-    <div id="brokenLinksTab" class="tab-content">
-        <h2 class="tab-title">Broken Link Search</h2>
-        <div class="columns-is-centered">
-            <div class="column is-8">
-                <form id="crawlForm">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_type" value="search_term_form">
->>>>>>> 61dc03fd1cc50d49c4c1a57419a6c944c5bf2587
 
                 <div class="field">
                     <label class="label">Root URLs
@@ -37,63 +27,36 @@
                                 login access, like those using Okta. It checks the seed URLs and all the
                                 internal links with the same prefix URL.
                             </div>
-<<<<<<< HEAD
                         </span>
                     </label>
                     <div id="crawlUrlInputContainer">
                         <div class="control">
                             <input class="input" type="text" name="starting_links[]"
                                 placeholder="Enter a URL defining the search range..." required>
-=======
-                        </div>
-                        <div>
-                            <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
-                                style="margin-top: 10px;">Add URL</button>
->>>>>>> 61dc03fd1cc50d49c4c1a57419a6c944c5bf2587
                         </div>
                     </div>
                     <div>
                         <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
                             style="margin-top: 10px;">Add URL</button>
                     </div>
-                    <div>
-                        <button id="submit_button" type="submit" class="button is-link is-light"
-                            style="margin-top: 10px;">Search</button>
-                    </div>
                 </div>
 
-                <!-- <div class="field"></div>
-                        <div class="control">
-                            <button class="button is-link" type="submit">Search</button>
-<<<<<<< HEAD
-                        </div> -->
-=======
-                        </div>
-                    </div> 
-                </form>
-            </div>
->>>>>>> 61dc03fd1cc50d49c4c1a57419a6c944c5bf2587
+                <div class="field"></div>
+                <div class="control">
+                    <button class="button is-link" type="submit">Search</button>
+                </div>
         </div>
         </form>
     </div>
 </div>
 
-<<<<<<< HEAD
 <div class="columns is-centered" style="margin-top: 20px;">
     <div class="column is-8">
+        <div id="exportButtons">
+            <!-- Export buttons will be added here after the search -->
+        </div>
         <div id="crawlResults">
             <!-- Results will be displayed here after search -->
-=======
-        <div class="columns is-centered" style="margin-top: 20px;">
-            <div class="column is-8">
-                <div id="exportButtons">
-                    <!-- Export buttons will be added here after the search -->
-                </div>
-                <div id="crawlResults">
-                    <!-- Results will be displayed here after search -->
-                </div>
-            </div>
->>>>>>> 61dc03fd1cc50d49c4c1a57419a6c944c5bf2587
         </div>
     </div>
 </div>
@@ -131,25 +94,14 @@
                 console.log("data: " + data);
                 const crawlResultsDiv = document.getElementById('crawlResults');
 
-<<<<<<< HEAD
                 if (data.length > 0 && data[0].length > 0) {
-                    // clears previous results
+                    // Clears previous results
                     crawlResultsDiv.innerHTML = '';
 
                     const resultsTitle = document.createElement('h2');
                     resultsTitle.classList.add('results');
-                    resultsTitle.textContent = 'Results - Strings Matched';
+                    resultsTitle.textContent = 'Results - Broken Links';
                     crawlResultsDiv.appendChild(resultsTitle);
-=======
-            if (data.length > 0 && data[0].length > 0) {
-                // Clears previous results
-                crawlResultsDiv.innerHTML = '';
-
-                const resultsTitle = document.createElement('h2');
-                resultsTitle.classList.add('results');
-                resultsTitle.textContent = 'Results - Broken Links';
-                crawlResultsDiv.appendChild(resultsTitle);
->>>>>>> 61dc03fd1cc50d49c4c1a57419a6c944c5bf2587
 
                     const table = document.createElement('table');
                     table.classList.add('table', 'is-bordered', 'is-fullwidth', 'is-hoverable');
@@ -164,42 +116,27 @@
 
                     const tableBody = document.createElement('tbody');
 
-<<<<<<< HEAD
                     data[0].forEach(link => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                        <td>${searchText}</td>
-=======
-                data[0].forEach(link => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
                         <td>${link}</td>
->>>>>>> 61dc03fd1cc50d49c4c1a57419a6c944c5bf2587
                         <td><a href="${link}" target="_blank">${link}</a></td>
                     `;
                         tableBody.appendChild(row);
                     });
 
-<<<<<<< HEAD
                     table.appendChild(tableBody);
                     crawlResultsDiv.appendChild(table);
-                } else if (data[0].length == 0) {
-                    crawlResultsDiv.innerHTML = `
-                <p>No results found!</p>
-=======
-                table.appendChild(tableBody);
-                crawlResultsDiv.appendChild(table);
 
-                // Call the export buttons functionality
-                const buttons = createExportButtons([], data[0], data[1], 'broken_links');
-                const exportButtonsDiv = document.getElementById('exportButtons');
-                exportButtonsDiv.innerHTML = '';
-                exportButtonsDiv.appendChild(buttons[0]);
-                exportButtonsDiv.appendChild(buttons[1]);
-            } else if (data[0] && data[0].length == 0) {
-                crawlResultsDiv.innerHTML = `
+                    // Call the export buttons functionality
+                    const buttons = createExportButtons([], data[0], data[1], 'broken_links');
+                    const exportButtonsDiv = document.getElementById('exportButtons');
+                    exportButtonsDiv.innerHTML = '';
+                    exportButtonsDiv.appendChild(buttons[0]);
+                    exportButtonsDiv.appendChild(buttons[1]);
+                } else if (data[0] && data[0].length == 0) {
+                    crawlResultsDiv.innerHTML = `
                 <p>No broken links found!</p>
->>>>>>> 61dc03fd1cc50d49c4c1a57419a6c944c5bf2587
                 `;
                 } else if (data.message) {
                     crawlResultsDiv.innerHTML = `<p>${data.message}</p>`;
@@ -216,9 +153,17 @@
         newFieldDiv.classList.add('control');
         newFieldDiv.style.marginTop = '10px';
 
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = "X";
+        deleteBtn.classList.add("delete-btn");
+        deleteBtn.addEventListener('click', () => {
+            newFieldDiv.remove();
+        })
+
         newFieldDiv.innerHTML = `
         <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
         `;
+        newFieldDiv.appendChild(deleteBtn);
         crawlUrlInputContainer.appendChild(newFieldDiv);
     });
 </script>
