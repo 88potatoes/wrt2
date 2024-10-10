@@ -162,18 +162,21 @@
                     </thead>
                 `;
 
-                    const tableBody = document.createElement('tbody');
-                    data[0].forEach(result => {
-                        const [searchTerm, link] = result;
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                        <td>${searchTerm}</td>
-                        <td><a href="${link}" target="_blank">${link}</a></td>
-                    `;
-                        tableBody.appendChild(row);
-                    });
+                const tableBody = document.createElement('tbody');
+                data[0].forEach(result => {
+                    const [searchTerm, link] = result;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td>${searchTerm}</td>
+                    <td><a href="${link}" target="_blank">${link}</a></td>
+                `;
+                    tableBody.appendChild(row);
+                });
 
-                    console.log('Table of Results shown');
+                table.appendChild(tableBody);
+                searchResultsDiv.appendChild(table);
+
+                console.log('Table of Results shown');
 
             } else if (data[0].length == 0) {
                 if (data[1].length > 0 || data[2].length > 0) {
