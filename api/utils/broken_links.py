@@ -2,6 +2,7 @@ from typing import List
 
 import requests
 from .robots import process_robots, check_link_ok
+from .response import BrokenLinksResponse
 
 import re
 from urllib.parse import urljoin
@@ -19,9 +20,7 @@ def crawl(starting_links: List[str]) -> List[str]:
 
     robots_item = "/robots.txt"
     to_visit = []
-    broken_links = []
-    output = {}
-    requires_access = []
+    response = BrokenLinksResponse()
 
     # search for base urls
     for start_link in starting_links:
@@ -30,15 +29,15 @@ def crawl(starting_links: List[str]) -> List[str]:
             # catch links that require access
             if page.status_code == 401 or page.status_code == 403:
                 print("requires acces: ", start_link)
-                requires_access.append(start_link)
+                response.requires_access.append(start_link)
                 continue
             # catch broken links
             elif not (200 <= page.status_code <= 299):
-                broken_links.append(start_link)
+                response.broken_links.append(start_link)
                 print("new broken: ", start_link)
                 continue
         except requests.exceptions.RequestException:
-            broken_links.append(start_link)
+            response.broken_links.append(start_link)
             continue
 
         pages_visited = 0
@@ -87,11 +86,11 @@ def crawl(starting_links: List[str]) -> List[str]:
                 # catch links that require access
                 if page.status_code == 401 or page.status_code == 403:
                     print("requires acces: ", link)
-                    requires_access.append(link)
+                    response.requires_access.append(link)
                     continue
                 # catch broken links
                 elif not (200 <= page.status_code <= 299):
-                    broken_links.append(link)
+                    response.broken_links.append(link)
                     print("new broken: ", link)
                     continue
 
@@ -132,8 +131,9 @@ def crawl(starting_links: List[str]) -> List[str]:
                         to_visit.append(potential_link)
                 pages_visited += 1
             except requests.exceptions.RequestException:
-                broken_links.append(link)
+                response.broken_links.append(link)
 
-        output[start_link] = sorted(visited.keys())
+        response.output[start_link] = sorted(visited.keys())
 
-    return [broken_links, requires_access, output]
+    return response
+

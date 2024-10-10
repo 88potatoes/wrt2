@@ -4,6 +4,7 @@ import requests
 from .robots import process_robots, check_link_ok
 from .search import search, search_without_highlighting
 from .create_pattern import create_pattern
+from .response import StringMatchResponse
 import re
 import urllib
 from urllib.parse import urljoin, urlparse
@@ -19,12 +20,9 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
 
     robots_item = "/robots.txt"
     to_visit = []
-    broken_links = []
     queried_webpages = []  # Pages where search term was found
-    output = {}  # Crawled pages organized by the starting URL
-    requires_access = []  # Pages requiring access (401 or 403 status)
     pattern = create_pattern(search_text)
-    search_str_webpages = []  # URLs with matched fragments (for highlighting browsers)
+    response = StringMatchResponse()
 
     # Determine if the browser supports text fragments (i.e., highlighting)
     use_highlighting = "chrome" in browser_info.lower()
@@ -36,14 +34,14 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
             # Handle access-required pages or broken links
             if page.status_code == 401 or page.status_code == 403:
                 # print("requires access: ", start_link)
-                requires_access.append(start_link)
+                response.requires_access.append(start_link)
                 continue
             elif not (200 <= page.status_code <= 299):
-                broken_links.append(start_link)
+                response.broken_links.append(start_link)
                 # print("new broken: ", start_link, ' code: ', page.status_code)
                 continue
         except requests.exceptions.RequestException:
-            broken_links.append(start_link)
+            response.broken_links.append(start_link)
             continue
         pages_visited = 0
         visited = {}
@@ -73,10 +71,10 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
                 for fragment in fragments:
                     updated_url = parsed_url._replace(fragment=fragment)
                     final_url = urllib.parse.urlunparse(updated_url)
-                    search_str_webpages.append((search_text, final_url))
+                    response.search_str_webpages.append((search_text, final_url))
             # For non-highlighting browsers, append only the URL (without duplicating)
             else:
-                search_str_webpages.append((search_text, start_link))
+                response.search_str_webpages.append((search_text, start_link))
 
         # Extract all links from the current page and add them to the to-visit list
         links = soup.findAll("a")
@@ -116,11 +114,11 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
                 # catch links that require access
                 if page.status_code == 401 or page.status_code == 403:
                     # print("requires acces: ", link)
-                    requires_access.append(link)
+                    response.requires_access.append(link)
                     continue
                 # catch broken links
                 elif not (200 <= page.status_code <= 299):
-                    broken_links.append(link)
+                    response.broken_links.append(link)
                     # print("new broken: ", link)
                     continue
 
@@ -142,10 +140,10 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
                         for fragment in fragments:
                             updated_url = parsed_url._replace(fragment=fragment)
                             final_url = urllib.parse.urlunparse(updated_url)
-                            search_str_webpages.append((search_text, final_url))
+                            response.search_str_webpages.append((search_text, final_url))
                     # For non-highlighting browsers, append only the URL (without duplicating)
                     else:
-                        search_str_webpages.append((search_text, link))
+                        response.search_str_webpages.append((search_text, link))
 
                 if link in visited:
                     print(f"Link already visited: {link}")
@@ -182,8 +180,8 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
                         to_visit.append(potential_link)
                 pages_visited += 1
             except requests.exceptions.RequestException:
-                broken_links.append(link)
+                response.broken_links.append(link)
 
-        output[start_link] = sorted(visited.keys())
+        response.output[start_link] = sorted(visited.keys())
 
-    return [search_str_webpages, broken_links, requires_access, output]
+    return response
