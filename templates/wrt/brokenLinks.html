@@ -102,7 +102,7 @@
                 resultsTitle.id = 'resultsTable'
                 resultsTitle.classList.add('results');
                 resultsTitle.textContent = 'Results - Broken Links';
-                crawlResultsDiv.appendChild(resultsTitle);
+                resultsHeaderDiv.appendChild(resultsTitle);
 
                 // create buttons div
                 const buttonsDiv = document.createElement('div');
@@ -129,7 +129,7 @@
                     <thead>
                         <tr>
                             <th>Broken Link</th>
-                            <th>Page URL</th>
+                            <th>Found Location Page URL</th>
                         </tr>
                     </thead>
                 `;
