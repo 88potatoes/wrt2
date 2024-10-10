@@ -51,40 +51,78 @@
             list-style-type: disc;
             padding-left: 20px;
         }
+
+        .search_terms_list li {
+            font-size: 18px;
+            font-weight: 400;
+            color: #000B34;
+            text-align: left; 
+        }
+
+        h3 {
+            font-size: 24px;
+            font-weight: 400;
+            color: #000B34;
+            text-align: left; 
+        }
+
     </style>
 {% endblock %}
 
 {% block content %} 
     {% include "partials/navbar.html" %}
-    <!-- 'table', 'is-bordered', 'is-fullwidth', 'is-hoverable'
-    <thead>
-        <tr>
-            <th>Matched String</th>
-            <th>Page URL</th>
-        </tr>
-    </thead> -->
 
-    <h1>Results for: {{ search_query }}</h1>
-    <div class="search_terms">
-        <h2>Search Term(s)</h2>
-        <ul class="search_terms_list">
-            {% for search_term in search_terms %}
-                <li>{{search_term}}</li>  <!-- TODO Customize this -->
-            {% empty %}
-                <li>No Search Terms</li>
-            {% endfor %}
-        </ul>
+    <div class="tab-content">
+        <div class="columns-is-centered">
+            <h2 class="tab-title">{{ search_query }}</h2>
+
+            <div class="searchParameters">
+                <h3>Search Term(s)</h3>
+                <ul class="search_terms_list">
+                    {% for search_term in search_terms %}
+                        <li>{{search_term}}</li>  <!-- TODO Customize this -->
+                    {% empty %}
+                        <li>No Search Terms</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="searchResultsContainer" style="margin-top: 20px;">
+                <div class="table-header">
+                    <h2 class="results">Results</h2>
+                    <div class="button-group">
+                        <button id="exportPDF" class="button is-link export-pdf" style="margin-right: 10px;">
+                            Export to PDF
+                        </button>
+                        <button id="exportExcel" class="button is-link export-excel">Export to Excel</button>
+                    </div>
+                </div>
+    
+                <table class="table is-bordered is-fullwidth is-hoverable">
+                    <thead>
+                        <tr>
+                            <th>Matched String</th>
+                            <th>Page URL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in results %}
+                            <tr>
+                                <td>{{result.search_text}}</td>
+                                <td><a href={{result.url}}>{{result.url}}</a></td>
+                            </tr>
+                        {% empty %}
+                            <h3>No results found for this query.</h3>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <ul class="container">
-        <div class="header">Matched String</div>
-        <div class="header">Page URL</div>
-        {% for result in results %}
-            <div class="row">
-                <div class="cell">{{result.search_text}}</div>
-                <div class="cell">{{result.url}}</div>
-            </div> <!-- TODO Customize this -->
-        {% empty %}
-            <li>No results found for this query.</li>
-        {% endfor %}
-    </ul>
+{% endblock %}
+
+{% block script %}
+<script>
+
+</script>
 {% endblock %}
