@@ -3,63 +3,64 @@
 
 {% block title %} Search {% endblock %}
 
-{% block head %} 
-    <link rel="stylesheet" href="{% static 'css/search.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- probably don't need to load in all the icons -->
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/search.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<!-- probably don't need to load in all the icons -->
 {% endblock %}
-{% block content %} 
-    {% include "partials/navbar.html" %}
+{% block content %}
+{% include "partials/navbar.html" %}
 
-    <div id="brokenLinksTab" class="tab-content">
-        <h2 class="tab-title">Broken Link Search</h2>
-        <div class="columns-is-centered">
-            <div class="column is-8">
-                <form id="crawlForm">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_type" value="search_term_form">
+<div id="brokenLinksTab" class="tab-content">
+    <h2 class="tab-title">Broken Link Search</h2>
+    <div class="columns-is-centered">
+        <div class="column is-8">
+            <form id="crawlForm">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="search_term_form">
 
-                    <div class="field">
-                        <label class="label">Root URLs
-                            <span class="icon has-tooltip" id="tooltipIcon3">
-                                <i class="fas fa-info-circle"></i>
-                                <div class="tooltip">This tool scans a website for broken links and pages that require
-                                    login access, like those using Okta. It checks the seed URLs and all the
-                                    internal links with the same prefix URL.
-                                </div>
-                            </span>
-                        </label>
-                        <div id="crawlUrlInputContainer">
-                            <div class="control">
-                                <input class="input" type="text" name="starting_links[]"
-                                    placeholder="Enter a URL defining the search range..." required>
+                <div class="field">
+                    <label class="label">Root URLs
+                        <span class="icon has-tooltip" id="tooltipIcon3">
+                            <i class="fas fa-info-circle"></i>
+                            <div class="tooltip">This tool scans a website for broken links and pages that require
+                                login access, like those using Okta. It checks the seed URLs and all the
+                                internal links with the same prefix URL.
                             </div>
-                        </div>
-                        <div>
-                            <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
-                                style="margin-top: 10px;">Add URL</button>
+                        </span>
+                    </label>
+                    <div id="crawlUrlInputContainer">
+                        <div class="control">
+                            <input class="input" type="text" name="starting_links[]"
+                                placeholder="Enter a URL defining the search range..." required>
                         </div>
                     </div>
+                    <div>
+                        <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
+                            style="margin-top: 10px;">Add URL</button>
+                    </div>
+                </div>
 
-                    <div class="field"></div>
-                        <div class="control">
-                            <button class="button is-link" type="submit">Search</button>
-                        </div>
-                    </div> 
-                </form>
-            </div>
+                <div class="field"></div>
+                <div class="control">
+                    <button class="button is-link" type="submit">Search</button>
+                </div>
         </div>
+        </form>
+    </div>
+</div>
 
-        <div class="columns is-centered" style="margin-top: 20px;">
-            <div class="column is-8">
-                <div id="exportButtons">
-                    <!-- Export buttons will be added here after the search -->
-                </div>
-                <div id="crawlResults">
-                    <!-- Results will be displayed here after search -->
-                </div>
-            </div>
+<div class="columns is-centered" style="margin-top: 20px;">
+    <div class="column is-8">
+        <div id="exportButtons">
+            <!-- Export buttons will be added here after the search -->
+        </div>
+        <div id="crawlResults">
+            <!-- Results will be displayed here after search -->
         </div>
     </div>
+</div>
+</div>
 
 {% endblock %}
 
@@ -68,11 +69,15 @@
 
     // Handle CrawlForm submission
     const crawlForm = document.getElementById('crawlForm');
+    const crawlResultsDiv = document.getElementById('crawlResults');
+
     crawlForm.addEventListener('submit', function (event) {
         event.preventDefault();
         const formData = new FormData(crawlForm);
         const starting_links = formData.getAll('starting_links[]');
         const browser_info = navigator.userAgent;
+
+        crawlResultsDiv.innerHTML = `<p>Scraping in progress... Please wait.</p>`;
 
         // Debug
         console.log("Starting Links: ", starting_links);
@@ -88,23 +93,23 @@
                 browser_info
             })
         })
-        .then(response => response.json())
-        .then((data) => {
-            console.log("data: " + data); 
-            const crawlResultsDiv = document.getElementById('crawlResults');
+            .then(response => response.json())
+            .then((data) => {
+                console.log("data: " + data);
+                const crawlResultsDiv = document.getElementById('crawlResults');
 
-            if (data.length > 0 && data[0].length > 0) {
-                // Clears previous results
-                crawlResultsDiv.innerHTML = '';
+                if (data.length > 0 && data[0].length > 0) {
+                    // Clears previous results
+                    crawlResultsDiv.innerHTML = '';
 
-                const resultsTitle = document.createElement('h2');
-                resultsTitle.classList.add('results');
-                resultsTitle.textContent = 'Results - Broken Links';
-                crawlResultsDiv.appendChild(resultsTitle);
+                    const resultsTitle = document.createElement('h2');
+                    resultsTitle.classList.add('results');
+                    resultsTitle.textContent = 'Results - Broken Links';
+                    crawlResultsDiv.appendChild(resultsTitle);
 
-                const table = document.createElement('table');
-                table.classList.add('table', 'is-bordered', 'is-fullwidth', 'is-hoverable');
-                table.innerHTML = `
+                    const table = document.createElement('table');
+                    table.classList.add('table', 'is-bordered', 'is-fullwidth', 'is-hoverable');
+                    table.innerHTML = `
                     <thead>
                         <tr>
                             <th>Broken Link</th>
@@ -113,45 +118,45 @@
                     </thead>
                 `;
 
-                const tableBody = document.createElement('tbody');
+                    const tableBody = document.createElement('tbody');
 
-                data[0].forEach(link => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
+                    data[0].forEach(link => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
                         <td>${link}</td>
                         <td><a href="${link}" target="_blank">${link}</a></td>
                     `;
-                    tableBody.appendChild(row);
-                });
+                        tableBody.appendChild(row);
+                    });
 
-                table.appendChild(tableBody);
-                crawlResultsDiv.appendChild(table);
+                    table.appendChild(tableBody);
+                    crawlResultsDiv.appendChild(table);
 
-                // Call the export buttons functionality
-                const buttons = createExportButtons([], data[0], data[1], 'broken_links');
-                const exportButtonsDiv = document.getElementById('exportButtons');
-                exportButtonsDiv.innerHTML = '';
-                exportButtonsDiv.appendChild(buttons[0]);
-                exportButtonsDiv.appendChild(buttons[1]);
-            } else if (data[0] && data[0].length == 0) {
-                crawlResultsDiv.innerHTML = `
+                    // Call the export buttons functionality
+                    const buttons = createExportButtons([], data[0], data[1], 'broken_links');
+                    const exportButtonsDiv = document.getElementById('exportButtons');
+                    exportButtonsDiv.innerHTML = '';
+                    exportButtonsDiv.appendChild(buttons[0]);
+                    exportButtonsDiv.appendChild(buttons[1]);
+                } else if (data[0] && data[0].length == 0) {
+                    crawlResultsDiv.innerHTML = `
                 <p>No broken links found!</p>
                 `;
-            } else if (data.message) {
-                crawlResultsDiv.innerHTML = `<p>${data.message}</p>`;
-            }
-        });
+                } else if (data.message) {
+                    crawlResultsDiv.innerHTML = `<p>${data.message}</p>`;
+                }
+            });
     });
-    
+
     // Handle adding input fields for Crawl Form
     const addCrawlInputBtn = document.getElementById('addCrawlInputBtn');
     const crawlUrlInputContainer = document.getElementById('crawlUrlInputContainer');
-    
+
     addCrawlInputBtn.addEventListener('click', function () {
         const newFieldDiv = document.createElement('div');
         newFieldDiv.classList.add('control');
         newFieldDiv.style.marginTop = '10px';
-        
+
         newFieldDiv.innerHTML = `
         <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
         `;
