@@ -62,18 +62,13 @@ def crawl_broken_links_view(request):
             broken_links, requires_access, output = data
             print(data)
 
-            # writing to database
-            for seed_url in output:
-                for page in output[seed_url]:
-                    pass
-                    # TODO replace this with the new schema
-                    # past_search = PastSearch.objects.create(
-                    #     user=request.user,
-                    #     seed_url=seed_url,
-                    #     url_from=page,
-                    #     search_type="search",
-                    # )
-                    # past_search.save()
+            new_query = SearchQuery.objects.create(
+                user=request.user, type=SearchQuery.QueryType.CRAWL
+            )
+
+            for link in broken_links:
+                SearchResult.objects.create(searchquery=new_query, url=link)
+
             return JsonResponse(data, status=200, safe=False)  # TODO make it safe
         elif status == 400:  # return the errors
             return JsonResponse(data, status=400)
@@ -166,7 +161,11 @@ def download(request):
         if export_type == "pdf":
             pdf_file_path = os.path.join(temp_dir, f"scrape_results_{timestamp}.pdf")
             export_to_pdf(
-                search_results, broken_links, access_required_links, pdf_file_path, search_type
+                search_results,
+                broken_links,
+                access_required_links,
+                pdf_file_path,
+                search_type,
             )
             file_url = f"/temp/scrape_results_{timestamp}.pdf"
 
@@ -174,7 +173,11 @@ def download(request):
         elif export_type == "excel":
             excel_file_path = os.path.join(temp_dir, f"scrape_results_{timestamp}.xlsx")
             export_to_excel(
-                search_results, broken_links, access_required_links, excel_file_path, search_type
+                search_results,
+                broken_links,
+                access_required_links,
+                excel_file_path,
+                search_type,
             )
             file_url = f"/temp/scrape_results_{timestamp}.xlsx"
 
@@ -184,6 +187,7 @@ def download(request):
     else:
         print("Serializer errors 3:", serializer.errors)
         return HttpResponse(serializer.errors, status=400)
+
 
 def download_view(request, filename):
     # Sanitize the filename
