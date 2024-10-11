@@ -185,5 +185,13 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())
+    
 
-    return [search_str_webpages, broken_links, requires_access, output]
+    result = {
+        "search_str_webpages": search_str_webpages,
+        "broken_links": broken_links,
+        "requires_access": requires_access,
+        "output": output
+    }
+
+    return result

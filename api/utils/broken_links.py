@@ -147,4 +147,10 @@ def crawl(starting_links: List[str], browser_info: str) -> List[str]:
 
         output[start_link] = sorted(visited.keys())
 
-    return [broken_links, requires_access, output]
+    result = {
+        "broken_links": broken_links,
+        "requires_access": requires_access,
+        "output": output
+    }
+
+    return result
