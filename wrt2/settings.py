@@ -187,3 +187,7 @@ sentry_sdk.init(
 # login stuff
 LOGIN_URL = "/"
 LOGIN_REDIRECT_URL = "/search_term"
+
+CELERY_TASK_ROUTES = {
+    "api.tasks.*": {"queue": "app1_queue"},
+}
