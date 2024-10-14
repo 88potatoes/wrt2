@@ -2,17 +2,17 @@ from typing import List
 
 import requests
 from .robots import process_robots, check_link_ok
-
+from .search import search
 import re
-from urllib.parse import urljoin
-from urllib.parse import urlparse
+import urllib
+from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 
 # A limit on the number of links crawled for each starting link
 SAFE_PAGE_LIMIT = 5
 
 
-def crawl(starting_links: List[str]) -> List[str]:
+def crawl(starting_links: List[str], browser_info: str) -> List[str]:
     """Crawl each url in the starting_link list, and output
     the broken links and links that require private access. All links
     crawled stored in JSON file"""
@@ -22,6 +22,8 @@ def crawl(starting_links: List[str]) -> List[str]:
     broken_links = []
     output = {}
     requires_access = []
+    origin = {}
+    use_highlighting = "chrome" in browser_info.lower()
 
     # search for base urls
     for start_link in starting_links:
@@ -34,7 +36,7 @@ def crawl(starting_links: List[str]) -> List[str]:
                 continue
             # catch broken links
             elif not (200 <= page.status_code <= 299):
-                broken_links.append(start_link)
+                broken_links.append([start_link, "Seed link is broken."])
                 print("new broken: ", start_link)
                 continue
         except requests.exceptions.RequestException:
@@ -72,6 +74,7 @@ def crawl(starting_links: List[str]) -> List[str]:
             if not check_link_ok(robot_rules, href):
                 continue
             to_visit.append(potential_link)
+            origin[potential_link] = [start_link, new_link.get_text(strip=True)]
         visited[start_link] = True
 
         # crawling
@@ -91,7 +94,14 @@ def crawl(starting_links: List[str]) -> List[str]:
                     continue
                 # catch broken links
                 elif not (200 <= page.status_code <= 299):
-                    broken_links.append(link)
+                    if use_highlighting:
+                        fragment = search(origin[link][1], origin[link][0])[0]
+                        parsed_url = urllib.parse.urlparse(origin[link][0])
+                        updated_url = parsed_url._replace(fragment=fragment)
+                        final_url = urllib.parse.urlunparse(updated_url)
+                        broken_links.append([link, final_url])
+                    else:
+                        broken_links.append([link, origin[link][0]])
                     print("new broken: ", link)
                     continue
 
@@ -130,10 +140,17 @@ def crawl(starting_links: List[str]) -> List[str]:
                         potential_link not in to_visit
                     ):
                         to_visit.append(potential_link)
+                        origin[potential_link] = [start_link, href]
                 pages_visited += 1
             except requests.exceptions.RequestException:
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())
 
-    return [broken_links, requires_access, output]
+    result = {
+        "broken_links": broken_links,
+        "requires_access": requires_access,
+        "output": output
+    }
+
+    return result
