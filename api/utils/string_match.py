@@ -31,6 +31,7 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
 
     # Iterate over each starting link
     for start_link in starting_links:
+        print(start_link)
         try:
             page = requests.get(start_link)
             # Handle access-required pages or broken links
@@ -185,13 +186,12 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
                 broken_links.append(link)
 
         output[start_link] = sorted(visited.keys())
-    
 
     result = {
         "search_str_webpages": search_str_webpages,
         "broken_links": broken_links,
         "requires_access": requires_access,
-        "output": output
+        "output": output,
     }
 
     return result

@@ -28,12 +28,21 @@ def search_term_view(request):
     if request.method == "GET":
         return render(request, "wrt/search.html")
     else:
-        queued_item = find_text_string.delay(request, from_website=True)
-        data, status = queued_item.get()
+        print("POSTING SEARCH TERM")
+        queued_item = find_text_string.delay(request.body, from_website=True)
+        print("QUEUED ITEM")
+        response = queued_item.get()
+        print("RESPONSE")
+        print(response)
+        data, status = response
+        print("RECEIVED ITEM")
 
         if status == 200:
             # TODO test that the writing works
-            queried_webpages, broken_links, requires_access, output = data
+            queried_webpages = data["search_str_webpages"]
+            # broken_links = data['broken_links']
+            # requires_access = data['requires_access']
+            # output = data['output']
             print(data)
 
             # writing to database

@@ -22,9 +22,7 @@ from .utils.string_match import scrape
 from .utils.export import export_to_excel, export_to_pdf
 import os
 import threading
-from celery import Celery
-
-app = Celery("my_app", broker="redis://localhost:6379/0")
+from celery import shared_task
 
 """
 ================================= Search APIS =================================
@@ -32,12 +30,17 @@ app = Celery("my_app", broker="redis://localhost:6379/0")
 
 
 # Search Text String API
-@app.task
-def find_text_string(request, from_website=False):  # used by the website app
-    data = request.body if from_website else request.data
-    serializer = SearchTermSerializer(data=json.loads(data))
-    print("Request data:", data)
-    print("Request method:", request.method)
+@shared_task
+def find_text_string(request_data, from_website=False):  # used by the website app
+    print("Started request")  # TODO remove eventually
+    # data = request.body if from_website else request.data
+    # serializer = SearchTermSerializer(data=json.loads(data))
+    request_data = json.loads(
+        request_data.decode("utf-8")
+    )  # TODO add error handling / conditionally turning the request_data to dictionary
+    serializer = SearchTermSerializer(data=request_data)
+    # print("Request data:", data)
+    # print("Request method:", request.method)
 
     if serializer.is_valid():
         search_text = serializer.validated_data["search_text"]
@@ -58,9 +61,11 @@ def find_text_string(request, from_website=False):  # used by the website app
             else (serializer.errors, 400)
         )
 
+    print("Started request")  # TODO remove eventually
+
 
 # Broken Links API
-@app.task
+@shared_task
 def find_broken_links(request, from_website=False):  # used by the website app
     data = request.body if from_website else request.data
     serializer = BrokenLinksSerializer(data=json.loads(data))
@@ -73,17 +78,17 @@ def find_broken_links(request, from_website=False):  # used by the website app
         result = crawl(starting_links)
         print(result)
 
-        return (
+        return (  # TODO remove
             Response(result, status=status.HTTP_200_OK)
             if not from_website
-            else (result, 200)
+            else {"data": result, "status_code": 200}
         )
     else:
         print("Serializer errors 2:", serializer.errors)
         return (
             Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             if not from_website
-            else (serializer.errors, 400)
+            else {"data": serializer.errors, "status_code": 400}
         )
 
 
