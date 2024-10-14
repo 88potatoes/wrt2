@@ -28,7 +28,8 @@ def search_term_view(request):
     if request.method == "GET":
         return render(request, "wrt/search.html")
     else:
-        data, status = find_text_string(request, from_website=True)
+        queued_item = find_text_string.delay(request, from_website=True)
+        data, status = queued_item.get()
 
         if status == 200:
             # TODO test that the writing works
@@ -56,7 +57,9 @@ def crawl_broken_links_view(request):
     if request.method == "GET":
         return render(request, "wrt/brokenLinks.html")
     elif request.method == "POST":
-        data, status = find_broken_links(request, from_website=True)
+        queued_item = find_broken_links.delay(request, from_website=True)
+        data, status = queued_item.get()
+
         if status == 200:
             # TODO test that the writing works
             broken_links, requires_access, output = data
