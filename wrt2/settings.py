@@ -192,10 +192,10 @@ CELERY_TASK_ROUTES = {
 CELERY_BROKER_URL = (
     config("REDIS_URL")
     + "/0"
-    + ("?ssl_cert_reqs=CERT_REQUIRED" if config("ENVIRONMENT") == "production" else "")
+    + ("?ssl_cert_reqs=CERT_NONE" if config("ENVIRONMENT") == "production" else "")
 )
 CELERY_RESULT_BACKEND = (
     config("REDIS_URL")
     + "/1"
-    + ("?ssl_cert_reqs=CERT_REQUIRED" if config("ENVIRONMENT") == "production" else "")
+    + ("?ssl_cert_reqs=CERT_NONE" if config("ENVIRONMENT") == "production" else "")
 )
