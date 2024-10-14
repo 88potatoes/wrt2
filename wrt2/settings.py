@@ -189,5 +189,13 @@ CELERY_TASK_ROUTES = {
     "api.tasks.*": {"queue": "app1_queue"},
 }
 
-CELERY_BROKER_URL = config("REDIS_URL") + "/0"
-CELERY_RESULT_BACKEND = config("REDIS_URL") + "/1"
+CELERY_BROKER_URL = (
+    config("REDIS_URL")
+    + "/0"
+    + ("?ssl_cert_reqs=CERT_REQUIRED" if config("ENVIRONMENT") == "production" else "")
+)
+CELERY_RESULT_BACKEND = (
+    config("REDIS_URL")
+    + "/1"
+    + ("?ssl_cert_reqs=CERT_REQUIRED" if config("ENVIRONMENT") == "production" else "")
+)
