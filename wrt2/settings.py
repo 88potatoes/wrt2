@@ -188,7 +188,9 @@ LOGIN_REDIRECT_URL = "/search_term"
 CELERY_TASK_ROUTES = {
     "api.tasks.*": {"queue": "app1_queue"},
 }
-CELERY_BROKER_URL = "redis://localhost:6379/0"  # Redis broker URL # TODO make these environment variables
-CELERY_RESULT_BACKEND = (
-    "redis://localhost:6379/0"  # Optional, if you want to store results
-)
+CELERY_BROKER_URL = config(
+    "REDIS_BROKER_URL"
+)  # Redis broker URL # TODO make these environment variables
+CELERY_RESULT_BACKEND = config(
+    "REDIS_BACKEND_URL"
+)  # Optional, if you want to store results
