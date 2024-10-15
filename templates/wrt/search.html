@@ -95,7 +95,6 @@
 
         searchResultsDiv.innerHTML = `<p>Scraping in progress... Please wait.</p>`;
 
-
         fetch("{% url 'search_term' %}", {
             method: "POST", // Specify the method here
             headers: {
@@ -108,14 +107,58 @@
                 browser_info: browserInfo
             })
         })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return res.json(); // Call .json() method to parse response
-            })
-            .then(data => {
-                console.log("Data received from the server:", data);
+        .then(() => {
+            checkTaskStatus()
+        })
+        .catch(error => {
+            console.error('Error:', error); // Handle errors
+        });
+
+    });
+
+    // Handle adding input fields for Search Form
+    const addSearchInputBtn = document.getElementById('addSearchInputBtn');
+    const searchUrlInputContainer = document.getElementById('searchUrlInputContainer');
+
+    addSearchInputBtn.addEventListener('click', function () {
+        const newFieldDiv = document.createElement('div');
+        newFieldDiv.classList.add('control');
+        newFieldDiv.style.marginTop = '10px';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = "X";
+        deleteBtn.classList.add("delete-btn");
+        deleteBtn.addEventListener('click', () => {
+            newFieldDiv.remove();
+        })
+
+        newFieldDiv.innerHTML = `
+                <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
+            `;
+        newFieldDiv.appendChild(deleteBtn);
+        searchUrlInputContainer.appendChild(newFieldDiv);
+    });
+
+    function checkTaskStatus() {
+        fetch("{% url 'search_term' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',  // Ensure CSRF token is included
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),  // Include necessary data if any
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'processing' || data.status === 'task started') {
+                // Task is still processing, poll again after a delay
+                console.log("Task is still processing, checking again in 5 seconds...");
+                setTimeout(checkTaskStatus, 5000);  // Poll every 5 seconds
+            } else {
+                // Task is complete, stop polling and handle the result
+                console.log('Task completed, result:', data);
+                // Update the UI or take action based on the result
+
                 const searchResultsDiv = document.getElementById('searchResults');
 
                 if (data.length > 0 && data[0].length > 0) {
@@ -196,34 +239,11 @@
 
                     }
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error); // Handle errors
-            });
-
-    });
-
-    // Handle adding input fields for Search Form
-    const addSearchInputBtn = document.getElementById('addSearchInputBtn');
-    const searchUrlInputContainer = document.getElementById('searchUrlInputContainer');
-
-    addSearchInputBtn.addEventListener('click', function () {
-        const newFieldDiv = document.createElement('div');
-        newFieldDiv.classList.add('control');
-        newFieldDiv.style.marginTop = '10px';
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = "X";
-        deleteBtn.classList.add("delete-btn");
-        deleteBtn.addEventListener('click', () => {
-            newFieldDiv.remove();
+            }
         })
+        .catch(error => console.error('Error:', error));
+    }
 
-        newFieldDiv.innerHTML = `
-                <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
-            `;
-        newFieldDiv.appendChild(deleteBtn);
-        searchUrlInputContainer.appendChild(newFieldDiv);
-    });
+// Start polling after the user submits the search term
 </script>
 {% endblock %}
