@@ -82,8 +82,7 @@
                     <tr>
                         <th class="is-narrow">Link</th>
                         <th style="width: 250px;">Time and Date</th>
-                        <th style="width: 150px;">Search Type</th>
-                        <th>Details</th>
+                        <th style="width: 250px;">Search Type</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -91,8 +90,15 @@
                         <tr>
                             <td><a href="{% url 'query_results' query.id %}">view</a></td>
                             <td>{{query.created_at}}</td>
-                            <td>{{query.type}}</td>
-                            <td>details</td>
+                            <td>
+                                {% if query.type == "Search" %}
+                                    String Search
+                                {% elif query.type == "Crawl" %}
+                                    Broken Links
+                                {% else %}
+                                    Error
+                                {% endif %}
+                            </td>
                         </tr>
                     {% empty %}
                         <h3>No Queries Found</h3>
