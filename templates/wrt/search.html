@@ -162,8 +162,11 @@
                 const searchResultsDiv = document.getElementById('searchResults');
 
                 const searchStrWebpages = data.search_str_webpages;
+                const brokenLinks = data.broken_links;
+                const requiresAccess = data.requires_access;
+                const output = data.output;
 
-                if (data.length > 0 && data[0].length > 0) {
+                if (searchStrWebpages.length > 0) {
                     // clears previous results
                     searchResultsDiv.innerHTML = '';
 
@@ -181,10 +184,11 @@
                     buttonsDiv.classList.add('button-group');
 
                     // Create export buttons
-                    const buttons = createExportButtons(data[0], data[1], data[2], 'search_term');
-                    console.log("Search Results:", data[0]);
-                    console.log("Broken Links:", data[1]);
-                    console.log("Access Required Links:", data[2]);
+                    // !!!!!!! first parameter might not be correct
+                    const buttons = createExportButtons(searchStrWebpages, brokenLinks, requiresAccess, 'search_term');
+                    console.log("Search Results:", searchStrWebpages);
+                    console.log("Broken Links:", brokenLinks);
+                    console.log("Access Required Links:", requiresAccess);
 
                     // Append buttons to the export buttons div
                     buttonsDiv.appendChild(buttons[0]);
@@ -208,13 +212,13 @@
                 `;
 
                     const tableBody = document.createElement('tbody');
-                    data[0].forEach(result => {
+                    searchStrWebpages.forEach(result => {
                         const [searchTerm, link] = result;
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                    <td>${searchTerm}</td>
-                    <td><a href="${link}" target="_blank">${link}</a></td>
-                `;
+                            <td>${searchTerm}</td>
+                            <td><a href="${link}" target="_blank">${link}</a></td>
+                        `;
                         tableBody.appendChild(row);
                     });
 
@@ -223,8 +227,8 @@
 
                     console.log('Table of Results shown');
 
-                } else if (data[0].length == 0) {
-                    if (data[1].length > 0 || data[2].length > 0) {
+                } else if (searchStrWebpages.length == 0) {
+                    if (brokenLinks.length > 0 || requiresAccess.length > 0) {
 
                         searchResultsDiv.innerHTML = '';
 
