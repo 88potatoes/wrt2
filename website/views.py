@@ -255,10 +255,17 @@ def query_results_view(request, query_id):
         search_query.results.all()
     )  # Using the related_name defined in the model
     search_terms = list(set(result.search_text for result in results))
+
+    urls_list = [[result.search_text, result.url] for result in results]
+
+    query_type = search_query.type
+
     context = {
         "search_query": search_query,
         "results": results,
+        "urls_list": urls_list,
         "search_terms": search_terms,
+        "query_type": query_type,
     }
     return render(
         request, "wrt/query_results.html", context

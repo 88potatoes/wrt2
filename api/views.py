@@ -19,16 +19,11 @@ from .serializers import (
 # from .models import PastSearch
 from .utils.broken_links import crawl
 from .utils.string_match import scrape
-from .utils.export import export_to_excel, export_to_pdf
-import os
-import threading
 from celery import shared_task
 
 """
 ================================= Search APIS =================================
 """
-
-
 # Search Text String API
 @shared_task
 def find_text_string(request_data, from_website=False):  # used by the website app
