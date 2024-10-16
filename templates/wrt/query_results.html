@@ -83,6 +83,12 @@
 
         .modal { 
             border-radius: 10px;
+            opacity: 0; 
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .modal.is-active {
+            opacity: 1; 
         }
 
         .modal-card {
@@ -220,7 +226,9 @@
         const confirmExportButton = document.getElementById("confirmExport");
 
         exportButton.onclick = function() {
-            modal.classList.add("is-active");
+            modal.style.opacity = "0"; 
+            modal.classList.add("is-active"); 
+            setTimeout(() => { modal.style.opacity = "1"; }, 10);
         };
 
         closeButton.onclick = function() {
@@ -276,19 +284,25 @@
                 console.error('No export format selected');
             }
         });
-    });
 
-    function resetModal() {
-        modal.classList.remove("is-active"); 
-        exampleImage.style.display = "none"; 
-        formatDescription.style.display = "none";
-        exampleImage.src = "";
-        
-        // Uncheck all radio buttons
-        radios.forEach(radio => {
-            radio.checked = false;
-        });
-    }
+        function resetModal() {
+            modal.style.opacity = "1"; 
+            setTimeout(() => {
+                modal.style.opacity = "0"; 
+                setTimeout(() => {
+                    modal.classList.remove("is-active"); 
+                }, 300); 
+            }, 10); 
+
+            exampleImage.style.display = "none"; 
+            formatDescription.style.display = "none";
+            exampleImage.src = "";
+
+            radios.forEach(radio => {
+                radio.checked = false;
+            });
+        }
+    });
 
     function exportResults(searchResults, brokenLinks, accessRequired, exportType, searchType) {
         const requestBody = {
