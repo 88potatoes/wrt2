@@ -159,7 +159,7 @@ def crawl_broken_links_view(request):
 @require_http_methods(["GET"])
 @login_required
 def history(request):
-    all_queries = SearchQuery.objects.filter(user=request.user)[:30:-1]
+    all_queries = SearchQuery.objects.filter(user=request.user)[::-1]
     paginator = Paginator(all_queries, 10)
 
     page_number = request.GET.get(
