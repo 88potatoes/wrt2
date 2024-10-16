@@ -66,29 +66,30 @@ def find_text_string(request_data, from_website=False):  # used by the website a
 
 # Broken Links API
 @shared_task
-def find_broken_links(request, from_website=False):  # used by the website app
-    data = request.body if from_website else request.data
-    serializer = BrokenLinksSerializer(data=json.loads(data))
-    print("Request data:", data)
-    print("Request method:", request.method)
+def find_broken_links(request_body, from_website=False):  # used by the website app
+    # data = request.body if from_website else request.data
+    serializer = BrokenLinksSerializer(data=request_body)
+    # print("Request data:", request_data)
+    # print("Request method:", request.method)
 
     if serializer.is_valid():
         starting_links = serializer.validated_data["starting_links"]
+        browser_info = serializer.validated_data["browser_info"]
 
-        result = crawl(starting_links)
+        result = crawl(starting_links, browser_info)
         print(result)
 
         return (  # TODO remove
             Response(result, status=status.HTTP_200_OK)
             if not from_website
-            else {"data": result, "status_code": 200}
+            else (result, 200)
         )
     else:
         print("Serializer errors 2:", serializer.errors)
         return (
             Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             if not from_website
-            else {"data": serializer.errors, "status_code": 400}
+            else (serializer.errors, 400)
         )
 
 
