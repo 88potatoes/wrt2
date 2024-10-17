@@ -217,7 +217,7 @@ else:
     REDIS_URL = "redis://localhost:6379"
 
     # Redis client instance for development
-    REDIS_CLIENT = Redis.from_url(REDIS_URL)
+    REDIS_CLIENT = Redis.from_url(REDIS_URL, ssl_cert_reqs=None)
 
     # Celery settings for development
     CELERY_BROKER_URL = REDIS_URL
