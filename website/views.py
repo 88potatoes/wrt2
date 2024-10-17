@@ -20,6 +20,13 @@ from api.views import find_broken_links, find_text_string
 from django.core.paginator import Paginator
 
 from website.models import SearchQuery, SearchResult
+from redis import Redis
+
+from wrt2.settings import CELERY_RESULT_BACKEND
+from celery.result import AsyncResult
+
+r = Redis()
+r = Redis.from_url(CELERY_RESULT_BACKEND)
 
 
 @require_http_methods(["GET", "POST"])
@@ -28,36 +35,99 @@ def search_term_view(request):
     if request.method == "GET":
         return render(request, "wrt/search.html")
     else:
-        print("POSTING SEARCH TERM")
-        queued_item = find_text_string.delay(request.body, from_website=True)
-        print("QUEUED ITEM")
-        response = queued_item.get()
-        print("RESPONSE")
-        print(response)
-        data, status = response
-        print("RECEIVED ITEM")
+        session_key = request.session.session_key
+        task_id = r.get(f"task:{session_key}")
 
-        if status == 200:
-            # TODO test that the writing works
-            queried_webpages = data["search_str_webpages"]
-            # broken_links = data['broken_links']
-            # requires_access = data['requires_access']
-            # output = data['output']
-            print(data)
+        if task_id:
+            # Convert bytes to string if necessary
+            task_id = task_id.decode("utf-8") if isinstance(task_id, bytes) else task_id
+            result = AsyncResult(task_id)
 
-            # writing to database
-            new_search = SearchQuery.objects.create(
-                user=request.user, type=SearchQuery.QueryType.SEARCH
-            )
+            if result.ready():
+                # Task is complete
+                response = result.get()
+                data, status = response
 
-            for search_term, url in queried_webpages:
-                SearchResult.objects.create(
-                    searchquery=new_search, url=url, search_text=search_term
-                )
+                # Clean up Redis
+                r.delete(f"task:{session_key}")
 
-            return JsonResponse(data, status=200, safe=False)  # TODO make it safe
-        elif status == 400:  # return the errors
-            return JsonResponse(data, status=400)
+                if status == 200:
+                    queried_webpages = data["search_str_webpages"]
+                    data["status"] = "finished"
+
+                    # Save to database
+                    new_search = SearchQuery.objects.create(
+                        user=request.user, type=SearchQuery.QueryType.SEARCH
+                    )
+
+                    for search_term, url in queried_webpages:
+                        SearchResult.objects.create(
+                            searchquery=new_search, url=url, search_text=search_term
+                        )
+
+                    return JsonResponse(data, status=200)
+                elif status == 400:
+                    return JsonResponse(data, status=400)
+            else:
+                # Task is still processing
+                return JsonResponse({"status": "processing"}, status=202)
+        else:
+            # No existing task; create a new one
+            queued_item = find_text_string.delay(request.body, from_website=True)
+            task_id = queued_item.id
+
+            # Store task ID in Redis associated with the session key
+            r.set(f"task:{session_key}", task_id, ex=3600)  # Expires in 1 hour
+
+            return JsonResponse({"status": "task started"}, status=202)
+
+
+# @require_http_methods(["GET", "POST"])
+# @login_required
+# def search_term_view(request):
+#     if request.method == "GET":
+#         return render(request, "wrt/search.html")
+#     else:
+#         print("POSTING SEARCH TERM")
+
+#         if r.in(request.session.session_key, "current_requests"):
+#             # check if the request is complete
+#             # if it is then get the result, otherwise return a random number
+#         else:
+#             # add an itemp the queue and put the session key intot he current requests
+#             queued_item = find_text_string.delay(request.body, from_website=True)
+#             r.lpush("current_requests", request.session.session_key)
+
+#         print(f"request.session.session_key: {request.session.session_key}")
+
+#         print("QUEUED ITEM")
+#         response = queued_item.get()
+#         print("RESPONSE")
+#         print(response)
+#         data, status = response
+#         print("RECEIVED ITEM")
+
+#         if status == 200:
+#             # TODO test that the writing works
+#             queried_webpages = data["search_str_webpages"]
+#             # broken_links = data['broken_links']
+#             # requires_access = data['requires_access']
+#             # output = data['output']
+#             print(data)
+
+#             # writing to database
+#             new_search = SearchQuery.objects.create(
+#                 user=request.user, type=SearchQuery.QueryType.SEARCH
+#             )
+
+#             for search_term, url in queried_webpages:
+#                 SearchResult.objects.create(
+#                     searchquery=new_search, url=url, search_text=search_term
+#                 )
+
+#             return JsonResponse(data, status=200, safe=False)  # TODO make it safe
+#         elif status == 400:  # return the errors
+#             return JsonResponse(data, status=400)
 
 
 @require_http_methods(["GET", "POST"])
@@ -89,7 +159,7 @@ def crawl_broken_links_view(request):
 @require_http_methods(["GET"])
 @login_required
 def history(request):
-    all_queries = SearchQuery.objects.filter(user=request.user)[:30:-1]
+    all_queries = SearchQuery.objects.filter(user=request.user)[::-1]
     paginator = Paginator(all_queries, 10)
 
     page_number = request.GET.get(

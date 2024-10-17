@@ -95,7 +95,6 @@
 
         searchResultsDiv.innerHTML = `<p>Scraping in progress... Please wait.</p>`;
 
-
         fetch("{% url 'search_term' %}", {
             method: "POST", // Specify the method here
             headers: {
@@ -108,98 +107,12 @@
                 browser_info: browserInfo
             })
         })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return res.json(); // Call .json() method to parse response
-            })
-            .then(data => {
-                console.log("Data received from the server:", data);
-                const searchResultsDiv = document.getElementById('searchResults');
-
-                if (data.length > 0 && data[0].length > 0) {
-                    // clears previous results
-                    searchResultsDiv.innerHTML = '';
-
-                    const resultsHeaderDiv = document.createElement('div');
-                    resultsHeaderDiv.classList.add('table-header');
-
-                    const resultsTitle = document.createElement('h2');
-                    resultsTitle.id = 'resultsTable'
-                    resultsTitle.classList.add('results');
-                    resultsTitle.textContent = 'Results - Strings Matched';
-                    resultsHeaderDiv.appendChild(resultsTitle);
-
-                    // create buttons div
-                    const buttonsDiv = document.createElement('div');
-                    buttonsDiv.classList.add('button-group');
-
-                    // Create export buttons
-                    const buttons = createExportButtons(data[0], data[1], data[2], 'search_term');
-                    console.log("Search Results:", data[0]);
-                    console.log("Broken Links:", data[1]);
-                    console.log("Access Required Links:", data[2]);
-
-                    // Append buttons to the export buttons div
-                    buttonsDiv.appendChild(buttons[0]);
-                    buttonsDiv.appendChild(buttons[1]);
-                    console.log('Buttons added to the buttons div');
-
-                    resultsHeaderDiv.appendChild(buttonsDiv);
-
-                    searchResultsDiv.appendChild(resultsHeaderDiv);
-
-                    const table = document.createElement('table');
-                    table.classList.add('table', 'is-bordered', 'is-fullwidth', 'is-hoverable');
-                    table.innerHTML = `
-
-                    <thead>
-                        <tr>
-                            <th>Matched String</th>
-                            <th>Page URL</th>
-                        </tr>
-                    </thead>
-                `;
-
-                    const tableBody = document.createElement('tbody');
-                    data[0].forEach(result => {
-                        const [searchTerm, link] = result;
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                    <td>${searchTerm}</td>
-                    <td><a href="${link}" target="_blank">${link}</a></td>
-                `;
-                        tableBody.appendChild(row);
-                    });
-
-                    table.appendChild(tableBody);
-                    searchResultsDiv.appendChild(table);
-
-                    console.log('Table of Results shown');
-
-                } else if (data[0].length == 0) {
-                    if (data[1].length > 0 || data[2].length > 0) {
-
-                        searchResultsDiv.innerHTML = '';
-
-                        const resultsDiv = document.createElement('h3');
-                        resultsDiv.textContent = 'No matches found: broken/access-required links encountered!';
-                        searchResultsDiv.appendChild(resultsDiv);
-                    }
-                    else {
-                        searchResultsDiv.innerHTML = '';
-
-                        const resultsDiv = document.createElement('h3');
-                        resultsDiv.textContent = 'No matches found!';
-                        searchResultsDiv.appendChild(resultsDiv);
-
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error); // Handle errors
-            });
+        .then(() => {
+            checkTaskStatus()
+        })
+        .catch(error => {
+            console.error('Error:', error); // Handle errors
+        });
 
     });
 
@@ -225,5 +138,118 @@
         newFieldDiv.appendChild(deleteBtn);
         searchUrlInputContainer.appendChild(newFieldDiv);
     });
+
+    function checkTaskStatus() {
+        fetch("{% url 'search_term' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',  // Ensure CSRF token is included
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),  // Include necessary data if any
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'processing' || data.status === 'task started') {
+                // Task is still processing, poll again after a delay
+                console.log("Task is still processing, checking again in 5 seconds...");
+                setTimeout(checkTaskStatus, 5000);  // Poll every 5 seconds
+            } else {
+                // Task is complete, stop polling and handle the result
+                console.log('Task completed, result:', data);
+                // Update the UI or take action based on the result
+
+                const searchResultsDiv = document.getElementById('searchResults');
+
+                const searchStrWebpages = data.search_str_webpages;
+                const brokenLinks = data.broken_links;
+                const requiresAccess = data.requires_access;
+                const output = data.output;
+
+                if (searchStrWebpages.length > 0) {
+                    // clears previous results
+                    searchResultsDiv.innerHTML = '';
+
+                    const resultsHeaderDiv = document.createElement('div');
+                    resultsHeaderDiv.classList.add('table-header');
+
+                    const resultsTitle = document.createElement('h2');
+                    resultsTitle.id = 'resultsTable'
+                    resultsTitle.classList.add('results');
+                    resultsTitle.textContent = 'Results - Strings Matched';
+                    resultsHeaderDiv.appendChild(resultsTitle);
+
+                    // create buttons div
+                    const buttonsDiv = document.createElement('div');
+                    buttonsDiv.classList.add('button-group');
+
+                    // Create export buttons
+                    // !!!!!!! first parameter might not be correct
+                    const buttons = createExportButtons(searchStrWebpages, brokenLinks, requiresAccess, 'search_term');
+                    console.log("Search Results:", searchStrWebpages);
+                    console.log("Broken Links:", brokenLinks);
+                    console.log("Access Required Links:", requiresAccess);
+
+                    // Append buttons to the export buttons div
+                    buttonsDiv.appendChild(buttons[0]);
+                    buttonsDiv.appendChild(buttons[1]);
+                    console.log('Buttons added to the buttons div');
+
+                    resultsHeaderDiv.appendChild(buttonsDiv);
+
+                    searchResultsDiv.appendChild(resultsHeaderDiv);
+
+                    const table = document.createElement('table');
+                    table.classList.add('table', 'is-bordered', 'is-fullwidth', 'is-hoverable');
+                    table.innerHTML = `
+
+                    <thead>
+                        <tr>
+                            <th>Matched String</th>
+                            <th>Page URL</th>
+                        </tr>
+                    </thead>
+                `;
+
+                    const tableBody = document.createElement('tbody');
+                    searchStrWebpages.forEach(result => {
+                        const [searchTerm, link] = result;
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${searchTerm}</td>
+                            <td><a href="${link}" target="_blank">${link}</a></td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    table.appendChild(tableBody);
+                    searchResultsDiv.appendChild(table);
+
+                    console.log('Table of Results shown');
+
+                } else if (searchStrWebpages.length == 0) {
+                    if (brokenLinks.length > 0 || requiresAccess.length > 0) {
+
+                        searchResultsDiv.innerHTML = '';
+
+                        const resultsDiv = document.createElement('h3');
+                        resultsDiv.textContent = 'No matches found: broken/access-required links encountered!';
+                        searchResultsDiv.appendChild(resultsDiv);
+                    }
+                    else {
+                        searchResultsDiv.innerHTML = '';
+
+                        const resultsDiv = document.createElement('h3');
+                        resultsDiv.textContent = 'No matches found!';
+                        searchResultsDiv.appendChild(resultsDiv);
+
+                    }
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+// Start polling after the user submits the search term
 </script>
 {% endblock %}

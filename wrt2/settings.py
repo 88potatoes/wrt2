@@ -144,12 +144,9 @@ SIMPLE_JWT = {
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
-
-TIME_ZONE = "UTC"
-
+LANGUAGE_CODE = "en-au"
+TIME_ZONE = "Australia/Sydney"
 USE_I18N = True
-
 USE_TZ = True
 
 
@@ -191,7 +188,14 @@ LOGIN_REDIRECT_URL = "/search_term"
 CELERY_TASK_ROUTES = {
     "api.tasks.*": {"queue": "app1_queue"},
 }
-CELERY_BROKER_URL = "redis://localhost:6379/0"  # Redis broker URL # TODO make these environment variables
+
+CELERY_BROKER_URL = (
+    config("REDIS_URL")
+    + "/0"
+    + ("?ssl_cert_reqs=CERT_NONE" if config("ENVIRONMENT") == "production" else "")
+)
 CELERY_RESULT_BACKEND = (
-    "redis://localhost:6379/0"  # Optional, if you want to store results
+    config("REDIS_URL")
+    + "/1"
+    + ("?ssl_cert_reqs=CERT_NONE" if config("ENVIRONMENT") == "production" else "")
 )
