@@ -9,3 +9,4 @@ staticfiles
 db.sqlite3
 a.json
 temp/*
+dump.rdb
