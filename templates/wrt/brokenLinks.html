@@ -92,7 +92,12 @@
                 console.log("data: " + data);
                 const crawlResultsDiv = document.getElementById('crawlResults');
 
-                if (data.length > 0 && data[0].length > 0) {
+                const searchStrWebpages = data.search_str_webpages;
+                const brokenLinks = data.broken_links;
+                const requiresAccess = data.requires_access;
+                const output = data.output;
+
+                if (data.length > 0) {
                     // Clears previous results
                     crawlResultsDiv.innerHTML = '';
 
@@ -110,10 +115,10 @@
                     buttonsDiv.classList.add('button-group');
 
                     // Create export buttons
-                    const buttons = createExportButtons(data[0], data[1], data[2], 'broken_links');
-                    console.log("Search Results:", data[0]);
-                    console.log("Broken Links:", data[1]);
-                    console.log("Access Required Links:", data[2]);
+                    const buttons = createExportButtons(searchStrWebpages, brokenLinks, requiresAccess, 'broken_links');
+                    console.log("Search Results:", searchStrWebpages);
+                    console.log("Broken Links:", brokenLinks);
+                    console.log("Access Required Links:", requiresAccess);
 
                     // Append buttons to the export buttons div
                     buttonsDiv.appendChild(buttons[0]);
@@ -130,19 +135,21 @@
                     <thead>
                         <tr>
                             <th>Broken Link</th>
-                            <th>Found Location Page URL</th>
+                            <th>Origin Page URL</th>
                         </tr>
                     </thead>
                 `;
 
                     const tableBody = document.createElement('tbody');
 
-                    data[0].forEach(link => {
+                    // TODO 
+                    brokenLinks.forEach(result => {
+                        const [URL, origin] = result;
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                        <td>${link}</td>
-                        <td><a href="${link}" target="_blank">${link}</a></td>
-                    `;
+                            <td><a href="${URL}" target="_blank">${URL}</a></td>
+                            <td><a href="${origin}" target="_blank">${origin}</a></td>
+                        `;
 
                         tableBody.appendChild(row);
                     });
@@ -150,15 +157,15 @@
                     table.appendChild(tableBody);
                     crawlResultsDiv.appendChild(table);
 
-                } else if (data[0] && data[0].length == 0) {
+                } else if (data.length == 0) {
                     crawlResultsDiv.innerHTML = '';
 
                     const resultsDiv = document.createElement('h3');
                     resultsDiv.textContent = 'No broken links found!';
                     crawlResultsDiv.appendChild(resultsDiv);
 
-                } else if (data.message) {
-                    crawlResultsDiv.innerHTML = `<p>${data.message}</p>`;
+                } else if (data.status) {
+                    crawlResultsDiv.innerHTML = `<p>${data.status}</p>`;
                 }
             });
     });

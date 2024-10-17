@@ -93,7 +93,6 @@
         const startingLinks = formData.getAll('starting_links[]'); // Ensure you're getting the right input
         const browserInfo = navigator.userAgent; // Use userAgent to get browser info
 
-        searchResultsDiv.innerHTML = `<p>Scraping in progress... Please wait.</p>`;
 
         fetch("{% url 'search_term' %}", {
             method: "POST", // Specify the method here
@@ -154,6 +153,10 @@
                 // Task is still processing, poll again after a delay
                 console.log("Task is still processing, checking again in 5 seconds...");
                 setTimeout(checkTaskStatus, 5000);  // Poll every 5 seconds
+
+                searchResultsDiv.innerHTML = '';
+                searchResultsDiv.innerHTML = `<p>Scraping in progress... Please wait.</p>`;
+                
             } else {
                 // Task is complete, stop polling and handle the result
                 console.log('Task completed, result:', data);
@@ -176,7 +179,7 @@
                     const resultsTitle = document.createElement('h2');
                     resultsTitle.id = 'resultsTable'
                     resultsTitle.classList.add('results');
-                    resultsTitle.textContent = 'Results - Strings Matched';
+                    resultsTitle.textContent = 'Results - ' + searchStrWebpages.length + ' Strings Matched';
                     resultsHeaderDiv.appendChild(resultsTitle);
 
                     // create buttons div
