@@ -22,16 +22,16 @@ from django.core.paginator import Paginator
 from website.models import SearchQuery, SearchResult
 from redis import Redis
 
-from wrt2.settings import CELERY_RESULT_BACKEND
+from wrt2.settings import REDIS_CLIENT
 from celery.result import AsyncResult
-
-r = Redis()
-r = Redis.from_url(CELERY_RESULT_BACKEND)
 
 
 @require_http_methods(["GET", "POST"])
 @login_required
 def search_term_view(request):
+    r = REDIS_CLIENT
+    print(r)
+
     if request.method == "GET":
         return render(request, "wrt/search.html")
     else:
@@ -133,6 +133,8 @@ def search_term_view(request):
 @require_http_methods(["GET", "POST"])
 @login_required
 def crawl_broken_links_view(request):
+    r = REDIS_CLIENT
+
     if request.method == "GET":
         return render(request, "wrt/brokenLinks.html")
     elif request.method == "POST":

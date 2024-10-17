@@ -16,6 +16,8 @@ from decouple import config
 from datetime import timedelta
 from pathlib import Path
 import os
+import ssl
+from redis import Redis
 
 APPEND_SLASH = False
 
@@ -180,22 +182,87 @@ sentry_sdk.init(
     profiles_sample_rate=1.0,
 )
 
+ssl_context = ssl.create_default_context()
+
 
 # login stuff
 LOGIN_URL = "/"
 LOGIN_REDIRECT_URL = "/search_term"
 
-CELERY_TASK_ROUTES = {
-    "api.tasks.*": {"queue": "app1_queue"},
-}
 
-CELERY_BROKER_URL = (
-    config("REDIS_URL")
-    + "/0"
-    + ("?ssl_cert_reqs=CERT_NONE" if config("ENVIRONMENT") == "production" else "")
-)
-CELERY_RESULT_BACKEND = (
-    config("REDIS_URL")
-    + "/1"
-    + ("?ssl_cert_reqs=CERT_NONE" if config("ENVIRONMENT") == "production" else "")
-)
+# Redis and Celery settings
+if config("ENVIRONMENT") == "production":
+    REDIS_URL = config("REDIS_TLS_URL", config("REDIS_URL", "")).replace(
+        "redis://", "rediss://"
+    )
+
+    # SSL Configuration for Redis
+    ssl_config = {
+        "ssl_cert_reqs": ssl.CERT_REQUIRED,
+        "ssl_ca_certs": None,  # Uses default CA bundle
+    }
+
+    # Redis client instance for production
+    REDIS_CLIENT = Redis.from_url(REDIS_URL, **ssl_config)
+
+    # Celery settings for production
+    CELERY_BROKER_URL = REDIS_URL
+    CELERY_RESULT_BACKEND = REDIS_URL
+
+    CELERY_REDIS_BACKEND_USE_SSL = ssl_config
+    CELERY_BROKER_USE_SSL = ssl_config
+
+else:
+    # Development settings
+    REDIS_URL = "redis://localhost:6379"
+
+    # Redis client instance for development
+    REDIS_CLIENT = Redis.from_url(REDIS_URL)
+
+    # Celery settings for development
+    CELERY_BROKER_URL = REDIS_URL
+    CELERY_RESULT_BACKEND = REDIS_URL
+
+
+# Redis and Celery settings
+# REDIS_TLS_URL = config("REDIS_TLS_URL", default=config("REDIS_URL"))
+# print("REDIS URL: " + REDIS_TLS_URL)
+
+# SSL Context for Redis
+# REDIS_SSL_CONTEXT = ssl.create_default_context()
+
+# Redis client instance
+# if config("ENVIRONMENT") == "production":
+#     REDIS_CLIENT = Redis.from_url(
+#         REDIS_TLS_URL,
+#         ssl_cert_reqs=ssl.CERT_REQUIRED,
+#         ssl=REDIS_SSL_CONTEXT
+#     )
+# else:
+#     print("NOT PRODUCTION")
+#     REDIS_CLIENT = Redis.from_url(
+#         REDIS_TLS_URL
+#     )
+
+# CELERY_TASK_ROUTES = {
+#     "api.tasks.*": {"queue": "app1_queue"},
+# }
+
+# CELERY_BROKER_URL = REDIS_TLS_URL
+# CELERY_RESULT_BACKEND = REDIS_TLS_URL
+
+# CELERY_REDIS_BACKEND_USE_SSL = {
+#     'ssl_cert_reqs': ssl.CERT_REQUIRED,
+#     'ssl_context': REDIS_SSL_CONTEXT,
+# }
+
+# CELERY_BROKER_USE_SSL = {
+#     'ssl_cert_reqs': ssl.CERT_REQUIRED,
+#     'ssl_context': REDIS_SSL_CONTEXT,
+# }
+
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TIMEZONE = "UTC"
+CELERY_ENABLE_UTC = True
