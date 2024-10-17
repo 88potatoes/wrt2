@@ -141,7 +141,7 @@ def crawl_broken_links_view(request):
         )
         result = queued_item.get()
         print(result)
-        data, status = result["data"], result["status_code"]
+        data, status = result
 
         if status == 200:
             # TODO test that the writing works
