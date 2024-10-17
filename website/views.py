@@ -136,12 +136,18 @@ def crawl_broken_links_view(request):
     if request.method == "GET":
         return render(request, "wrt/brokenLinks.html")
     elif request.method == "POST":
-        queued_item = find_broken_links.delay(request, from_website=True)
-        data, status = queued_item.get()
+        queued_item = find_broken_links.delay(
+            json.loads(request.body), from_website=True
+        )
+        result = queued_item.get()
+        print(result)
+        data, status = result["data"], result["status_code"]
 
         if status == 200:
             # TODO test that the writing works
-            broken_links, requires_access, output = data
+            broken_links = data["broken_links"]
+            # broken_links, requires_access, output = data
+            # broken_links, requires_access, output = data
             print(data)
 
             new_query = SearchQuery.objects.create(
