@@ -197,7 +197,7 @@ if config("ENVIRONMENT") == "production":
     if REDIS_URL == "":
         print("No REDIS_TLS_URL or REDIS_URL has been configured. Please configure it.")
         exit()
-    
+
     REDIS_URL += "?ssl_cert_reqs=CERT_NONE"
 
     # SSL Configuration for Redis
@@ -217,7 +217,7 @@ if config("ENVIRONMENT") == "production":
             password=url.password,
             ssl=(url.scheme == "rediss"),
             ssl_cert_reqs=None,
-            max_connections=2
+            max_connections=2,
         )
     except Exception as e:
         print(e)
@@ -286,9 +286,9 @@ else:
 #         REDIS_TLS_URL
 #     )
 
-# CELERY_TASK_ROUTES = {
-#     "api.tasks.*": {"queue": "app1_queue"},
-# }
+CELERY_TASK_ROUTES = {
+    "api.tasks.*": {"queue": "app1_queue"},
+}
 
 # CELERY_BROKER_URL = REDIS_TLS_URL
 # CELERY_RESULT_BACKEND = REDIS_TLS_URL
