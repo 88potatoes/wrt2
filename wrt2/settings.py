@@ -194,8 +194,11 @@ LOGIN_REDIRECT_URL = "/search_term"
 # Redis and Celery settings
 if config("ENVIRONMENT") == "production":
     REDIS_URL = config("REDIS_TLS_URL", config("REDIS_URL", ""))
-
-    print(f"[REDIS URL] {REDIS_URL}")
+    if REDIS_URL == "":
+        print("No REDIS_TLS_URL or REDIS_URL has been configured. Please configure it.")
+        exit()
+    
+    REDIS_URL += "?ssl_cert_reqs=CERT_NONE"
 
     # SSL Configuration for Redis
     # ssl_config = {
