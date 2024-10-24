@@ -209,12 +209,15 @@ if config("ENVIRONMENT") == "production":
     try:
         url = urlparse(REDIS_URL)
         print(f"PORT: {url.port}")
+        print(f"hostname: {url.hostname}")
+        print(f"password: {url.password}")
         REDIS_CLIENT = redis.Redis(
             host=url.hostname,
             port=url.port,
             password=url.password,
             ssl=(url.scheme == "rediss"),
             ssl_cert_reqs=None,
+            max_connections=2
         )
     except Exception as e:
         print(e)
