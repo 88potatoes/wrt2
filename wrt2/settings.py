@@ -206,7 +206,13 @@ if config("ENVIRONMENT") == "production":
     try:
         url = urlparse(REDIS_URL)
         print(f"PORT: {url.port}")
-        REDIS_CLIENT = redis.Redis(host=url.hostname, port=url.port, password=url.password, ssl=(url.scheme == "rediss"), ssl_cert_reqs=None)
+        REDIS_CLIENT = redis.Redis(
+            host=url.hostname,
+            port=url.port,
+            password=url.password,
+            ssl=(url.scheme == "rediss"),
+            ssl_cert_reqs=None,
+        )
     except Exception as e:
         print(e)
 
@@ -215,7 +221,6 @@ if config("ENVIRONMENT") == "production":
         print("Connected to Redis server.")
     except redis.ConnectionError:
         print("Failed to connect to Redis server.")
-
 
     # try:
     #     task_value = REDIS_CLIENT.get(f"task")
