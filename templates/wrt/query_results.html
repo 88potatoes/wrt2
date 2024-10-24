@@ -146,14 +146,25 @@
             <h2 class="tab-title">{{ search_query }}</h2>
 
             <div class="searchParameters">
-                <h3>Search Term(s)</h3>
-                <ul class="search_terms_list">
-                    {% for search_term in search_terms %}
-                        <li>{{ search_term }}</li>
-                    {% empty %}
-                        <li>No Search Terms</li>
-                    {% endfor %}
-                </ul>
+                {% if query_type == "Search" %}
+                    <h3>Search Term(s)</h3>
+                    <ul class="search_terms_list">
+                        {% for search_term in search_terms %}
+                            <li>{{ search_term }}</li>
+                        {% empty %}
+                            <li>No Search Terms</li>
+                        {% endfor %}
+                    </ul>
+                {% elif query_type == "Crawl" %}
+                    <h3>Website Range(s)</h3>
+                    <ul class="search_terms_list">
+                        {% for search_term in search_terms %}
+                            <li>{{ search_term }}</li>
+                        {% empty %}
+                            <li>No URLs</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
 
             <div class="searchResultsContainer" style="margin-top: 20px;">
@@ -163,25 +174,45 @@
                         <button id="exportButton" class="button is-link">Export</button>
                     </div>
                 </div>
-
-                <table class="table is-bordered is-fullwidth is-hoverable">
-                    <thead>
-                        <tr>
-                            <th>Matched String</th>
-                            <th>Page URL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for result in results %}
+                {% if query_type == "Search" %}
+                    <table class="table is-bordered is-fullwidth is-hoverable">
+                        <thead>
                             <tr>
-                                <td>{{ result.search_text }}</td>
-                                <td><a href="{{ result.url }}">{{ result.url }}</a></td>
+                                <th>Matched String</th>
+                                <th>Page URL</th>
                             </tr>
-                        {% empty %}
-                            <tr><td colspan="2">No results found for this query.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                                <tr>
+                                    <td>{{ result.url }}</td>
+                                    <td><a href="{{ result.url }}">{{ result.url }}</a></td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="2">No results found for this query.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% elif query_type == "Crawl" %}
+                    <table class="table is-bordered is-fullwidth is-hoverable">
+                        <thead>
+                            <tr>
+                                <th>Broken Link</th>
+                                <th>Origin Page URL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                                <tr>
+                                    <td>{{ result }}</td>
+                                    <td><a href="{{ result }}">{{ result }}</a></td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="2">No results found for this query.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
             </div>
         </div>
     </div>

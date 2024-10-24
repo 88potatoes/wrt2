@@ -320,6 +320,13 @@ def download_view(request, filename):
 @require_http_methods(["GET"])
 @login_required
 def query_results_view(request, query_id):
+
+    # def process_results(results):
+    #     for result in results:
+    #         # Assuming result.url is a string like "[link1, link2]"
+    #         result.url = result.url.strip('[]').replace("'", "").split(', ')
+    #     return results
+
     # Fetch the specific SearchQuery using the provided ID
     search_query = get_object_or_404(SearchQuery, id=query_id)
     if search_query.user != request.user:
@@ -335,6 +342,9 @@ def query_results_view(request, query_id):
     urls_list = [[result.search_text, result.url] for result in results]
 
     query_type = search_query.type
+
+    # if query_type == "Crawl":
+    #     results = process_results(results)
 
     context = {
         "search_query": search_query,
