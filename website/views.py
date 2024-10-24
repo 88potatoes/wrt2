@@ -30,7 +30,7 @@ from celery.result import AsyncResult
 @login_required
 def search_term_view(request):
     r = REDIS_CLIENT
-    print(r)
+    # print(r)
 
     if request.method == "GET":
         return render(request, "wrt/search.html")

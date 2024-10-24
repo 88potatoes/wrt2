@@ -17,7 +17,8 @@ from datetime import timedelta
 from pathlib import Path
 import os
 import ssl
-from redis import Redis
+import redis
+from urllib.parse import urlparse
 
 APPEND_SLASH = False
 
@@ -192,32 +193,62 @@ LOGIN_REDIRECT_URL = "/search_term"
 
 # Redis and Celery settings
 if config("ENVIRONMENT") == "production":
-    REDIS_URL = config("REDIS_TLS_URL", config("REDIS_URL", "")).replace(
-        "redis://", "rediss://"
-    )
+    REDIS_URL = config("REDIS_TLS_URL", config("REDIS_URL", ""))
+
+    print(f"[REDIS URL] {REDIS_URL}")
 
     # SSL Configuration for Redis
-    ssl_config = {
-        "ssl_cert_reqs": ssl.CERT_REQUIRED,
-        "ssl_ca_certs": None,  # Uses default CA bundle
-    }
+    # ssl_config = {
+    #     "ssl_ca_certs": None,  # Uses default CA bundle
+    # }
 
     # Redis client instance for production
-    REDIS_CLIENT = Redis.from_url(REDIS_URL, **ssl_config)
+    try:
+        url = urlparse(REDIS_URL)
+        print(f"PORT: {url.port}")
+        REDIS_CLIENT = redis.Redis(host=url.hostname, port=url.port, password=url.password, ssl=(url.scheme == "rediss"), ssl_cert_reqs=None)
+    except Exception as e:
+        print(e)
+
+    try:
+        REDIS_CLIENT.ping()
+        print("Connected to Redis server.")
+    except redis.ConnectionError:
+        print("Failed to connect to Redis server.")
+
+
+    # try:
+    #     task_value = REDIS_CLIENT.get(f"task")
+    #     if task_value is None:
+    #         print("No task value found in Redis")
+    #     else:
+    #         # Decode bytes to string
+    #         task_value = task_value.decode('utf-8')
+    #         print(task_value)
+    # except Exception as e:
+    #     print(f"getting: {e}")
+
+    # try:
+    #     task_value = REDIS_CLIENT.get(f"task")
+    #     print(task_value)
+    # except Exception as e:
+    #     print(f"getting: {e}")
 
     # Celery settings for production
     CELERY_BROKER_URL = REDIS_URL
     CELERY_RESULT_BACKEND = REDIS_URL
 
-    CELERY_REDIS_BACKEND_USE_SSL = ssl_config
-    CELERY_BROKER_USE_SSL = ssl_config
+    # CELERY_REDIS_BACKEND_USE_SSL = ssl_config
+    # CELERY_BROKER_USE_SSL = ssl_config
 
 else:
     # Development settings
     REDIS_URL = "redis://localhost:6379"
 
+    print(f"DEV [REDIS URL] {REDIS_URL}")
+
     # Redis client instance for development
-    REDIS_CLIENT = Redis.from_url(REDIS_URL, ssl_cert_reqs=None)
+    REDIS_CLIENT = redis.Redis.from_url(REDIS_URL, ssl_cert_reqs=None)
 
     # Celery settings for development
     CELERY_BROKER_URL = REDIS_URL
