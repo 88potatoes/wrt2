@@ -106,8 +106,9 @@
                 browser_info: browserInfo
             })
         })
-        .then(() => {
-            checkTaskStatus()
+        .then((res) => res.json())
+        .then((data) => {
+            checkTaskStatus(data["task_id"])
         })
         .catch(error => {
             console.error('Error:', error); // Handle errors
@@ -138,21 +139,23 @@
         searchUrlInputContainer.appendChild(newFieldDiv);
     });
 
-    function checkTaskStatus() {
-        fetch("{% url 'search_term' %}", {
+    function checkTaskStatus(task_id) {
+        fetch("{% url 'search_term_task_status' %}", {
             method: 'POST',
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}',  // Ensure CSRF token is included
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({}),  // Include necessary data if any
+            body: JSON.stringify({
+                task_id: task_id
+            }),  // Include necessary data if any
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'processing' || data.status === 'task started') {
                 // Task is still processing, poll again after a delay
                 console.log("Task is still processing, checking again in 5 seconds...");
-                setTimeout(checkTaskStatus, 5000);  // Poll every 5 seconds
+                setTimeout(() => {checkTaskStatus(task_id)}, 5000);  // Poll every 5 seconds
 
                 searchResultsDiv.innerHTML = '';
                 searchResultsDiv.innerHTML = `<p>Scraping in progress... Please wait.</p>`;

@@ -56,8 +56,6 @@ def find_text_string(request_data, from_website=False):  # used by the website a
             else (serializer.errors, 400)
         )
 
-    print("Started request")  # TODO remove eventually
-
 
 # Broken Links API
 @shared_task

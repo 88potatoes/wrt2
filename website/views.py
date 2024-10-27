@@ -20,66 +20,62 @@ from api.views import find_broken_links, find_text_string
 from django.core.paginator import Paginator
 
 from website.models import SearchQuery, SearchResult
-from redis import Redis
 
-from wrt2.settings import REDIS_CLIENT
 from celery.result import AsyncResult
 
 
 @require_http_methods(["GET", "POST"])
 @login_required
 def search_term_view(request):
-    r = REDIS_CLIENT
-    # print(r)
 
     if request.method == "GET":
         return render(request, "wrt/search.html")
     else:
-        session_key = request.session.session_key
-        task_id = r.get(f"task:{session_key}")
+        # No existing task; create a new one
+        queued_item = find_text_string.delay(request.body, from_website=True)
+        task_id = queued_item.id
+        return JsonResponse({"status": "task started", "task_id": task_id}, status=202)
 
-        if task_id:
-            # Convert bytes to string if necessary
-            task_id = task_id.decode("utf-8") if isinstance(task_id, bytes) else task_id
-            result = AsyncResult(task_id)
+@require_http_methods(["POST"])
+@login_required    
+def search_term_task_status(request):
+    try:
+        # Attempt to parse JSON body
+        body = json.loads(request.body)
+        task_id = body.get('task_id')
+    except json.JSONDecodeError:
+        # Handle non-JSON body
+        task_id = request.POST.get('task_id')
 
-            if result.ready():
-                # Task is complete
-                response = result.get()
-                data, status = response
+    if not task_id:
+        return JsonResponse({'error': 'No task_id provided'}, status=400)
 
-                # Clean up Redis
-                r.delete(f"task:{session_key}")
+    result = AsyncResult(task_id)
+    data = {
+        'task_id': task_id,
+        'status': result.status,
+    }
+    if result.status == 'SUCCESS':
+        data['result'] = result.result  # Include the result if needed
 
-                if status == 200:
-                    queried_webpages = data["search_str_webpages"]
-                    data["status"] = "finished"
+        # TODO write to the database
+        # queried_webpages = data["search_str_webpages"]
+#             # broken_links = data['broken_links']
+#             # requires_access = data['requires_access']
+#             # output = data['output']
+#             print(data)
 
-                    # Save to database
-                    new_search = SearchQuery.objects.create(
-                        user=request.user, type=SearchQuery.QueryType.SEARCH
-                    )
+#             # writing to database
+#             new_search = SearchQuery.objects.create(
+#                 user=request.user, type=SearchQuery.QueryType.SEARCH
+#             )
 
-                    for search_term, url in queried_webpages:
-                        SearchResult.objects.create(
-                            searchquery=new_search, url=url, search_text=search_term
-                        )
+#             for search_term, url in queried_webpages:
+#                 SearchResult.objects.create(
+#                     searchquery=new_search, url=url, search_text=search_term
+#                 )
 
-                    return JsonResponse(data, status=200)
-                elif status == 400:
-                    return JsonResponse(data, status=400)
-            else:
-                # Task is still processing
-                return JsonResponse({"status": "processing"}, status=202)
-        else:
-            # No existing task; create a new one
-            queued_item = find_text_string.delay(request.body, from_website=True)
-            task_id = queued_item.id
-
-            # Store task ID in Redis associated with the session key
-            r.set(f"task:{session_key}", task_id, ex=100)  # Expires in 1 hour
-
-            return JsonResponse({"status": "task started"}, status=202)
+    return JsonResponse(data)
 
 
 # @require_http_methods(["GET", "POST"])

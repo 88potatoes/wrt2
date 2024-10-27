@@ -5,6 +5,7 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     # Main functionalities
     path("search_term", views.search_term_view, name="search_term"),                       # Search term
+    path("search_term", views.search_term_task_status, name="search_term_task_status"),    # Search term task status
     path("history", views.history, name="history"),                                        # History
     path("crawl_broken_links", views.crawl_broken_links_view, name="crawl_broken_links"),  # Broken links
 
