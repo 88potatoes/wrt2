@@ -24,6 +24,8 @@ from celery import shared_task
 """
 ================================= Search APIS =================================
 """
+
+
 # Search Text String API
 @shared_task
 def find_text_string(request_data, from_website=False):  # used by the website app

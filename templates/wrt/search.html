@@ -7,6 +7,37 @@
 <link rel="stylesheet" href="{% static 'css/search.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <!-- probably don't need to load in all the icons -->
+<style>
+    .is-loading {
+        position: relative;
+        color: transparent !important;
+        pointer-events: none;
+    }
+
+    .is-loading::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 1em;
+        height: 1em;
+        border: 2px solid #dbdbdb;
+        border-radius: 50%;
+        border-right-color: transparent;
+        border-top-color: transparent;
+        animation: spinAround 500ms infinite linear;
+    }
+
+    @keyframes spinAround {
+        from {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+        to {
+            transform: translate(-50%, -50%) rotate(360deg);
+        }
+    }
+</style>
+
 {% endblock %}
 
 {% block content %}
@@ -63,7 +94,7 @@
 
                 <div class="field">
                     <div class="control">
-                        <button class="button is-link" type="submit">Search</button>
+                        <button id="searchButton" class="button is-link" type="submit">Search</button>
                     </div>
             </form>
         </div>
@@ -84,9 +115,17 @@
 <script>
     const searchForm = document.getElementById('searchForm');
     const searchResultsDiv = document.getElementById('searchResults');
+    const searchButton = document.getElementById('searchButton');
 
     searchForm.addEventListener('submit', function (event) {
         event.preventDefault(); // Prevent the default form submission
+
+        // Disable the search button
+        searchButton.disabled = true;
+        searchButton.classList.add('is-loading');
+        // Show a loading message
+        searchResultsDiv.innerHTML = '<p>Searching... This may take a few moments.</p>';
+
 
         const formData = new FormData(searchForm);
         const searchText = formData.get('search_text');
@@ -140,6 +179,7 @@
     });
 
     function checkTaskStatus(task_id) {
+        console.log(task_id);
         fetch("{% url 'search_term_task_status' %}", {
             method: 'POST',
             headers: {
@@ -152,7 +192,7 @@
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'processing' || data.status === 'task started') {
+            if (data.status === 'PENDING') {
                 // Task is still processing, poll again after a delay
                 console.log("Task is still processing, checking again in 5 seconds...");
                 setTimeout(() => {checkTaskStatus(task_id)}, 5000);  // Poll every 5 seconds
@@ -167,10 +207,10 @@
 
                 const searchResultsDiv = document.getElementById('searchResults');
 
-                const searchStrWebpages = data.search_str_webpages;
-                const brokenLinks = data.broken_links;
-                const requiresAccess = data.requires_access;
-                const output = data.output;
+                const searchStrWebpages = data.result[0].search_str_webpages;
+                const brokenLinks = data.result[0].broken_links;
+                const requiresAccess = data.result[0].requires_access;
+                const output = data.result[0].output;
 
                 if (searchStrWebpages.length > 0) {
                     // clears previous results
@@ -251,6 +291,10 @@
 
                     }
                 }
+
+                // Re-enable the search button
+                searchButton.disabled = false;
+                searchButton.classList.remove('is-loading');
             }
         })
         .catch(error => console.error('Error:', error));
