@@ -61,22 +61,24 @@ def search_term_task_status(request):
     if result.status == "SUCCESS":
         data["result"] = result.result  # Include the result if needed
 
-        # TODO write to the database
-        # queried_webpages = data["search_str_webpages"]
-    #             # broken_links = data['broken_links']
-    #             # requires_access = data['requires_access']
-    #             # output = data['output']
-    #             print(data)
+        # Write to the database
+        queried_webpages = data["result"][0].get("search_str_webpages", [])
+        broken_links = data["result"][0].get("broken_links", [])
+        requires_access = data["result"][0].get("requires_access", [])
 
-    #             # writing to database
-    #             new_search = SearchQuery.objects.create(
-    #                 user=request.user, type=SearchQuery.QueryType.SEARCH
-    #             )
+        # Create a new SearchQuery
+        new_search = SearchQuery.objects.create(
+            user=request.user,
+            type=SearchQuery.QueryType.SEARCH
+        )
 
-    #             for search_term, url in queried_webpages:
-    #                 SearchResult.objects.create(
-    #                     searchquery=new_search, url=url, search_text=search_term
-    #                 )
+        # Create SearchResult objects for each queried webpage
+        for search_term, url in queried_webpages:
+            SearchResult.objects.create(
+                searchquery=new_search,
+                url=url,
+                search_text=search_term,
+            )
 
     return JsonResponse(data)
 

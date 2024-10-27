@@ -12,6 +12,9 @@
         position: relative;
         color: transparent !important;
         pointer-events: none;
+        display: inline-block;
+        width: 100%;  /* Ensures it stretches to the parent width */
+        height: 100%; /* Ensures it stretches to the parent height */
     }
 
     .is-loading::after {
@@ -26,6 +29,7 @@
         border-right-color: transparent;
         border-top-color: transparent;
         animation: spinAround 500ms infinite linear;
+        transform: translate(-50%, -50%);
     }
 
     @keyframes spinAround {
@@ -35,6 +39,13 @@
         to {
             transform: translate(-50%, -50%) rotate(360deg);
         }
+    }
+
+    /* Center the loading spinner */
+    .is-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 </style>
 
