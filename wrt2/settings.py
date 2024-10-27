@@ -215,6 +215,7 @@ if config("ENVIRONMENT") == "production":
             password=url.password,
             ssl=(url.scheme == "rediss"),
             ssl_cert_reqs=None,
+            max_connections=1
         )
     except Exception as e:
         print(e)
@@ -243,8 +244,12 @@ if config("ENVIRONMENT") == "production":
     #     print(f"getting: {e}")
 
     # Celery settings for production
-    CELERY_BROKER_URL = REDIS_URL
-    CELERY_RESULT_BACKEND = REDIS_URL
+    # CELERY_BROKER_URL = REDIS_URL
+    # CELERY_RESULT_BACKEND = REDIS_URL
+
+    # new syntax for celery >= 4.0.0
+    broker_url = REDIS_URL
+    result_backend = REDIS_URL
 
     # CELERY_REDIS_BACKEND_USE_SSL = ssl_config
     # CELERY_BROKER_USE_SSL = ssl_config
@@ -261,6 +266,33 @@ else:
     # Celery settings for development
     CELERY_BROKER_URL = REDIS_URL
     CELERY_RESULT_BACKEND = REDIS_URL
+
+# reduce celery connection count (because heroku has a cap of 20 connections for the free tier)
+# CELERY_SEND_EVENTS = False  # Disable events
+# CELERY_SEND_TASK_SENT_EVENT = False
+# CELERY_WORKER_SEND_TASK_EVENTS = False
+# BROKER_POOL_LIMIT = 2  # Limit broker connections
+# CELERY_RESULT_BACKEND_TRANSPORT_OPTIONS = {
+#     'max_connections': 2  # Limit result backend connections
+# }
+# BROKER_TRANSPORT_OPTIONS = {
+#     'max_connections': 2
+# }
+# BROKER_HEARTBEAT = 0
+# CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+
+
+# new settings for celery >= 4.0.0
+broker_pool_limit = 1  # Limit broker connections
+broker_transport_options = {'max_connections': 1}
+result_backend_transport_options = {'max_connections': 1}
+
+worker_concurrency = 1  # Limit worker processes
+worker_prefetch_multiplier = 1  # Reduce prefetching
+worker_enable_remote_control = False  # Disable remote control
+
+task_send_sent_event = False  # Disable task sent events
+worker_send_task_events = False  # Disable worker task events
 
 
 # Redis and Celery settings

@@ -77,7 +77,7 @@ def search_term_view(request):
             task_id = queued_item.id
 
             # Store task ID in Redis associated with the session key
-            r.set(f"task:{session_key}", task_id, ex=3600)  # Expires in 1 hour
+            r.set(f"task:{session_key}", task_id, ex=100)  # Expires in 1 hour
 
             return JsonResponse({"status": "task started"}, status=202)
 
