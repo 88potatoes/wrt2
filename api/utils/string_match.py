@@ -10,7 +10,7 @@ from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 
 # A limit on the number of links crawled for each starting link
-SAFE_PAGE_LIMIT = 5
+SAFE_PAGE_LIMIT = 300
 
 
 def scrape(starting_links: List[str], search_text: str, browser_info: str) -> List[str]:
@@ -27,7 +27,7 @@ def scrape(starting_links: List[str], search_text: str, browser_info: str) -> Li
     search_str_webpages = []  # URLs with matched fragments (for highlighting browsers)
 
     # Determine if the browser supports text fragments (i.e., highlighting)
-    use_highlighting = "chrome" in browser_info.lower()
+    use_highlighting = True
 
     # Iterate over each starting link
     for start_link in starting_links:

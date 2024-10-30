@@ -240,7 +240,8 @@
 
         const formData = new FormData(searchForm);
         const searchText = formData.get('search_text');
-        const startingLinks = formData.getAll('starting_links[]');
+        const startingLinks = formData.getAll('starting_links[]'); // Ensure you're getting the right input
+        const browserInfo = navigator.userAgent; // Use userAgent to get browser info
 
 
         fetch("{% url 'search_term' %}", {
@@ -251,7 +252,8 @@
             },
             body: JSON.stringify({
                 search_text: searchText,
-                starting_links: startingLinks, 
+                starting_links: startingLinks, // Sending as an array
+                browser_info: browserInfo
             })
         })
         .then((res) => res.json())
