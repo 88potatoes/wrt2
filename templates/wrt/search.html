@@ -47,6 +47,75 @@
         justify-content: center;
         align-items: center;
     }
+
+    .radio-list {
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+    }
+
+    .radio {
+        margin-right: 30px;
+        color: #000B34;
+    }
+
+    .radio:last-child {
+        margin-right: 0;
+    }
+
+    .modal { 
+        border-radius: 10px;
+        opacity: 0; 
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .modal.is-active {
+        opacity: 1; 
+    }
+
+    .modal-card {
+        background-color: #000B34;
+        border-radius: 10px;
+        max-width: 600px; 
+        margin: auto;
+    }
+
+    .modal-card-title,
+    .modal-card-head,
+    .modal-card-foot,
+    .modal-card-body {
+        background-color: #000B34; 
+        color: white;
+    }
+
+    .modal-card-body {
+        background-color: white; 
+        color: #000B34;
+    }
+
+    .modal-card-foot .button {
+        margin-right: 10px; 
+    }
+
+    .custom-export {
+        background-color: #ABC1A7;
+        color: #000B34; 
+    }
+
+    .custom-export:hover {
+        background-color: #042085;
+        color: white; 
+    }
+
+    .custom-cancel {
+        background-color: #D1E7DD; 
+        color: #000B34; 
+    }
+
+    .custom-cancel:hover {
+        background-color: #91142d; 
+        color: white;
+    }
 </style>
 
 {% endblock %}
@@ -117,13 +186,44 @@
             <!-- Results will be displayed here after search -->
         </div>
     </div>
+</div>
 
+<div id="exportModal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Select Export Format</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body has-text-centered">
+            <div class="radio-list">
+                <label class="radio">
+                    <input type="radio" name="exportFormat" value="pdf">
+                    Export to PDF
+                </label>
+                <label class="radio">
+                    <input type="radio" name="exportFormat" value="excel">
+                    Export to Excel
+                </label>
+            </div>
+            <p id="formatDescription" style="display:none; margin-top: 20px;">Your export will have this format:</p>
+            <img id="exampleImage" src="" alt="Export Format Example" style="display:none; max-width: 100%; margin-top: 20px;">
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button custom-export" id="confirmExport">Export</button>
+            <button class="button custom-cancel" id="cancelButton">Cancel</button>
+        </footer>
+    </div>
 </div>
-</div>
+
 {% endblock %}
 
 {% block script %}
 <script>
+    let searchStrWebpages = [];
+    let brokenLinks = [];
+    let requiresAccess = [];
+
     const searchForm = document.getElementById('searchForm');
     const searchResultsDiv = document.getElementById('searchResults');
     const searchButton = document.getElementById('searchButton');
@@ -140,8 +240,7 @@
 
         const formData = new FormData(searchForm);
         const searchText = formData.get('search_text');
-        const startingLinks = formData.getAll('starting_links[]'); // Ensure you're getting the right input
-        const browserInfo = navigator.userAgent; // Use userAgent to get browser info
+        const startingLinks = formData.getAll('starting_links[]');
 
 
         fetch("{% url 'search_term' %}", {
@@ -152,8 +251,7 @@
             },
             body: JSON.stringify({
                 search_text: searchText,
-                starting_links: startingLinks, // Sending as an array
-                browser_info: browserInfo
+                starting_links: startingLinks, 
             })
         })
         .then((res) => res.json())
@@ -218,10 +316,10 @@
 
                 const searchResultsDiv = document.getElementById('searchResults');
 
-                const searchStrWebpages = data.result[0].search_str_webpages;
-                const brokenLinks = data.result[0].broken_links;
-                const requiresAccess = data.result[0].requires_access;
-                const output = data.result[0].output;
+                searchStrWebpages = data.result[0].search_str_webpages;
+                brokenLinks = data.result[0].broken_links;
+                requiresAccess = data.result[0].requires_access;
+                // const output = data.result[0].output;
 
                 if (searchStrWebpages.length > 0) {
                     // clears previous results
@@ -236,23 +334,15 @@
                     resultsTitle.textContent = 'Results - ' + searchStrWebpages.length + ' Strings Matched';
                     resultsHeaderDiv.appendChild(resultsTitle);
 
-                    // create buttons div
-                    const buttonsDiv = document.createElement('div');
-                    buttonsDiv.classList.add('button-group');
-
-                    // Create export buttons
-                    // !!!!!!! first parameter might not be correct
-                    const buttons = createExportButtons(searchStrWebpages, brokenLinks, requiresAccess, 'search_term');
-                    console.log("Search Results:", searchStrWebpages);
-                    console.log("Broken Links:", brokenLinks);
-                    console.log("Access Required Links:", requiresAccess);
-
-                    // Append buttons to the export buttons div
-                    buttonsDiv.appendChild(buttons[0]);
-                    buttonsDiv.appendChild(buttons[1]);
-                    console.log('Buttons added to the buttons div');
-
-                    resultsHeaderDiv.appendChild(buttonsDiv);
+                    // Create a single export button
+                    const exportButton = document.createElement('button');
+                    exportButton.id = 'exportButton';
+                    exportButton.className = 'button is-link';
+                    exportButton.textContent = 'Export';
+                    exportButton.onclick = function() {
+                        document.getElementById("exportModal").classList.add("is-active");  // Open modal
+                    };
+                    resultsHeaderDiv.appendChild(exportButton);
 
                     searchResultsDiv.appendChild(resultsHeaderDiv);
 
@@ -310,6 +400,87 @@
         })
         .catch(error => console.error('Error:', error));
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById("exportModal");
+        const closeButton = modal.querySelector('.delete'); 
+        const cancelButton = document.getElementById("cancelButton");
+        const confirmExportButton = document.getElementById("confirmExport");
+        const formatDescription = document.getElementById("formatDescription");
+        const exampleImage = document.getElementById("exampleImage");
+        const radios = document.querySelectorAll('input[name="exportFormat"]');
+
+        closeButton.onclick = function() {
+            resetModal(); 
+        };
+        
+        cancelButton.onclick = function() {
+            resetModal(); 
+        };
+
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                resetModal();
+            }
+        };
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    formatDescription.style.display = "block";
+                    exampleImage.style.display = "block";
+                    if (this.value === 'pdf') {
+                        exampleImage.src = "{% static 'images/pdf_example.png' %}"; 
+                    } else if (this.value === 'excel') {
+                        exampleImage.src = "{% static 'images/xlsx_example.png' %}";
+                    }
+                }
+            });
+        });
+
+        function resetModal() {
+            modal.classList.remove("is-active"); 
+            document.querySelectorAll('input[name="exportFormat"]').forEach(radio => radio.checked = false);
+            document.getElementById("formatDescription").style.display = "none";
+            document.getElementById("exampleImage").style.display = "none";
+        }
+
+        confirmExportButton.addEventListener('click', function() {
+            const selectedRadio = document.querySelector('input[name="exportFormat"]:checked');
+            if (selectedRadio) {
+                const selectedFormat = selectedRadio.value;
+                exportResults(searchStrWebpages, brokenLinks, requiresAccess, selectedFormat, 'search_term');
+                resetModal();
+            } else {
+                console.error('No export format selected');
+            }
+        });
+
+        function exportResults(searchResults, brokenLinks, accessRequired, exportType, searchType) {
+            const requestBody = {
+                search_results: searchResults,
+                broken_links: brokenLinks,
+                access_required_links: accessRequired,
+                export_type: exportType,
+                search_type: searchType
+            };
+
+            fetch("{% url 'download' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const filename = data.file_url.split('/').pop();
+                window.location.href = `/download/${filename}/`;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    });
 
 // Start polling after the user submits the search term
 </script>
