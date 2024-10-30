@@ -55,10 +55,41 @@
     </div>
 </div>
 
+<div id="exportModal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Select Export Format</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body has-text-centered">
+            <div class="radio-list">
+                <label class="radio">
+                    <input type="radio" name="exportFormat" value="pdf">
+                    Export to PDF
+                </label>
+                <label class="radio">
+                    <input type="radio" name="exportFormat" value="excel">
+                    Export to Excel
+                </label>
+            </div>
+            <p id="formatDescription" style="display:none; margin-top: 20px;">Your export will have this format:</p>
+            <img id="exampleImage" src="" alt="Export Format Example" style="display:none; max-width: 100%; margin-top: 20px;">
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button custom-export" id="confirmExport">Export</button>
+            <button class="button custom-cancel" id="cancelButton">Cancel</button>
+        </footer>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block script %}
-<script>
+<script>   
+    let searchStrWebpages = [];
+    let brokenLinks = [];
+    let requiresAccess = [];
 
     // Handle CrawlForm submission
     const crawlForm = document.getElementById('crawlForm');
@@ -92,10 +123,9 @@
                 console.log("data: " + data);
                 const crawlResultsDiv = document.getElementById('crawlResults');
 
-                const searchStrWebpages = data.search_str_webpages;
-                const brokenLinks = data.broken_links;
-                const requiresAccess = data.requires_access;
-                const output = data.output;
+                brokenLinks = data.broken_links;
+                requiresAccess = data.requires_access;
+                // const output = data.output;
 
                 if (brokenLinks.length > 0) {
                     // Clears previous results
@@ -114,18 +144,15 @@
                     const buttonsDiv = document.createElement('div');
                     buttonsDiv.classList.add('button-group');
 
-                    // Create export buttons
-                    const buttons = createExportButtons(searchStrWebpages, brokenLinks, requiresAccess, 'broken_links');
-                    console.log("Search Results:", searchStrWebpages);
-                    console.log("Broken Links:", brokenLinks);
-                    console.log("Access Required Links:", requiresAccess);
-
-                    // Append buttons to the export buttons div
-                    buttonsDiv.appendChild(buttons[0]);
-                    buttonsDiv.appendChild(buttons[1]);
-                    console.log('Buttons added to the buttons div');
-
-                    resultsHeaderDiv.appendChild(buttonsDiv);
+                    // Create an export button
+                    const exportButton = document.createElement('button');
+                    exportButton.id = 'exportButton';
+                    exportButton.className = 'button is-link';
+                    exportButton.textContent = 'Export';
+                    exportButton.onclick = function() {
+                        document.getElementById("exportModal").classList.add("is-active");  // Open modal
+                    };
+                    resultsHeaderDiv.appendChild(exportButton);
 
                     crawlResultsDiv.appendChild(resultsHeaderDiv);
 
@@ -191,6 +218,87 @@
         `;
         newFieldDiv.appendChild(deleteBtn);
         crawlUrlInputContainer.appendChild(newFieldDiv);
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById("exportModal");
+        const closeButton = modal.querySelector('.delete'); 
+        const cancelButton = document.getElementById("cancelButton");
+        const confirmExportButton = document.getElementById("confirmExport");
+        const formatDescription = document.getElementById("formatDescription");
+        const exampleImage = document.getElementById("exampleImage");
+        const radios = document.querySelectorAll('input[name="exportFormat"]');
+
+        closeButton.onclick = function() {
+            resetModal(); 
+        };
+        
+        cancelButton.onclick = function() {
+            resetModal(); 
+        };
+
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                resetModal();
+            }
+        };
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    formatDescription.style.display = "block";
+                    exampleImage.style.display = "block";
+                    if (this.value === 'pdf') {
+                        exampleImage.src = "{% static 'images/pdf_example.png' %}"; 
+                    } else if (this.value === 'excel') {
+                        exampleImage.src = "{% static 'images/xlsx_example.png' %}";
+                    }
+                }
+            });
+        });
+
+        function resetModal() {
+            modal.classList.remove("is-active"); 
+            document.querySelectorAll('input[name="exportFormat"]').forEach(radio => radio.checked = false);
+            document.getElementById("formatDescription").style.display = "none";
+            document.getElementById("exampleImage").style.display = "none";
+        }
+
+        confirmExportButton.addEventListener('click', function() {
+            const selectedRadio = document.querySelector('input[name="exportFormat"]:checked');
+            if (selectedRadio) {
+                const selectedFormat = selectedRadio.value;
+                exportResults(searchStrWebpages, brokenLinks, requiresAccess, selectedFormat, 'broken_links');
+                resetModal();
+            } else {
+                console.error('No export format selected');
+            }
+        });
+
+        function exportResults(searchResults, brokenLinks, accessRequired, exportType, searchType) {
+            const requestBody = {
+                search_results: searchResults,
+                broken_links: brokenLinks,
+                access_required_links: accessRequired,
+                export_type: exportType,
+                search_type: searchType
+            };
+
+            fetch("{% url 'download' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const filename = data.file_url.split('/').pop();
+                window.location.href = `/download/${filename}/`;
+            })
+            .catch(error => console.error('Error:', error));
+        }
     });
 </script>
 {% endblock %}
