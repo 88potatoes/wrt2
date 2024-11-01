@@ -82,54 +82,6 @@ def search_term_task_status(request):
     return JsonResponse(data)
 
 
-# @require_http_methods(["GET", "POST"])
-# @login_required
-# def search_term_view(request):
-#     if request.method == "GET":
-#         return render(request, "wrt/search.html")
-#     else:
-#         print("POSTING SEARCH TERM")
-
-#         if r.in(request.session.session_key, "current_requests"):
-#             # check if the request is complete
-#             # if it is then get the result, otherwise return a random number
-#         else:
-#             # add an itemp the queue and put the session key intot he current requests
-#             queued_item = find_text_string.delay(request.body, from_website=True)
-#             r.lpush("current_requests", request.session.session_key)
-
-#         print(f"request.session.session_key: {request.session.session_key}")
-
-#         print("QUEUED ITEM")
-#         response = queued_item.get()
-#         print("RESPONSE")
-#         print(response)
-#         data, status = response
-#         print("RECEIVED ITEM")
-
-#         if status == 200:
-#             # TODO test that the writing works
-#             queried_webpages = data["search_str_webpages"]
-#             # broken_links = data['broken_links']
-#             # requires_access = data['requires_access']
-#             # output = data['output']
-#             print(data)
-
-#             # writing to database
-#             new_search = SearchQuery.objects.create(
-#                 user=request.user, type=SearchQuery.QueryType.SEARCH
-#             )
-
-#             for search_term, url in queried_webpages:
-#                 SearchResult.objects.create(
-#                     searchquery=new_search, url=url, search_text=search_term
-#                 )
-
-#             return JsonResponse(data, status=200, safe=False)  # TODO make it safe
-#         elif status == 400:  # return the errors
-#             return JsonResponse(data, status=400)
-
-
 @require_http_methods(["GET", "POST"])
 @login_required
 def crawl_broken_links_view(request):
@@ -142,6 +94,7 @@ def crawl_broken_links_view(request):
         queued_item = find_broken_links.delay(body, from_website=True)
         task_id = queued_item.id
         return JsonResponse({"status": "task started", "task_id": task_id}, status=202)
+
 
 @require_http_methods(["POST"])
 @login_required
@@ -174,9 +127,7 @@ def broken_links_task_status(request):
         # Create SearchResult objects for each broken link
         for broken_url, origin_url in broken_links:
             SearchResult.objects.create(
-                searchquery=new_search,
-                url=origin_url,
-                url_to=broken_url
+                searchquery=new_search, url=origin_url, url_to=broken_url
             )
 
     return JsonResponse(return_data)
@@ -193,7 +144,7 @@ def history(request):
     )  # Get the current page number from the query parameters
     queries = paginator.get_page(page_number)  # Get the corresponding page of results
 
-    context = {"queries": queries}
+    context = {"queries": queries }
     return render(request, "wrt/history.html", context)
 
 

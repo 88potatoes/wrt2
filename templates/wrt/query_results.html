@@ -1,222 +1,262 @@
 {% extends "base.html" %}
 {% load static %}
+{% block title %} Search {% endblock%}
 
-{% block title %} Search {% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/search.css' %}" />
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+/>
+<style>
+    .container {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Two equal columns */
+        gap: 10px; /* Spacing between cells */
+        padding: 20px; /* Container padding */
+        background-color: #f8f9fa; /* Background color */
+    }
 
-{% block head %} 
-    <link rel="stylesheet" href="{% static 'css/search.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        .container {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* Two equal columns */
-            gap: 10px; /* Spacing between cells */
-            padding: 20px; /* Container padding */
-            background-color: #f8f9fa; /* Background color */
-        }
+    .header {
+        font-weight: bold;
+        background-color: #343a40; /* Dark background for header */
+        color: white; /* White text */
+        padding: 10px; /* Padding for header */
+        text-align: center; /* Center align text */
+    }
 
-        .header {
-            font-weight: bold;
-            background-color: #343a40; /* Dark background for header */
-            color: white; /* White text */
-            padding: 10px; /* Padding for header */
-            text-align: center; /* Center align text */
-        }
+    .row {
+        display: contents; /* Use contents to keep grid layout */
+    }
 
-        .row {
-            display: contents; /* Use contents to keep grid layout */
-        }
+    .cell {
+        background-color: #e9ecef; /* Light background for cells */
+        padding: 15px; /* Padding for cells */
+        text-align: center; /* Center align text */
+        border: 1px solid #ced4da; /* Border around cells */
+        text-decoration: none; /* Remove link underline */
+        color: #212529; /* Text color */
+    }
 
-        .cell {
-            background-color: #e9ecef; /* Light background for cells */
-            padding: 15px; /* Padding for cells */
-            text-align: center; /* Center align text */
-            border: 1px solid #ced4da; /* Border around cells */
-            text-decoration: none; /* Remove link underline */
-            color: #212529; /* Text color */
-        }
+    .cell:hover {
+        background-color: #adb5bd; /* Change background on hover */
+    }
 
-        .cell:hover {
-            background-color: #adb5bd; /* Change background on hover */
-        }
+    .search_terms {
+        background-color: #f8f9fa;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+    }
 
-        .search_terms {
-            background-color: #f8f9fa;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-        }
+    .search_terms_list {
+        list-style-type: disc;
+        padding-left: 20px;
+    }
 
-        .search_terms_list {
-            list-style-type: disc;
-            padding-left: 20px;
-        }
+    .search_terms_list li {
+        font-size: 18px;
+        font-weight: 400;
+        color: #000b34;
+        text-align: left;
+    }
 
-        .search_terms_list li {
-            font-size: 18px;
-            font-weight: 400;
-            color: #000B34;
-            text-align: left; 
-        }
+    h3 {
+        font-size: 24px;
+        font-weight: 400;
+        color: #000b34;
+        text-align: left;
+    }
 
-        h3 {
-            font-size: 24px;
-            font-weight: 400;
-            color: #000B34;
-            text-align: left; 
-        }
+    .radio-list {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 
-        .radio-list {
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-        }
+    .radio {
+        margin-right: 30px;
+        color: #000b34;
+    }
 
-        .radio {
-            margin-right: 30px;
-            color: #000B34;
-        }
+    .radio:last-child {
+        margin-right: 0;
+    }
 
-        .radio:last-child {
-            margin-right: 0;
-        }
+    .modal {
+        border-radius: 10px;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
 
-        .modal { 
-            border-radius: 10px;
-            opacity: 0; 
-            transition: opacity 0.3s ease-in-out;
-        }
+    .modal.is-active {
+        opacity: 1;
+    }
 
-        .modal.is-active {
-            opacity: 1; 
-        }
+    .modal-card {
+        background-color: #000b34;
+        border-radius: 10px;
+        max-width: 600px;
+        margin: auto;
+    }
 
-        .modal-card {
-            background-color: #000B34;
-            border-radius: 10px;
-            max-width: 600px; 
-            margin: auto;
-        }
+    .modal-card-title,
+    .modal-card-head,
+    .modal-card-foot,
+    .modal-card-body {
+        background-color: #000b34;
+        color: white;
+    }
 
-        .modal-card-title,
-        .modal-card-head,
-        .modal-card-foot,
-        .modal-card-body {
-            background-color: #000B34; 
-            color: white;
-        }
+    .modal-card-body {
+        background-color: white;
+        color: #000b34;
+    }
 
-        .modal-card-body {
-            background-color: white; 
-            color: #000B34;
-        }
+    .modal-card-foot .button {
+        margin-right: 10px;
+    }
 
-        .modal-card-foot .button {
-            margin-right: 10px; 
-        }
+    .custom-export {
+        background-color: #abc1a7;
+        color: #000b34;
+    }
 
-        .custom-export {
-            background-color: #ABC1A7;
-            color: #000B34; 
-        }
+    .custom-export:hover {
+        background-color: #042085;
+        color: white;
+    }
 
-        .custom-export:hover {
-            background-color: #042085;
-            color: white; 
-        }
+    .custom-cancel {
+        background-color: #d1e7dd;
+        color: #000b34;
+    }
 
-        .custom-cancel {
-            background-color: #D1E7DD; 
-            color: #000B34; 
-        }
+    .custom-cancel:hover {
+        background-color: #91142d;
+        color: white;
+    }
 
-        .custom-cancel:hover {
-            background-color: #91142d; 
-            color: white;
-        }
+    h4 {
+        color: #000b34;
+    }
 
-    </style>
-{% endblock %}
+    .search_info {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %} {% block content %} {% include "partials/navbar.html" %}
 
-{% block content %}
-    {% include "partials/navbar.html" %}
+<div class="tab-content">
+    <div class="columns-is-centered">
+        <div class="search_info">
+            <h2>Information</h2>
+            <h4>User: {{ search_query.user.username }}</h4>
+            <h4>Created at: {{ search_query.created_at }}</h4>
+            <h4>Type: {{ query_type }}</h4>
+        </div>
 
-    <div class="tab-content">
-        <div class="columns-is-centered">
-            <h2 class="tab-title">{{ search_query }}</h2>
+        {% if query_type == 'Search' %}
+        <div class="searchParameters">
+            <h3>Search Term(s)</h3>
+            <ul class="search_terms_list">
+                {% for search_term in search_terms %}
+                <li>{{ search_term }}</li>
+                {% empty %}
+                <li>No Search Terms</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
-            <div class="searchParameters">
-                <h3>Search Term(s)</h3>
-                <ul class="search_terms_list">
-                    {% for search_term in search_terms %}
-                        <li>{{ search_term }}</li>
+        <div class="searchResultsContainer" style="margin-top: 20px">
+            <div class="table-header">
+                <h2 class="results">Results</h2>
+                <div class="button-group">
+                    <button id="exportButton" class="button is-link">
+                        Export
+                    </button>
+                </div>
+            </div>
+
+            <table class="table is-bordered is-fullwidth is-hoverable">
+                <thead>
+                    <tr>
+                        {% if query_type == 'Search' %}
+                        <th>Matched String</th>
+                        <th>Search Term</th>
+                        {% elif query_type == 'Crawl' %}
+                        <th>Broken Link</th>
+                        <th>Broken Link Origin</th>
+                        {% else %}
+                        <th>Error</th>
+                        <th>Error</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        {% if query_type == 'Search' %}
+                        <td>{{ result.search_text }}</td>
+                        {% elif query_type == 'Crawl' %}
+                        <td>{{ result.url_to }}</td>
+                        {% else %}
+                        <td>Error</td>
+                        {% endif %}
+                        <td><a href="{{ result.url }}">{{ result.url }}</a></td>
+                    </tr>
                     {% empty %}
-                        <li>No Search Terms</li>
+                    <tr>
+                        <td colspan="2">No results found for this query.</td>
+                    </tr>
                     {% endfor %}
-                </ul>
-            </div>
-
-            <div class="searchResultsContainer" style="margin-top: 20px;">
-                <div class="table-header">
-                    <h2 class="results">Results</h2>
-                    <div class="button-group">
-                        <button id="exportButton" class="button is-link">Export</button>
-                    </div>
-                </div>
-
-                <table class="table is-bordered is-fullwidth is-hoverable">
-                    <thead>
-                        <tr>
-                            <th>Matched String</th>
-                            <th>Page URL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for result in results %}
-                            <tr>
-                                <td>{{ result.search_text }}</td>
-                                <td><a href="{{ result.url }}">{{ result.url }}</a></td>
-                            </tr>
-                        {% empty %}
-                            <tr><td colspan="2">No results found for this query.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 
-    <div id="exportModal" class="modal">
-        <div class="modal-background"></div>
-        <div class="modal-card">
-            <header class="modal-card-head">
-                <p class="modal-card-title">Select Export Format</p>
-                <button class="delete" aria-label="close"></button>
-            </header>
-            <section class="modal-card-body has-text-centered">
-                <div class="radio-list">
-                    <label class="radio">
-                        <input type="radio" name="exportFormat" value="pdf">
-                        Export to PDF
-                    </label>
-                    <label class="radio">
-                        <input type="radio" name="exportFormat" value="excel">
-                        Export to Excel
-                    </label>
-                </div>
-                <p id="formatDescription" style="display:none; margin-top: 20px;">Your export will have this format:</p>
-                <img id="exampleImage" src="" alt="Export Format Example" style="display:none; max-width: 100%; margin-top: 20px;">
-            </section>
-            <footer class="modal-card-foot">
-                <button class="button custom-export" id="confirmExport">Export</button>
-                <button class="button custom-cancel" id="cancelButton">Cancel</button>
-            </footer>
-        </div>
+<div id="exportModal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Select Export Format</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body has-text-centered">
+            <div class="radio-list">
+                <label class="radio">
+                    <input type="radio" name="exportFormat" value="pdf" />
+                    Export to PDF
+                </label>
+                <label class="radio">
+                    <input type="radio" name="exportFormat" value="excel" />
+                    Export to Excel
+                </label>
+            </div>
+            <p id="formatDescription" style="display: none; margin-top: 20px">
+                Your export will have this format:
+            </p>
+            <img
+                id="exampleImage"
+                src=""
+                alt="Export Format Example"
+                style="display: none; max-width: 100%; margin-top: 20px"
+            />
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button custom-export" id="confirmExport">
+                Export
+            </button>
+            <button class="button custom-cancel" id="cancelButton">
+                Cancel
+            </button>
+        </footer>
     </div>
+</div>
 
-{% endblock %}
-
-{% block script %}
+{% endblock %} {% block script %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const modal = document.getElementById("exportModal");
@@ -226,17 +266,17 @@
         const confirmExportButton = document.getElementById("confirmExport");
 
         exportButton.onclick = function() {
-            modal.style.opacity = "0"; 
-            modal.classList.add("is-active"); 
+            modal.style.opacity = "0";
+            modal.classList.add("is-active");
             setTimeout(() => { modal.style.opacity = "1"; }, 10);
         };
 
         closeButton.onclick = function() {
-            resetModal(); 
+            resetModal();
         };
-        
+
         cancelButton.onclick = function() {
-            resetModal(); 
+            resetModal();
         };
 
         window.onclick = function(event) {
@@ -252,9 +292,9 @@
                 if (this.checked) {
                     formatDescription.style.display = "block";
                     if (this.value === 'pdf') {
-                        exampleImage.src = "{% static 'images/pdf_example.png' %}"; 
+                        exampleImage.src = "{% static 'images/pdf_example.png' %}";
                     } else if (this.value === 'excel') {
-                        exampleImage.src = "{% static 'images/xlsx_example.png' %}"; 
+                        exampleImage.src = "{% static 'images/xlsx_example.png' %}";
                     }
                     exampleImage.style.display = "block";
                 }
@@ -268,7 +308,7 @@
                 const selectedFormat = selectedRadio.value;
 
                 const searchResults = {{ urls_list|safe }};
-                const accessRequired = []; 
+                const accessRequired = [];
                 const brokenLinks = [];
                 let searchType = "";
 
@@ -286,15 +326,15 @@
         });
 
         function resetModal() {
-            modal.style.opacity = "1"; 
+            modal.style.opacity = "1";
             setTimeout(() => {
-                modal.style.opacity = "0"; 
+                modal.style.opacity = "0";
                 setTimeout(() => {
-                    modal.classList.remove("is-active"); 
-                }, 300); 
-            }, 10); 
+                    modal.classList.remove("is-active");
+                }, 300);
+            }, 10);
 
-            exampleImage.style.display = "none"; 
+            exampleImage.style.display = "none";
             formatDescription.style.display = "none";
             exampleImage.src = "";
 

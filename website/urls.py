@@ -15,7 +15,9 @@ urlpatterns = [
         "crawl_broken_links", views.crawl_broken_links_view, name="crawl_broken_links"
     ),
     path(
-        "crawl_broken_links/status", views.broken_links_task_status, name="broken_links_task_status"
+        "crawl_broken_links/status",
+        views.broken_links_task_status,
+        name="broken_links_task_status",
     ),  # Broken links
     # Authentication
     path("", auth_views.LoginView.as_view(), name="login_page"),
