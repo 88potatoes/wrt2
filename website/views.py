@@ -68,8 +68,7 @@ def search_term_task_status(request):
 
         # Create a new SearchQuery
         new_search = SearchQuery.objects.create(
-            user=request.user,
-            type=SearchQuery.QueryType.SEARCH
+            user=request.user, type=SearchQuery.QueryType.SEARCH
         )
 
         # Create SearchResult objects for each queried webpage
@@ -130,6 +129,7 @@ def search_term_task_status(request):
 #         elif status == 400:  # return the errors
 #             return JsonResponse(data, status=400)
 
+
 @require_http_methods(["GET", "POST"])
 @login_required
 def crawl_broken_links_view(request):
@@ -141,6 +141,7 @@ def crawl_broken_links_view(request):
         queued_item = find_broken_links.delay(request.body, from_website=True)
         task_id = queued_item.id
         return JsonResponse({"status": "task started", "task_id": task_id}, status=202)
+
 
 # @require_http_methods(["GET", "POST"])
 # @login_required

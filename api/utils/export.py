@@ -2,7 +2,7 @@ import pandas as pd
 from fpdf import FPDF
 
 
-def export_to_excel(queried_pages, requires_access, broken_links, file_path, search_type):
+def export_to_excel(queried_pages, broken_links, requires_access, file_path, search_type):
     with pd.ExcelWriter(file_path, engine="xlsxwriter") as writer:
         if search_type == "search_term":
             search_df = pd.DataFrame(queried_pages, columns=["Search Term", "Found URL"])
@@ -48,7 +48,7 @@ def shorten_url(url, max_length=75):
         return url[: max_length - 3] + "..."
 
 
-def export_to_pdf(queried_pages, requires_access, broken_links, file_path, search_type):
+def export_to_pdf(queried_pages, broken_links, requires_access, file_path, search_type):
     pdf = PDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
