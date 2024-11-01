@@ -97,7 +97,7 @@
                     </div>
                     <div class="field"></div>
                     <div class="control">
-                        <button class="button is-link" type="submit">
+                        <button class="button is-link" id="searchButton" type="submit">
                             Search
                         </button>
                     </div>
@@ -165,12 +165,17 @@
     // Handle CrawlForm submission
     const crawlForm = document.getElementById("crawlForm");
     const crawlResultsDiv = document.getElementById("crawlResults");
+    const searchButton = document.getElementById('searchButton');
 
     crawlForm.addEventListener("submit", function (event) {
         event.preventDefault();
         const formData = new FormData(crawlForm);
         const starting_links = formData.getAll("starting_links[]");
         const browser_info = navigator.userAgent;
+
+        // Disable the search button
+        searchButton.disabled = true;
+        searchButton.classList.add('is-loading');
 
         crawlResultsDiv.innerHTML = `<p>Scraping in progress... Please wait.</p>`;
 
@@ -302,6 +307,10 @@
                         crawlResultsDiv.innerHTML = `<p>${data.status}</p>`;
                     }
                 }
+
+                // Re-enable the search button
+                searchButton.disabled = false;
+                searchButton.classList.remove('is-loading');
             })
             .catch((error) => console.error("Error:", error));
     }
