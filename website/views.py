@@ -144,7 +144,7 @@ def history(request):
     )  # Get the current page number from the query parameters
     queries = paginator.get_page(page_number)  # Get the corresponding page of results
 
-    context = {"queries": queries }
+    context = {"queries": queries}
     return render(request, "wrt/history.html", context)
 
 

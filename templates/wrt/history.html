@@ -3,7 +3,7 @@
 
 {% block title %} Search {% endblock %}
 
-{% block head %} 
+{% block head %}
     <link rel="stylesheet" href="{% static 'css/search.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- probably don't need to load in all the icons -->
     <style>
@@ -49,6 +49,7 @@
 
         .active {
             color: #000B34;
+            text-decoration: underline;
         }
 
         .current {
@@ -71,7 +72,7 @@
     </style>
 {% endblock %}
 
-{% block content %} 
+{% block content %}
     {% include "partials/navbar.html" %}
     <div class="tab-content">
         <h2 class="tab-title">Search History</h2>
@@ -106,7 +107,7 @@
                 </tbody>
             </table>
 
-            
+
             <!-- Pagination controls -->
             <nav class="pagination">
                 <span class="step-links">
@@ -115,20 +116,20 @@
                     </span>
 
                     {% if queries.has_previous %}
-                        <a class="active pagination-right" href="?page=1">first</a>
-                        <a class="active pagination-left" href="?page={{ queries.previous_page_number }}">&lt;</a>
+                        <a class="active pagination-right" href="?page=1">First</a>
+                        <a class="active pagination-left" href="?page={{ queries.previous_page_number }}">Prev</a>
                     {% else %}
-                        <span class="inactive pagination-right">first</span>
-                        <span class="inactive pagination-left">&lt;</span>
+                        <span class="inactive pagination-right">First</span>
+                        <span class="inactive pagination-left">Prev</span>
                     {% endif %}
 
 
                     {% if queries.has_next %}
-                        <a class="active pagination-right" href="?page={{ queries.next_page_number }}">&gt;</a>
-                        <a class="active" href="?page={{ queries.paginator.num_pages }}">last</a>
+                        <a class="active pagination-right" href="?page={{ queries.next_page_number }}">Next</a>
+                        <a class="active" href="?page={{ queries.paginator.num_pages }}">Last</a>
                     {% else %}
-                        <span class="inactive pagination-right">&gt;</span>
-                        <span class="inactive">last</span>
+                        <span class="inactive pagination-right">Next</span>
+                        <span class="inactive">Last</span>
                     {% endif %}
                 </span>
             </nav>
