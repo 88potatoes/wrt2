@@ -18,7 +18,6 @@ from pathlib import Path
 import os
 import ssl
 import redis
-from urllib.parse import urlparse
 
 APPEND_SLASH = False
 
@@ -199,59 +198,7 @@ if config("ENVIRONMENT") == "production":
         exit()
 
     REDIS_URL += "?ssl_cert_reqs=CERT_NONE"
-
-    # SSL Configuration for Redis
-    # ssl_config = {
-    #     "ssl_ca_certs": None,  # Uses default CA bundle
-    # }
-
-    # Redis client instance for production
-    try:
-        url = urlparse(REDIS_URL)
-        print(f"PORT: {url.port}")
-        print(f"hostname: {url.hostname}")
-        print(f"password: {url.password}")
-        REDIS_CLIENT = redis.Redis(
-            host=url.hostname,
-            port=url.port,
-            password=url.password,
-            ssl=(url.scheme == "rediss"),
-            ssl_cert_reqs=None,
-            max_connections=2,
-        )
-    except Exception as e:
-        print(e)
-
-    try:
-        REDIS_CLIENT.ping()
-        print("Connected to Redis server.")
-    except redis.ConnectionError:
-        print("Failed to connect to Redis server.")
-
-    # try:
-    #     task_value = REDIS_CLIENT.get(f"task")
-    #     if task_value is None:
-    #         print("No task value found in Redis")
-    #     else:
-    #         # Decode bytes to string
-    #         task_value = task_value.decode('utf-8')
-    #         print(task_value)
-    # except Exception as e:
-    #     print(f"getting: {e}")
-
-    # try:
-    #     task_value = REDIS_CLIENT.get(f"task")
-    #     print(task_value)
-    # except Exception as e:
-    #     print(f"getting: {e}")
-
-    # Celery settings for production
-    CELERY_BROKER_URL = REDIS_URL
-    CELERY_RESULT_BACKEND = REDIS_URL
-
-    # CELERY_REDIS_BACKEND_USE_SSL = ssl_config
-    # CELERY_BROKER_USE_SSL = ssl_config
-
+    # new syntax for celery >= 4.0.0
 else:
     # Development settings
     REDIS_URL = "redis://localhost:6379"
@@ -261,50 +208,28 @@ else:
     # Redis client instance for development
     REDIS_CLIENT = redis.Redis.from_url(REDIS_URL, ssl_cert_reqs=None)
 
-    # Celery settings for development
-    CELERY_BROKER_URL = REDIS_URL
-    CELERY_RESULT_BACKEND = REDIS_URL
+print(f"[REDIS URL] {REDIS_URL}")
+broker_url = REDIS_URL
+result_backend = REDIS_URL
+# CELERY_RESULT_BACKEND = REDIS_URL
+# CELERY_BROKER_URL = REDIS_URL
+
+# reduce celery connection count (because heroku has a cap of 20 connections for the free tier)
+# new settings for celery >= 4.0.0
+# broker_pool_limit = 1  # Limit broker connections
+# broker_transport_options = {"max_connections": 1}
+# result_backend_transport_options = {"max_connections": 1}
+
+# worker_concurrency = 1  # Limit worker processes
+# worker_prefetch_multiplier = 1  # Reduce prefetching
+# worker_enable_remote_control = False  # Disable remote control
+
+# task_send_sent_event = False  # Disable task sent events
+# worker_send_task_events = False  # Disable worker task events
 
 
-# Redis and Celery settings
-# REDIS_TLS_URL = config("REDIS_TLS_URL", default=config("REDIS_URL"))
-# print("REDIS URL: " + REDIS_TLS_URL)
-
-# SSL Context for Redis
-# REDIS_SSL_CONTEXT = ssl.create_default_context()
-
-# Redis client instance
-# if config("ENVIRONMENT") == "production":
-#     REDIS_CLIENT = Redis.from_url(
-#         REDIS_TLS_URL,
-#         ssl_cert_reqs=ssl.CERT_REQUIRED,
-#         ssl=REDIS_SSL_CONTEXT
-#     )
-# else:
-#     print("NOT PRODUCTION")
-#     REDIS_CLIENT = Redis.from_url(
-#         REDIS_TLS_URL
-#     )
-
-CELERY_TASK_ROUTES = {
-    "api.tasks.*": {"queue": "app1_queue"},
-}
-
-# CELERY_BROKER_URL = REDIS_TLS_URL
-# CELERY_RESULT_BACKEND = REDIS_TLS_URL
-
-# CELERY_REDIS_BACKEND_USE_SSL = {
-#     'ssl_cert_reqs': ssl.CERT_REQUIRED,
-#     'ssl_context': REDIS_SSL_CONTEXT,
-# }
-
-# CELERY_BROKER_USE_SSL = {
-#     'ssl_cert_reqs': ssl.CERT_REQUIRED,
-#     'ssl_context': REDIS_SSL_CONTEXT,
-# }
-
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TIMEZONE = "UTC"
-CELERY_ENABLE_UTC = True
+# task_serializer = "json"
+# result_serializer = "json"
+# accept_content = ["json"]
+# timezone = "UTC"
+# enable_utc = True

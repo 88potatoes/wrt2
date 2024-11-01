@@ -1,15 +1,53 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block title %} Search {% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="{% static 'css/search.css' %}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% extends "base.html" %} {% load static %} {% block title %} Search {% endblock %} {% block head %}
+<link rel="stylesheet" href="{% static 'css/search.css' %}" />
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+/>
 <!-- probably don't need to load in all the icons -->
-{% endblock %}
-{% block content %}
-{% include "partials/navbar.html" %}
+
+<style>
+    .is-loading {
+        position: relative;
+        color: transparent !important;
+        pointer-events: none;
+        display: inline-block;
+        width: 100%; /* Ensures it stretches to the parent width */
+        height: 100%; /* Ensures it stretches to the parent height */
+    }
+
+    .is-loading::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 1em;
+        height: 1em;
+        border: 2px solid #dbdbdb;
+        border-radius: 50%;
+        border-right-color: transparent;
+        border-top-color: transparent;
+        animation: spinAround 500ms infinite linear;
+        transform: translate(-50%, -50%);
+    }
+
+    @keyframes spinAround {
+        from {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+        to {
+            transform: translate(-50%, -50%) rotate(360deg);
+        }
+    }
+
+    /* Center the loading spinner */
+    .is-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+{% endblock %} {% block content %} {% include "partials/navbar.html" %}
 
 <div id="brokenLinksTab" class="tab-content">
     <h2 class="tab-title">Broken Link Search</h2>
@@ -17,37 +55,61 @@
         <div class="column is-8">
             <form id="crawlForm">
                 {% csrf_token %}
-                <input type="hidden" name="form_type" value="search_term_form">
+                <input
+                    type="hidden"
+                    name="form_type"
+                    value="search_term_form"
+                />
 
                 <div class="field">
-                    <label class="label">Root URLs
+                    <label class="label"
+                        >Root URLs
                         <span class="icon has-tooltip" id="tooltipIcon3">
                             <i class="fas fa-info-circle"></i>
-                            <div class="tooltip">This tool scans a website for broken links and pages that require
-                                login access, like those using Okta. It checks the seed URLs and all the
+                            <div class="tooltip">
+                                This tool scans a website for broken links and
+                                pages that require login access, like those
+                                using Okta. It checks the seed URLs and all the
                                 internal links with the same prefix URL.
                             </div>
                         </span>
                     </label>
                     <div id="crawlUrlInputContainer">
                         <div class="control">
-                            <input class="input" type="text" name="starting_links[]"
-                                placeholder="Enter a URL defining the search range..." required>
+                            <input
+                                class="input"
+                                type="text"
+                                name="starting_links[]"
+                                placeholder="Enter a URL defining the search range..."
+                                required
+                            />
                         </div>
                     </div>
                     <div>
-                        <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
-                            style="margin-top: 10px;">Add URL</button>
+                        <button
+                            id="addCrawlInputBtn"
+                            type="button"
+                            class="button is-link is-light"
+                            style="margin-top: 10px"
+                        >
+                            Add URL
+                        </button>
                     </div>
                     <div class="field"></div>
                     <div class="control">
-                        <button class="button is-link" type="submit">Search</button>
+                        <button class="button is-link" type="submit">
+                            Search
+                        </button>
                     </div>
                 </div>
             </form>
         </div>
 
-        <div id="searchResultsContainer" class="container" style="margin-top: 20px;">
+        <div
+            id="searchResultsContainer"
+            class="container"
+            style="margin-top: 20px"
+        >
             <div id="crawlResults">
                 <!-- Results will be displayed here after search -->
             </div>
@@ -55,19 +117,59 @@
     </div>
 </div>
 
-{% endblock %}
+<div id="exportModal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Select Export Format</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body has-text-centered">
+            <div class="radio-list">
+                <label class="radio">
+                    <input type="radio" name="exportFormat" value="pdf" />
+                    Export to PDF
+                </label>
+                <label class="radio">
+                    <input type="radio" name="exportFormat" value="excel" />
+                    Export to Excel
+                </label>
+            </div>
+            <p id="formatDescription" style="display: none; margin-top: 20px">
+                Your export will have this format:
+            </p>
+            <img
+                id="exampleImage"
+                src=""
+                alt="Export Format Example"
+                style="display: none; max-width: 100%; margin-top: 20px"
+            />
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button custom-export" id="confirmExport">
+                Export
+            </button>
+            <button class="button custom-cancel" id="cancelButton">
+                Cancel
+            </button>
+        </footer>
+    </div>
+</div>
 
-{% block script %}
+{% endblock %} {% block script %}
 <script>
+    let searchStrWebpages = [];
+    let brokenLinks = [];
+    let requiresAccess = [];
 
     // Handle CrawlForm submission
-    const crawlForm = document.getElementById('crawlForm');
-    const crawlResultsDiv = document.getElementById('crawlResults');
+    const crawlForm = document.getElementById("crawlForm");
+    const crawlResultsDiv = document.getElementById("crawlResults");
 
-    crawlForm.addEventListener('submit', function (event) {
+    crawlForm.addEventListener("submit", function (event) {
         event.preventDefault();
         const formData = new FormData(crawlForm);
-        const starting_links = formData.getAll('starting_links[]');
+        const starting_links = formData.getAll("starting_links[]");
         const browser_info = navigator.userAgent;
 
         crawlResultsDiv.innerHTML = `<p>Scraping in progress... Please wait.</p>`;
@@ -78,119 +180,254 @@
         fetch("{% url 'crawl_broken_links' %}", {
             method: "POST",
             headers: {
-                'Content-Type': "application/json",
-                'X-CSRFToken': '{{ csrf_token }}'
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
             },
             body: JSON.stringify({
                 starting_links,
-                browser_info
-            })
+                browser_info,
+            }),
         })
-
-            .then(response => response.json())
+            .then((response) => response.json())
             .then((data) => {
-                console.log("data: " + data);
-                const crawlResultsDiv = document.getElementById('crawlResults');
-
-                const searchStrWebpages = data.search_str_webpages;
-                const brokenLinks = data.broken_links;
-                const requiresAccess = data.requires_access;
-                const output = data.output;
-
-                if (brokenLinks.length > 0) {
-                    // Clears previous results
-                    crawlResultsDiv.innerHTML = '';
-
-                    const resultsHeaderDiv = document.createElement('div');
-                    resultsHeaderDiv.classList.add('table-header');
-
-                    const resultsTitle = document.createElement('h2');
-                    resultsTitle.id = 'resultsTable'
-                    resultsTitle.classList.add('results');
-                    resultsTitle.textContent = 'Results - Broken Links';
-                    resultsHeaderDiv.appendChild(resultsTitle);
-
-                    // create buttons div
-                    const buttonsDiv = document.createElement('div');
-                    buttonsDiv.classList.add('button-group');
-
-                    // Create export buttons
-                    const buttons = createExportButtons(searchStrWebpages, brokenLinks, requiresAccess, 'broken_links');
-                    console.log("Search Results:", searchStrWebpages);
-                    console.log("Broken Links:", brokenLinks);
-                    console.log("Access Required Links:", requiresAccess);
-
-                    // Append buttons to the export buttons div
-                    buttonsDiv.appendChild(buttons[0]);
-                    buttonsDiv.appendChild(buttons[1]);
-                    console.log('Buttons added to the buttons div');
-
-                    resultsHeaderDiv.appendChild(buttonsDiv);
-
-                    crawlResultsDiv.appendChild(resultsHeaderDiv);
-
-                    const table = document.createElement('table');
-                    table.classList.add('table', 'is-bordered', 'is-fullwidth', 'is-hoverable');
-                    table.innerHTML = `
-                    <thead>
-                        <tr>
-                            <th>Broken Link</th>
-                            <th>Origin Page URL</th>
-                        </tr>
-                    </thead>
-                `;
-
-                    const tableBody = document.createElement('tbody');
-
-                    // TODO 
-                    brokenLinks.forEach(result => {
-                        const [URL, origin] = result;
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td><a href="${URL}" target="_blank">${URL}</a></td>
-                            <td><a href="${origin}" target="_blank">${origin}</a></td>
-                        `;
-
-                        tableBody.appendChild(row);
-                    });
-
-                    table.appendChild(tableBody);
-                    crawlResultsDiv.appendChild(table);
-
-                } else if (brokenLinks.length == 0) {
-                    crawlResultsDiv.innerHTML = '';
-
-                    const resultsDiv = document.createElement('h3');
-                    resultsDiv.textContent = 'No broken links found!';
-                    crawlResultsDiv.appendChild(resultsDiv);
-
-                } else if (data.status) {
-                    crawlResultsDiv.innerHTML = `<p>${data.status}</p>`;
-                }
+                checkTaskStatus(data["task_id"]);
+            })
+            .catch((error) => {
+                console.error("Error:", error); // Handle errors
             });
     });
 
+    function checkTaskStatus(task_id) {
+        console.log(task_id);
+        fetch("{% url 'broken_links_task_status' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}", // Ensure CSRF token is included
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                task_id: task_id,
+            }), // Include necessary data if any
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.status === "PENDING") {
+                    // Task is still processing, poll again after a delay
+                    console.log(
+                        "Task is still processing, checking again in 5 seconds...",
+                    );
+                    setTimeout(() => {
+                        checkTaskStatus(task_id);
+                    }, 5000); // Poll every 5 seconds
+                } else {
+                    // Task is complete, stop polling and handle the result
+                    console.log("Task completed, result:", data);
+
+                    const crawlResultsDiv = document.getElementById("crawlResults");
+
+                    brokenLinks = data.result[0].broken_links;
+                    requiresAccess = data.result[0].requires_access;
+                    // const output = data.output;
+
+                    if (brokenLinks.length > 0) {
+                        // Clears previous results
+                        crawlResultsDiv.innerHTML = "";
+
+                        const resultsHeaderDiv = document.createElement("div");
+                        resultsHeaderDiv.classList.add("table-header");
+
+                        const resultsTitle = document.createElement("h2");
+                        resultsTitle.id = "resultsTable";
+                        resultsTitle.classList.add("results");
+                        resultsTitle.textContent = "Results - Broken Links";
+                        resultsHeaderDiv.appendChild(resultsTitle);
+
+                        // create buttons div
+                        const buttonsDiv = document.createElement("div");
+                        buttonsDiv.classList.add("button-group");
+
+                        // Create an export button
+                        const exportButton = document.createElement("button");
+                        exportButton.id = "exportButton";
+                        exportButton.className = "button is-link";
+                        exportButton.textContent = "Export";
+                        exportButton.onclick = function () {
+                            document
+                                .getElementById("exportModal")
+                                .classList.add("is-active"); // Open modal
+                        };
+                        resultsHeaderDiv.appendChild(exportButton);
+
+                        crawlResultsDiv.appendChild(resultsHeaderDiv);
+
+                        const table = document.createElement("table");
+                        table.classList.add(
+                            "table",
+                            "is-bordered",
+                            "is-fullwidth",
+                            "is-hoverable",
+                        );
+                        table.innerHTML = `
+                            <thead>
+                                <tr>
+                                    <th>Broken Link</th>
+                                    <th>Origin Page URL</th>
+                                </tr>
+                            </thead>
+                        `;
+
+                        const tableBody = document.createElement("tbody");
+
+                        // TODO
+                        brokenLinks.forEach((result) => {
+                            const [URL, origin] = result;
+                            const row = document.createElement("tr");
+                            row.innerHTML = `
+                                    <td><a href="${URL}" target="_blank">${URL}</a></td>
+                                    <td><a href="${origin}" target="_blank">${origin}</a></td>
+                                `;
+
+                            tableBody.appendChild(row);
+                        });
+
+                        table.appendChild(tableBody);
+                        crawlResultsDiv.appendChild(table);
+                    } else if (brokenLinks.length == 0) {
+                        crawlResultsDiv.innerHTML = "";
+
+                        const resultsDiv = document.createElement("h3");
+                        resultsDiv.textContent = "No broken links found!";
+                        crawlResultsDiv.appendChild(resultsDiv);
+                    } else if (data.status) {
+                        crawlResultsDiv.innerHTML = `<p>${data.status}</p>`;
+                    }
+                }
+            })
+            .catch((error) => console.error("Error:", error));
+    }
+
     // Handle adding input fields for Crawl Form
-    const addCrawlInputBtn = document.getElementById('addCrawlInputBtn');
-    const crawlUrlInputContainer = document.getElementById('crawlUrlInputContainer');
+    const addCrawlInputBtn = document.getElementById("addCrawlInputBtn");
+    const crawlUrlInputContainer = document.getElementById(
+        "crawlUrlInputContainer",
+    );
 
-    addCrawlInputBtn.addEventListener('click', function () {
-        const newFieldDiv = document.createElement('div');
-        newFieldDiv.classList.add('control');
-        newFieldDiv.style.marginTop = '10px';
+    addCrawlInputBtn.addEventListener("click", function () {
+        const newFieldDiv = document.createElement("div");
+        newFieldDiv.classList.add("control");
+        newFieldDiv.style.marginTop = "10px";
 
-        const deleteBtn = document.createElement('button');
+        const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "X";
         deleteBtn.classList.add("delete-btn");
-        deleteBtn.addEventListener('click', () => {
+        deleteBtn.addEventListener("click", () => {
             newFieldDiv.remove();
-        })
+        });
 
         newFieldDiv.innerHTML = `
-        <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
-        `;
+            <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">
+            `;
         newFieldDiv.appendChild(deleteBtn);
         crawlUrlInputContainer.appendChild(newFieldDiv);
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const modal = document.getElementById("exportModal");
+        const closeButton = modal.querySelector(".delete");
+        const cancelButton = document.getElementById("cancelButton");
+        const confirmExportButton = document.getElementById("confirmExport");
+        const formatDescription = document.getElementById("formatDescription");
+        const exampleImage = document.getElementById("exampleImage");
+        const radios = document.querySelectorAll('input[name="exportFormat"]');
+
+        closeButton.onclick = function () {
+            resetModal();
+        };
+
+        cancelButton.onclick = function () {
+            resetModal();
+        };
+
+        window.onclick = function (event) {
+            if (event.target === modal) {
+                resetModal();
+            }
+        };
+
+        radios.forEach((radio) => {
+            radio.addEventListener("change", function () {
+                if (this.checked) {
+                    formatDescription.style.display = "block";
+                    exampleImage.style.display = "block";
+                    if (this.value === "pdf") {
+                        exampleImage.src =
+                            "{% static 'images/pdf_example.png' %}";
+                    } else if (this.value === "excel") {
+                        exampleImage.src =
+                            "{% static 'images/xlsx_example.png' %}";
+                    }
+                }
+            });
+        });
+
+        function resetModal() {
+            modal.classList.remove("is-active");
+            document
+                .querySelectorAll('input[name="exportFormat"]')
+                .forEach((radio) => (radio.checked = false));
+            document.getElementById("formatDescription").style.display = "none";
+            document.getElementById("exampleImage").style.display = "none";
+        }
+
+        confirmExportButton.addEventListener("click", function () {
+            const selectedRadio = document.querySelector(
+                'input[name="exportFormat"]:checked',
+            );
+            if (selectedRadio) {
+                const selectedFormat = selectedRadio.value;
+                exportResults(
+                    searchStrWebpages,
+                    brokenLinks,
+                    requiresAccess,
+                    selectedFormat,
+                    "broken_links",
+                );
+                resetModal();
+            } else {
+                console.error("No export format selected");
+            }
+        });
+
+        function exportResults(
+            searchResults,
+            brokenLinks,
+            accessRequired,
+            exportType,
+            searchType,
+        ) {
+            const requestBody = {
+                search_results: searchResults,
+                broken_links: brokenLinks,
+                access_required_links: accessRequired,
+                export_type: exportType,
+                search_type: searchType,
+            };
+
+            fetch("{% url 'download' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                body: JSON.stringify(requestBody),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    const filename = data.file_url.split("/").pop();
+                    window.location.href = `/download/${filename}/`;
+                })
+                .catch((error) => console.error("Error:", error));
+        }
     });
 </script>
 {% endblock %}

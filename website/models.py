@@ -45,8 +45,12 @@ class SearchResult(models.Model):
     searchquery = models.ForeignKey(
         SearchQuery, on_delete=models.CASCADE, related_name="results"
     )
-    url = models.CharField(max_length=255, default="")
-    url_to = models.CharField(max_length=255, null=True, blank=True)
+    url = models.CharField(
+        max_length=255, default=""
+    )  # working link (in the case of crawl)
+    url_to = models.CharField(
+        max_length=255, null=True, blank=True
+    )  # broken link (in the case of crawl)
     created_at = models.DateTimeField(auto_now_add=True)
     starting_link = models.CharField(max_length=255, null=True, blank=True)
     search_text = models.CharField(max_length=255, blank=True, null=True)

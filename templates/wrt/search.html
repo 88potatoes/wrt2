@@ -7,6 +7,117 @@
 <link rel="stylesheet" href="{% static 'css/search.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <!-- probably don't need to load in all the icons -->
+<style>
+    .is-loading {
+        position: relative;
+        color: transparent !important;
+        pointer-events: none;
+        display: inline-block;
+        width: 100%;  /* Ensures it stretches to the parent width */
+        height: 100%; /* Ensures it stretches to the parent height */
+    }
+
+    .is-loading::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 1em;
+        height: 1em;
+        border: 2px solid #dbdbdb;
+        border-radius: 50%;
+        border-right-color: transparent;
+        border-top-color: transparent;
+        animation: spinAround 500ms infinite linear;
+        transform: translate(-50%, -50%);
+    }
+
+    @keyframes spinAround {
+        from {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+        to {
+            transform: translate(-50%, -50%) rotate(360deg);
+        }
+    }
+
+    /* Center the loading spinner */
+    .is-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .radio-list {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .radio {
+        margin-right: 30px;
+        color: #000B34;
+    }
+
+    .radio:last-child {
+        margin-right: 0;
+    }
+
+    .modal {
+        border-radius: 10px;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .modal.is-active {
+        opacity: 1;
+    }
+
+    .modal-card {
+        background-color: #000B34;
+        border-radius: 10px;
+        max-width: 600px;
+        margin: auto;
+    }
+
+    .modal-card-title,
+    .modal-card-head,
+    .modal-card-foot,
+    .modal-card-body {
+        background-color: #000B34;
+        color: white;
+    }
+
+    .modal-card-body {
+        background-color: white;
+        color: #000B34;
+    }
+
+    .modal-card-foot .button {
+        margin-right: 10px;
+    }
+
+    .custom-export {
+        background-color: #ABC1A7;
+        color: #000B34;
+    }
+
+    .custom-export:hover {
+        background-color: #042085;
+        color: white;
+    }
+
+    .custom-cancel {
+        background-color: #D1E7DD;
+        color: #000B34;
+    }
+
+    .custom-cancel:hover {
+        background-color: #91142d;
+        color: white;
+    }
+</style>
+
 {% endblock %}
 
 {% block content %}
@@ -63,7 +174,7 @@
 
                 <div class="field">
                     <div class="control">
-                        <button class="button is-link" type="submit">Search</button>
+                        <button id="searchButton" class="button is-link" type="submit">Search</button>
                     </div>
             </form>
         </div>
@@ -75,18 +186,57 @@
             <!-- Results will be displayed here after search -->
         </div>
     </div>
+</div>
 
+<div id="exportModal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Select Export Format</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body has-text-centered">
+            <div class="radio-list">
+                <label class="radio">
+                    <input type="radio" name="exportFormat" value="pdf">
+                    Export to PDF
+                </label>
+                <label class="radio">
+                    <input type="radio" name="exportFormat" value="excel">
+                    Export to Excel
+                </label>
+            </div>
+            <p id="formatDescription" style="display:none; margin-top: 20px;">Your export will have this format:</p>
+            <img id="exampleImage" src="" alt="Export Format Example" style="display:none; max-width: 100%; margin-top: 20px;">
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button custom-export" id="confirmExport">Export</button>
+            <button class="button custom-cancel" id="cancelButton">Cancel</button>
+        </footer>
+    </div>
 </div>
-</div>
+
 {% endblock %}
 
 {% block script %}
 <script>
+    let searchStrWebpages = [];
+    let brokenLinks = [];
+    let requiresAccess = [];
+
     const searchForm = document.getElementById('searchForm');
     const searchResultsDiv = document.getElementById('searchResults');
+    const searchButton = document.getElementById('searchButton');
 
     searchForm.addEventListener('submit', function (event) {
         event.preventDefault(); // Prevent the default form submission
+
+        // Disable the search button
+        searchButton.disabled = true;
+        searchButton.classList.add('is-loading');
+        // Show a loading message
+        searchResultsDiv.innerHTML = '<p>Searching... This may take a few moments.</p>';
+
 
         const formData = new FormData(searchForm);
         const searchText = formData.get('search_text');
@@ -106,8 +256,9 @@
                 browser_info: browserInfo
             })
         })
-        .then(() => {
-            checkTaskStatus()
+        .then((res) => res.json())
+        .then((data) => {
+            checkTaskStatus(data["task_id"])
         })
         .catch(error => {
             console.error('Error:', error); // Handle errors
@@ -138,25 +289,27 @@
         searchUrlInputContainer.appendChild(newFieldDiv);
     });
 
-    function checkTaskStatus() {
-        fetch("{% url 'search_term' %}", {
+    function checkTaskStatus(task_id) {
+        console.log(task_id);
+        fetch("{% url 'search_term_task_status' %}", {
             method: 'POST',
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}',  // Ensure CSRF token is included
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({}),  // Include necessary data if any
+            body: JSON.stringify({
+                task_id: task_id
+            }),  // Include necessary data if any
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'processing' || data.status === 'task started') {
+            if (data.status === 'PENDING') {
                 // Task is still processing, poll again after a delay
                 console.log("Task is still processing, checking again in 5 seconds...");
-                setTimeout(checkTaskStatus, 5000);  // Poll every 5 seconds
+                setTimeout(() => {checkTaskStatus(task_id)}, 5000);  // Poll every 5 seconds
 
                 searchResultsDiv.innerHTML = '';
                 searchResultsDiv.innerHTML = `<p>Scraping in progress... Please wait.</p>`;
-                
             } else {
                 // Task is complete, stop polling and handle the result
                 console.log('Task completed, result:', data);
@@ -164,10 +317,10 @@
 
                 const searchResultsDiv = document.getElementById('searchResults');
 
-                const searchStrWebpages = data.search_str_webpages;
-                const brokenLinks = data.broken_links;
-                const requiresAccess = data.requires_access;
-                const output = data.output;
+                searchStrWebpages = data.result[0].search_str_webpages;
+                brokenLinks = data.result[0].broken_links;
+                requiresAccess = data.result[0].requires_access;
+                // const output = data.result[0].output;
 
                 if (searchStrWebpages.length > 0) {
                     // clears previous results
@@ -182,23 +335,15 @@
                     resultsTitle.textContent = 'Results - ' + searchStrWebpages.length + ' Strings Matched';
                     resultsHeaderDiv.appendChild(resultsTitle);
 
-                    // create buttons div
-                    const buttonsDiv = document.createElement('div');
-                    buttonsDiv.classList.add('button-group');
-
-                    // Create export buttons
-                    // !!!!!!! first parameter might not be correct
-                    const buttons = createExportButtons(searchStrWebpages, brokenLinks, requiresAccess, 'search_term');
-                    console.log("Search Results:", searchStrWebpages);
-                    console.log("Broken Links:", brokenLinks);
-                    console.log("Access Required Links:", requiresAccess);
-
-                    // Append buttons to the export buttons div
-                    buttonsDiv.appendChild(buttons[0]);
-                    buttonsDiv.appendChild(buttons[1]);
-                    console.log('Buttons added to the buttons div');
-
-                    resultsHeaderDiv.appendChild(buttonsDiv);
+                    // Create an export button
+                    const exportButton = document.createElement('button');
+                    exportButton.id = 'exportButton';
+                    exportButton.className = 'button is-link';
+                    exportButton.textContent = 'Export';
+                    exportButton.onclick = function() {
+                        document.getElementById("exportModal").classList.add("is-active");  // Open modal
+                    };
+                    resultsHeaderDiv.appendChild(exportButton);
 
                     searchResultsDiv.appendChild(resultsHeaderDiv);
 
@@ -248,10 +393,95 @@
 
                     }
                 }
+
+                // Re-enable the search button
+                searchButton.disabled = false;
+                searchButton.classList.remove('is-loading');
             }
         })
         .catch(error => console.error('Error:', error));
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById("exportModal");
+        const closeButton = modal.querySelector('.delete');
+        const cancelButton = document.getElementById("cancelButton");
+        const confirmExportButton = document.getElementById("confirmExport");
+        const formatDescription = document.getElementById("formatDescription");
+        const exampleImage = document.getElementById("exampleImage");
+        const radios = document.querySelectorAll('input[name="exportFormat"]');
+
+        closeButton.onclick = function() {
+            resetModal();
+        };
+
+        cancelButton.onclick = function() {
+            resetModal();
+        };
+
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                resetModal();
+            }
+        };
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    formatDescription.style.display = "block";
+                    exampleImage.style.display = "block";
+                    if (this.value === 'pdf') {
+                        exampleImage.src = "{% static 'images/pdf_example.png' %}";
+                    } else if (this.value === 'excel') {
+                        exampleImage.src = "{% static 'images/xlsx_example.png' %}";
+                    }
+                }
+            });
+        });
+
+        function resetModal() {
+            modal.classList.remove("is-active");
+            document.querySelectorAll('input[name="exportFormat"]').forEach(radio => radio.checked = false);
+            document.getElementById("formatDescription").style.display = "none";
+            document.getElementById("exampleImage").style.display = "none";
+        }
+
+        confirmExportButton.addEventListener('click', function() {
+            const selectedRadio = document.querySelector('input[name="exportFormat"]:checked');
+            if (selectedRadio) {
+                const selectedFormat = selectedRadio.value;
+                exportResults(searchStrWebpages, brokenLinks, requiresAccess, selectedFormat, 'search_term');
+                resetModal();
+            } else {
+                console.error('No export format selected');
+            }
+        });
+
+        function exportResults(searchResults, brokenLinks, accessRequired, exportType, searchType) {
+            const requestBody = {
+                search_results: searchResults,
+                broken_links: brokenLinks,
+                access_required_links: accessRequired,
+                export_type: exportType,
+                search_type: searchType
+            };
+
+            fetch("{% url 'download' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const filename = data.file_url.split('/').pop();
+                window.location.href = `/download/${filename}/`;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    });
 
 // Start polling after the user submits the search term
 </script>

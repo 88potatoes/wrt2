@@ -24,6 +24,8 @@ from celery import shared_task
 """
 ================================= Search APIS =================================
 """
+
+
 # Search Text String API
 @shared_task
 def find_text_string(request_data, from_website=False):  # used by the website app
@@ -55,8 +57,6 @@ def find_text_string(request_data, from_website=False):  # used by the website a
             if not from_website
             else (serializer.errors, 400)
         )
-
-    print("Started request")  # TODO remove eventually
 
 
 # Broken Links API
