@@ -138,43 +138,48 @@ def crawl_broken_links_view(request):
     else:
         # No existing task; create a new one
         print("Request body:", request.body)
-        queued_item = find_broken_links.delay(request.body, from_website=True)
+        body = json.loads(request.body)
+        queued_item = find_broken_links.delay(body, from_website=True)
         task_id = queued_item.id
         return JsonResponse({"status": "task started", "task_id": task_id}, status=202)
 
+@require_http_methods(["POST"])
+@login_required
+def broken_links_task_status(request):
+    body = json.loads(request.body)
+    task_id = body.get("task_id")
 
-# @require_http_methods(["GET", "POST"])
-# @login_required
-# def crawl_broken_links_view(request):
-#     r = REDIS_CLIENT
+    if not task_id:
+        return JsonResponse({"error": "No task_id provided"}, status=400)
 
-#     if request.method == "GET":
-#         return render(request, "wrt/brokenLinks.html")
-#     elif request.method == "POST":
-#         queued_item = find_broken_links.delay(
-#             json.loads(request.body), from_website=True
-#         )
-#         result = queued_item.get()
-#         print(result)
-#         data, status = result
+    result = AsyncResult(task_id)
+    print(result)
+    print(result.status)
+    return_data = {
+        "task_id": task_id,
+        "status": result.status,
+    }
 
-#         if status == 200:
-#             # TODO test that the writing works
-#             broken_links = data["broken_links"]
-#             # broken_links, requires_access, output = data
-#             # broken_links, requires_access, output = data
-#             print(data)
+    if result.status == "SUCCESS":
+        return_data["result"] = result.result  # Include the result if it's successful
 
-#             new_query = SearchQuery.objects.create(
-#                 user=request.user, type=SearchQuery.QueryType.CRAWL
-#             )
+        # Write to the database
+        broken_links = result.result[0].get("broken_links", [])
 
-#             for link in broken_links:
-#                 SearchResult.objects.create(searchquery=new_query, url=link)
+        # Create a new SearchQuery
+        new_search = SearchQuery.objects.create(
+            user=request.user, type=SearchQuery.QueryType.CRAWL
+        )
 
-#             return JsonResponse(data, status=200, safe=False)  # TODO make it safe
-#         elif status == 400:  # return the errors
-#             return JsonResponse(data, status=400)
+        # Create SearchResult objects for each broken link
+        for broken_url, origin_url in broken_links:
+            SearchResult.objects.create(
+                searchquery=new_search,
+                url=origin_url,
+                url_to=broken_url
+            )
+
+    return JsonResponse(return_data)
 
 
 @require_http_methods(["GET"])

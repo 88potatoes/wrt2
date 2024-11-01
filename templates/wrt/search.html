@@ -49,9 +49,9 @@
     }
 
     .radio-list {
-        display: flex; 
-        justify-content: center; 
-        align-items: center; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .radio {
@@ -63,20 +63,20 @@
         margin-right: 0;
     }
 
-    .modal { 
+    .modal {
         border-radius: 10px;
-        opacity: 0; 
+        opacity: 0;
         transition: opacity 0.3s ease-in-out;
     }
 
     .modal.is-active {
-        opacity: 1; 
+        opacity: 1;
     }
 
     .modal-card {
         background-color: #000B34;
         border-radius: 10px;
-        max-width: 600px; 
+        max-width: 600px;
         margin: auto;
     }
 
@@ -84,36 +84,36 @@
     .modal-card-head,
     .modal-card-foot,
     .modal-card-body {
-        background-color: #000B34; 
+        background-color: #000B34;
         color: white;
     }
 
     .modal-card-body {
-        background-color: white; 
+        background-color: white;
         color: #000B34;
     }
 
     .modal-card-foot .button {
-        margin-right: 10px; 
+        margin-right: 10px;
     }
 
     .custom-export {
         background-color: #ABC1A7;
-        color: #000B34; 
+        color: #000B34;
     }
 
     .custom-export:hover {
         background-color: #042085;
-        color: white; 
+        color: white;
     }
 
     .custom-cancel {
-        background-color: #D1E7DD; 
-        color: #000B34; 
+        background-color: #D1E7DD;
+        color: #000B34;
     }
 
     .custom-cancel:hover {
-        background-color: #91142d; 
+        background-color: #91142d;
         color: white;
     }
 </style>
@@ -310,7 +310,6 @@
 
                 searchResultsDiv.innerHTML = '';
                 searchResultsDiv.innerHTML = `<p>Scraping in progress... Please wait.</p>`;
-                
             } else {
                 // Task is complete, stop polling and handle the result
                 console.log('Task completed, result:', data);
@@ -405,7 +404,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         const modal = document.getElementById("exportModal");
-        const closeButton = modal.querySelector('.delete'); 
+        const closeButton = modal.querySelector('.delete');
         const cancelButton = document.getElementById("cancelButton");
         const confirmExportButton = document.getElementById("confirmExport");
         const formatDescription = document.getElementById("formatDescription");
@@ -413,11 +412,11 @@
         const radios = document.querySelectorAll('input[name="exportFormat"]');
 
         closeButton.onclick = function() {
-            resetModal(); 
+            resetModal();
         };
-        
+
         cancelButton.onclick = function() {
-            resetModal(); 
+            resetModal();
         };
 
         window.onclick = function(event) {
@@ -432,7 +431,7 @@
                     formatDescription.style.display = "block";
                     exampleImage.style.display = "block";
                     if (this.value === 'pdf') {
-                        exampleImage.src = "{% static 'images/pdf_example.png' %}"; 
+                        exampleImage.src = "{% static 'images/pdf_example.png' %}";
                     } else if (this.value === 'excel') {
                         exampleImage.src = "{% static 'images/xlsx_example.png' %}";
                     }
@@ -441,7 +440,7 @@
         });
 
         function resetModal() {
-            modal.classList.remove("is-active"); 
+            modal.classList.remove("is-active");
             document.querySelectorAll('input[name="exportFormat"]').forEach(radio => radio.checked = false);
             document.getElementById("formatDescription").style.display = "none";
             document.getElementById("exampleImage").style.display = "none";

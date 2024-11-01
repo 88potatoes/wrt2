@@ -1,5 +1,4 @@
-{% extends "base.html" %} {% load static %} {% block title %} Search {%
-endblock%} {% block head %}
+{% extends "base.html" %} {% load static %} {% block title %} Search {% endblock %} {% block head %}
 <link rel="stylesheet" href="{% static 'css/search.css' %}" />
 <link
     rel="stylesheet"
@@ -191,87 +190,121 @@ endblock%} {% block head %}
         })
             .then((response) => response.json())
             .then((data) => {
-                console.log("data: " + data);
-                const crawlResultsDiv = document.getElementById("crawlResults");
-
-                brokenLinks = data.broken_links;
-                requiresAccess = data.requires_access;
-                // const output = data.output;
-
-                if (brokenLinks.length > 0) {
-                    // Clears previous results
-                    crawlResultsDiv.innerHTML = "";
-
-                    const resultsHeaderDiv = document.createElement("div");
-                    resultsHeaderDiv.classList.add("table-header");
-
-                    const resultsTitle = document.createElement("h2");
-                    resultsTitle.id = "resultsTable";
-                    resultsTitle.classList.add("results");
-                    resultsTitle.textContent = "Results - Broken Links";
-                    resultsHeaderDiv.appendChild(resultsTitle);
-
-                    // create buttons div
-                    const buttonsDiv = document.createElement("div");
-                    buttonsDiv.classList.add("button-group");
-
-                    // Create an export button
-                    const exportButton = document.createElement("button");
-                    exportButton.id = "exportButton";
-                    exportButton.className = "button is-link";
-                    exportButton.textContent = "Export";
-                    exportButton.onclick = function () {
-                        document
-                            .getElementById("exportModal")
-                            .classList.add("is-active"); // Open modal
-                    };
-                    resultsHeaderDiv.appendChild(exportButton);
-
-                    crawlResultsDiv.appendChild(resultsHeaderDiv);
-
-                    const table = document.createElement("table");
-                    table.classList.add(
-                        "table",
-                        "is-bordered",
-                        "is-fullwidth",
-                        "is-hoverable",
-                    );
-                    table.innerHTML = `
-                        <thead>
-                            <tr>
-                                <th>Broken Link</th>
-                                <th>Origin Page URL</th>
-                            </tr>
-                        </thead>
-                    `;
-
-                    const tableBody = document.createElement("tbody");
-
-                    // TODO
-                    brokenLinks.forEach((result) => {
-                        const [URL, origin] = result;
-                        const row = document.createElement("tr");
-                        row.innerHTML = `
-                                <td><a href="${URL}" target="_blank">${URL}</a></td>
-                                <td><a href="${origin}" target="_blank">${origin}</a></td>
-                            `;
-
-                        tableBody.appendChild(row);
-                    });
-
-                    table.appendChild(tableBody);
-                    crawlResultsDiv.appendChild(table);
-                } else if (brokenLinks.length == 0) {
-                    crawlResultsDiv.innerHTML = "";
-
-                    const resultsDiv = document.createElement("h3");
-                    resultsDiv.textContent = "No broken links found!";
-                    crawlResultsDiv.appendChild(resultsDiv);
-                } else if (data.status) {
-                    crawlResultsDiv.innerHTML = `<p>${data.status}</p>`;
-                }
+                checkTaskStatus(data["task_id"]);
+            })
+            .catch((error) => {
+                console.error("Error:", error); // Handle errors
             });
     });
+
+    function checkTaskStatus(task_id) {
+        console.log(task_id);
+        fetch("{% url 'broken_links_task_status' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}", // Ensure CSRF token is included
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                task_id: task_id,
+            }), // Include necessary data if any
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.status === "PENDING") {
+                    // Task is still processing, poll again after a delay
+                    console.log(
+                        "Task is still processing, checking again in 5 seconds...",
+                    );
+                    setTimeout(() => {
+                        checkTaskStatus(task_id);
+                    }, 5000); // Poll every 5 seconds
+                } else {
+                    // Task is complete, stop polling and handle the result
+                    console.log("Task completed, result:", data);
+
+                    const crawlResultsDiv = document.getElementById("crawlResults");
+
+                    brokenLinks = data.result[0].broken_links;
+                    requiresAccess = data.result[0].requires_access;
+                    // const output = data.output;
+
+                    if (brokenLinks.length > 0) {
+                        // Clears previous results
+                        crawlResultsDiv.innerHTML = "";
+
+                        const resultsHeaderDiv = document.createElement("div");
+                        resultsHeaderDiv.classList.add("table-header");
+
+                        const resultsTitle = document.createElement("h2");
+                        resultsTitle.id = "resultsTable";
+                        resultsTitle.classList.add("results");
+                        resultsTitle.textContent = "Results - Broken Links";
+                        resultsHeaderDiv.appendChild(resultsTitle);
+
+                        // create buttons div
+                        const buttonsDiv = document.createElement("div");
+                        buttonsDiv.classList.add("button-group");
+
+                        // Create an export button
+                        const exportButton = document.createElement("button");
+                        exportButton.id = "exportButton";
+                        exportButton.className = "button is-link";
+                        exportButton.textContent = "Export";
+                        exportButton.onclick = function () {
+                            document
+                                .getElementById("exportModal")
+                                .classList.add("is-active"); // Open modal
+                        };
+                        resultsHeaderDiv.appendChild(exportButton);
+
+                        crawlResultsDiv.appendChild(resultsHeaderDiv);
+
+                        const table = document.createElement("table");
+                        table.classList.add(
+                            "table",
+                            "is-bordered",
+                            "is-fullwidth",
+                            "is-hoverable",
+                        );
+                        table.innerHTML = `
+                            <thead>
+                                <tr>
+                                    <th>Broken Link</th>
+                                    <th>Origin Page URL</th>
+                                </tr>
+                            </thead>
+                        `;
+
+                        const tableBody = document.createElement("tbody");
+
+                        // TODO
+                        brokenLinks.forEach((result) => {
+                            const [URL, origin] = result;
+                            const row = document.createElement("tr");
+                            row.innerHTML = `
+                                    <td><a href="${URL}" target="_blank">${URL}</a></td>
+                                    <td><a href="${origin}" target="_blank">${origin}</a></td>
+                                `;
+
+                            tableBody.appendChild(row);
+                        });
+
+                        table.appendChild(tableBody);
+                        crawlResultsDiv.appendChild(table);
+                    } else if (brokenLinks.length == 0) {
+                        crawlResultsDiv.innerHTML = "";
+
+                        const resultsDiv = document.createElement("h3");
+                        resultsDiv.textContent = "No broken links found!";
+                        crawlResultsDiv.appendChild(resultsDiv);
+                    } else if (data.status) {
+                        crawlResultsDiv.innerHTML = `<p>${data.status}</p>`;
+                    }
+                }
+            })
+            .catch((error) => console.error("Error:", error));
+    }
 
     // Handle adding input fields for Crawl Form
     const addCrawlInputBtn = document.getElementById("addCrawlInputBtn");

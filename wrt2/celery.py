@@ -20,7 +20,7 @@ app.conf.update(
     broker_url=broker_url,
     result_backend=result_backend,
     broker_transport_options={"max_connections": 1},
-    result_backend_transport_options={"max_connections": 2},
+    result_backend_transport_options={"max_connections": 1},
     redis_max_connections=2,
     worker_concurrency=1,
     worker_prefetch_multiplier=1,
