@@ -1,15 +1,54 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block title %} Search {% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="{% static 'css/search.css' %}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% extends "base.html" %} {% load static %} {% block title %} Search {% endblock
+%} {% block head %}
+<link rel="stylesheet" href="{% static 'css/search.css' %}" />
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+/>
 <!-- probably don't need to load in all the icons -->
-{% endblock %}
-{% block content %}
-{% include "partials/navbar.html" %}
+
+<style>
+    .is-loading {
+        position: relative;
+        color: transparent !important;
+        pointer-events: none;
+        display: inline-block;
+        width: 100%; /* Ensures it stretches to the parent width */
+        height: 100%; /* Ensures it stretches to the parent height */
+    }
+
+    .is-loading::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 1em;
+        height: 1em;
+        border: 2px solid #dbdbdb;
+        border-radius: 50%;
+        border-right-color: transparent;
+        border-top-color: transparent;
+        animation: spinAround 500ms infinite linear;
+        transform: translate(-50%, -50%);
+    }
+
+    @keyframes spinAround {
+        from {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+        to {
+            transform: translate(-50%, -50%) rotate(360deg);
+        }
+    }
+
+    /* Center the loading spinner */
+    .is-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+{% endblock %} {% block content %} {% include "partials/navbar.html" %}
 
 <div id="brokenLinksTab" class="tab-content">
     <h2 class="tab-title">Broken Link Search</h2>
@@ -17,37 +56,61 @@
         <div class="column is-8">
             <form id="crawlForm">
                 {% csrf_token %}
-                <input type="hidden" name="form_type" value="search_term_form">
+                <input
+                    type="hidden"
+                    name="form_type"
+                    value="search_term_form"
+                />
 
                 <div class="field">
-                    <label class="label">Root URLs
+                    <label class="label"
+                        >Root URLs
                         <span class="icon has-tooltip" id="tooltipIcon3">
                             <i class="fas fa-info-circle"></i>
-                            <div class="tooltip">This tool scans a website for broken links and pages that require
-                                login access, like those using Okta. It checks the seed URLs and all the
+                            <div class="tooltip">
+                                This tool scans a website for broken links and
+                                pages that require login access, like those
+                                using Okta. It checks the seed URLs and all the
                                 internal links with the same prefix URL.
                             </div>
                         </span>
                     </label>
                     <div id="crawlUrlInputContainer">
                         <div class="control">
-                            <input class="input" type="text" name="starting_links[]"
-                                placeholder="Enter a URL defining the search range..." required>
+                            <input
+                                class="input"
+                                type="text"
+                                name="starting_links[]"
+                                placeholder="Enter a URL defining the search range..."
+                                required
+                            />
                         </div>
                     </div>
                     <div>
-                        <button id="addCrawlInputBtn" type="button" class="button is-link is-light"
-                            style="margin-top: 10px;">Add URL</button>
+                        <button
+                            id="addCrawlInputBtn"
+                            type="button"
+                            class="button is-link is-light"
+                            style="margin-top: 10px"
+                        >
+                            Add URL
+                        </button>
                     </div>
                     <div class="field"></div>
                     <div class="control">
-                        <button class="button is-link" type="submit">Search</button>
+                        <button class="button is-link" type="submit">
+                            Search
+                        </button>
                     </div>
                 </div>
             </form>
         </div>
 
-        <div id="searchResultsContainer" class="container" style="margin-top: 20px;">
+        <div
+            id="searchResultsContainer"
+            class="container"
+            style="margin-top: 20px"
+        >
             <div id="crawlResults">
                 <!-- Results will be displayed here after search -->
             </div>
@@ -55,19 +118,16 @@
     </div>
 </div>
 
-{% endblock %}
-
-{% block script %}
+{% endblock %} {% block script %}
 <script>
-
     // Handle CrawlForm submission
-    const crawlForm = document.getElementById('crawlForm');
-    const crawlResultsDiv = document.getElementById('crawlResults');
+    const crawlForm = document.getElementById("crawlForm");
+    const crawlResultsDiv = document.getElementById("crawlResults");
 
-    crawlForm.addEventListener('submit', function (event) {
+    crawlForm.addEventListener("submit", function (event) {
         event.preventDefault();
         const formData = new FormData(crawlForm);
-        const starting_links = formData.getAll('starting_links[]');
+        const starting_links = formData.getAll("starting_links[]");
         const browser_info = navigator.userAgent;
 
         crawlResultsDiv.innerHTML = `<p>Scraping in progress... Please wait.</p>`;
@@ -78,19 +138,18 @@
         fetch("{% url 'crawl_broken_links' %}", {
             method: "POST",
             headers: {
-                'Content-Type': "application/json",
-                'X-CSRFToken': '{{ csrf_token }}'
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
             },
             body: JSON.stringify({
                 starting_links,
-                browser_info
-            })
+                browser_info,
+            }),
         })
-
-            .then(response => response.json())
+            .then((response) => response.json())
             .then((data) => {
                 console.log("data: " + data);
-                const crawlResultsDiv = document.getElementById('crawlResults');
+                const crawlResultsDiv = document.getElementById("crawlResults");
 
                 const searchStrWebpages = data.search_str_webpages;
                 const brokenLinks = data.broken_links;
@@ -99,23 +158,28 @@
 
                 if (brokenLinks.length > 0) {
                     // Clears previous results
-                    crawlResultsDiv.innerHTML = '';
+                    crawlResultsDiv.innerHTML = "";
 
-                    const resultsHeaderDiv = document.createElement('div');
-                    resultsHeaderDiv.classList.add('table-header');
+                    const resultsHeaderDiv = document.createElement("div");
+                    resultsHeaderDiv.classList.add("table-header");
 
-                    const resultsTitle = document.createElement('h2');
-                    resultsTitle.id = 'resultsTable'
-                    resultsTitle.classList.add('results');
-                    resultsTitle.textContent = 'Results - Broken Links';
+                    const resultsTitle = document.createElement("h2");
+                    resultsTitle.id = "resultsTable";
+                    resultsTitle.classList.add("results");
+                    resultsTitle.textContent = "Results - Broken Links";
                     resultsHeaderDiv.appendChild(resultsTitle);
 
                     // create buttons div
-                    const buttonsDiv = document.createElement('div');
-                    buttonsDiv.classList.add('button-group');
+                    const buttonsDiv = document.createElement("div");
+                    buttonsDiv.classList.add("button-group");
 
                     // Create export buttons
-                    const buttons = createExportButtons(searchStrWebpages, brokenLinks, requiresAccess, 'broken_links');
+                    const buttons = createExportButtons(
+                        searchStrWebpages,
+                        brokenLinks,
+                        requiresAccess,
+                        "broken_links",
+                    );
                     console.log("Search Results:", searchStrWebpages);
                     console.log("Broken Links:", brokenLinks);
                     console.log("Access Required Links:", requiresAccess);
@@ -123,14 +187,19 @@
                     // Append buttons to the export buttons div
                     buttonsDiv.appendChild(buttons[0]);
                     buttonsDiv.appendChild(buttons[1]);
-                    console.log('Buttons added to the buttons div');
+                    console.log("Buttons added to the buttons div");
 
                     resultsHeaderDiv.appendChild(buttonsDiv);
 
                     crawlResultsDiv.appendChild(resultsHeaderDiv);
 
-                    const table = document.createElement('table');
-                    table.classList.add('table', 'is-bordered', 'is-fullwidth', 'is-hoverable');
+                    const table = document.createElement("table");
+                    table.classList.add(
+                        "table",
+                        "is-bordered",
+                        "is-fullwidth",
+                        "is-hoverable",
+                    );
                     table.innerHTML = `
                     <thead>
                         <tr>
@@ -140,12 +209,12 @@
                     </thead>
                 `;
 
-                    const tableBody = document.createElement('tbody');
+                    const tableBody = document.createElement("tbody");
 
-                    // TODO 
-                    brokenLinks.forEach(result => {
+                    // TODO
+                    brokenLinks.forEach((result) => {
                         const [URL, origin] = result;
-                        const row = document.createElement('tr');
+                        const row = document.createElement("tr");
                         row.innerHTML = `
                             <td><a href="${URL}" target="_blank">${URL}</a></td>
                             <td><a href="${origin}" target="_blank">${origin}</a></td>
@@ -156,14 +225,12 @@
 
                     table.appendChild(tableBody);
                     crawlResultsDiv.appendChild(table);
-
                 } else if (brokenLinks.length == 0) {
-                    crawlResultsDiv.innerHTML = '';
+                    crawlResultsDiv.innerHTML = "";
 
-                    const resultsDiv = document.createElement('h3');
-                    resultsDiv.textContent = 'No broken links found!';
+                    const resultsDiv = document.createElement("h3");
+                    resultsDiv.textContent = "No broken links found!";
                     crawlResultsDiv.appendChild(resultsDiv);
-
                 } else if (data.status) {
                     crawlResultsDiv.innerHTML = `<p>${data.status}</p>`;
                 }
@@ -171,20 +238,22 @@
     });
 
     // Handle adding input fields for Crawl Form
-    const addCrawlInputBtn = document.getElementById('addCrawlInputBtn');
-    const crawlUrlInputContainer = document.getElementById('crawlUrlInputContainer');
+    const addCrawlInputBtn = document.getElementById("addCrawlInputBtn");
+    const crawlUrlInputContainer = document.getElementById(
+        "crawlUrlInputContainer",
+    );
 
-    addCrawlInputBtn.addEventListener('click', function () {
-        const newFieldDiv = document.createElement('div');
-        newFieldDiv.classList.add('control');
-        newFieldDiv.style.marginTop = '10px';
+    addCrawlInputBtn.addEventListener("click", function () {
+        const newFieldDiv = document.createElement("div");
+        newFieldDiv.classList.add("control");
+        newFieldDiv.style.marginTop = "10px";
 
-        const deleteBtn = document.createElement('button');
+        const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "X";
         deleteBtn.classList.add("delete-btn");
-        deleteBtn.addEventListener('click', () => {
+        deleteBtn.addEventListener("click", () => {
             newFieldDiv.remove();
-        })
+        });
 
         newFieldDiv.innerHTML = `
         <input class="input" type="text" name="starting_links[]" placeholder="Enter a URL defining the search range...">

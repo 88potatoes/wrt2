@@ -130,39 +130,50 @@ def search_term_task_status(request):
 #         elif status == 400:  # return the errors
 #             return JsonResponse(data, status=400)
 
-
 @require_http_methods(["GET", "POST"])
 @login_required
 def crawl_broken_links_view(request):
-    r = REDIS_CLIENT
-
     if request.method == "GET":
         return render(request, "wrt/brokenLinks.html")
-    elif request.method == "POST":
-        queued_item = find_broken_links.delay(
-            json.loads(request.body), from_website=True
-        )
-        result = queued_item.get()
-        print(result)
-        data, status = result
+    else:
+        # No existing task; create a new one
+        print("Request body:", request.body)
+        queued_item = find_broken_links.delay(request.body, from_website=True)
+        task_id = queued_item.id
+        return JsonResponse({"status": "task started", "task_id": task_id}, status=202)
 
-        if status == 200:
-            # TODO test that the writing works
-            broken_links = data["broken_links"]
-            # broken_links, requires_access, output = data
-            # broken_links, requires_access, output = data
-            print(data)
+# @require_http_methods(["GET", "POST"])
+# @login_required
+# def crawl_broken_links_view(request):
+#     r = REDIS_CLIENT
 
-            new_query = SearchQuery.objects.create(
-                user=request.user, type=SearchQuery.QueryType.CRAWL
-            )
+#     if request.method == "GET":
+#         return render(request, "wrt/brokenLinks.html")
+#     elif request.method == "POST":
+#         queued_item = find_broken_links.delay(
+#             json.loads(request.body), from_website=True
+#         )
+#         result = queued_item.get()
+#         print(result)
+#         data, status = result
 
-            for link in broken_links:
-                SearchResult.objects.create(searchquery=new_query, url=link)
+#         if status == 200:
+#             # TODO test that the writing works
+#             broken_links = data["broken_links"]
+#             # broken_links, requires_access, output = data
+#             # broken_links, requires_access, output = data
+#             print(data)
 
-            return JsonResponse(data, status=200, safe=False)  # TODO make it safe
-        elif status == 400:  # return the errors
-            return JsonResponse(data, status=400)
+#             new_query = SearchQuery.objects.create(
+#                 user=request.user, type=SearchQuery.QueryType.CRAWL
+#             )
+
+#             for link in broken_links:
+#                 SearchResult.objects.create(searchquery=new_query, url=link)
+
+#             return JsonResponse(data, status=200, safe=False)  # TODO make it safe
+#         elif status == 400:  # return the errors
+#             return JsonResponse(data, status=400)
 
 
 @require_http_methods(["GET"])
