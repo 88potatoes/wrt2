@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth import authenticate, login, logout
 
-from api.serializers import ExportResultsSerializer
+from api.serializers import SearchTermExportSerializer, BrokenLinkExportSerializer
 from api.utils.export import export_to_excel, export_to_pdf
 from api.views import find_broken_links, find_text_string
 from django.core.paginator import Paginator
@@ -193,7 +193,15 @@ def logout_view(request):
 @login_required
 def download(request):
     print(request.body)
-    serializer = ExportResultsSerializer(data=json.loads(request.body))
+    request_data = json.loads(request.body)
+    search_type = request_data.get("search_type")
+
+    if search_type == "search_term":
+        serializer = SearchTermExportSerializer(data=request_data)
+    elif search_type == "broken_links":
+        serializer = BrokenLinkExportSerializer(data=request_data)
+    else:
+        return HttpResponse("Invalid search type", status=400)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 

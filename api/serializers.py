@@ -40,7 +40,7 @@ def validate_browser_info(value):
 
 
 def validate_export_type(value):
-    allowed_export_types = ["csv", "pdf", "excel"]
+    allowed_export_types = ["pdf", "excel"]
     if not any(export_types in value.lower() for export_types in allowed_export_types):
         raise serializers.ValidationError(f"Unsupported export type detected: {value}")
     return value
@@ -72,7 +72,7 @@ class BrokenLinksSerializer(BaseSerializer):
     pass
 
 
-class ExportResultsSerializer(serializers.Serializer):
+class SearchTermExportSerializer(serializers.Serializer):
     search_results = serializers.ListField(
         child=serializers.ListField(child=serializers.CharField(max_length=255)),
         required=True,
@@ -82,7 +82,7 @@ class ExportResultsSerializer(serializers.Serializer):
         child=serializers.URLField(), required=True
     )
     export_type = serializers.ChoiceField(
-        choices=["pdf", "excel", "csv"], required=True
+        choices=["pdf", "excel"], required=True
     )
     search_type = serializers.CharField(max_length=50, required=True)
 
@@ -97,7 +97,45 @@ class ExportResultsSerializer(serializers.Serializer):
         return validate_export_type(value)
     
     def validate_search_type(self, value):
-        valid_search_types = ["search_term", "broken_links"]
-        if value not in valid_search_types:
-            raise serializers.ValidationError("Invalid search type provided.")
+        if value != "search_term":
+            raise serializers.ValidationError("Invalid search type for broken links export.")
+        return value
+    
+class BrokenLinkExportSerializer(serializers.Serializer):
+    search_results = serializers.ListField(
+        child=serializers.ListField(child=serializers.CharField(max_length=255)),
+        required=True,
+    )
+    broken_links = serializers.ListField(
+        child=serializers.ListField(child=serializers.URLField()),  # Nested URLField for URL pairs
+        required=True
+    )
+    access_required_links = serializers.ListField(
+        child=serializers.URLField(), required=True
+    )
+    export_type = serializers.ChoiceField(
+        choices=["pdf", "excel"], required=True
+    )
+    search_type = serializers.CharField(max_length=50, required=True)
+
+    def validate_search_results(self, value):
+        if not all(isinstance(item, list) and len(item) == 2 for item in value):
+            raise serializers.ValidationError(
+                "Each search result must be a list containing two elements: search term and found URL."
+            )
+        return value
+
+    def validate_broken_links(self, value):
+        if not all(isinstance(link_pair, list) and len(link_pair) == 2 for link_pair in value):
+            raise serializers.ValidationError(
+                "Each broken link must be a list containing two URLs: the broken link and its origin page."
+            )
+        return value
+
+    def validate_export_type(self, value):
+        return validate_export_type(value)
+    
+    def validate_search_type(self, value):
+        if value != "broken_links":
+            raise serializers.ValidationError("Invalid search type for broken links export.")
         return value
