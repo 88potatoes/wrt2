@@ -307,16 +307,21 @@
             if (selectedRadio) {
                 const selectedFormat = selectedRadio.value;
 
-                const searchResults = {{ urls_list|safe }};
+                let searchResults = [];
+                let brokenLinks = [];
                 const accessRequired = [];
-                const brokenLinks = [];
                 let searchType = "";
 
                 {% if query_type == 'Search' %}
+                    searchResults = {{ urls_list|safe }};
                     searchType = 'search_term';
-                {% else %}
-                    searchType = 'other_type';
+                {% elif query_type == 'Crawl' %}
+                    brokenLinks = {{ urls_list|safe }};
+                    searchType = 'broken_links';
                 {% endif %}
+
+                console.log(searchType);
+                console.log(searchResults);
 
                 exportResults(searchResults, brokenLinks, accessRequired, selectedFormat, searchType);
                 resetModal();

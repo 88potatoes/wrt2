@@ -38,13 +38,19 @@ def export_to_pdf(queried_pages, broken_links, requires_access, file_path, searc
         add_search_term_section(pdf, queried_pages)
     
     pdf.ln(10)
+    pdf.set_font("Times", "B", 16)
     pdf.cell(190, 10, "Broken Links", ln=True, align="C")
-    if search_type == "search_term":
-        add_single_column_broken_links(pdf, broken_links)
+    if (broken_links):
+        if search_type == "search_term":
+            add_single_column_broken_links(pdf, broken_links)
+        else:
+            add_two_column_broken_links(pdf, broken_links)
     else:
-        add_two_column_broken_links(pdf, broken_links)
+        pdf.set_font("Times", "", 12)
+        pdf.cell(190, 10, "No broken links reached.", ln=True, align="C")
 
     pdf.ln(10)
+    pdf.set_font("Times", "B", 16)
     pdf.cell(190, 10, "Access Required Links", ln=True, align="C")
     add_access_required_section(pdf, requires_access)
 

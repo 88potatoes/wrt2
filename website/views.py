@@ -198,8 +198,10 @@ def download(request):
 
     if search_type == "search_term":
         serializer = SearchTermExportSerializer(data=request_data)
+        file_prefix = "scrape"
     elif search_type == "broken_links":
         serializer = BrokenLinkExportSerializer(data=request_data)
+        file_prefix = "crawl"
     else:
         return HttpResponse("Invalid search type", status=400)
 
@@ -226,7 +228,7 @@ def download(request):
 
         # Export PDF file
         if export_type == "pdf":
-            pdf_file_path = os.path.join(temp_dir, f"scrape_results_{timestamp}.pdf")
+            pdf_file_path = os.path.join(temp_dir, f"{file_prefix}_results_{timestamp}.pdf")
             export_to_pdf(
                 search_results,
                 broken_links,
@@ -234,11 +236,11 @@ def download(request):
                 pdf_file_path,
                 search_type,
             )
-            file_url = f"/temp/scrape_results_{timestamp}.pdf"
+            file_url = f"/temp/{file_prefix}_results_{timestamp}.pdf"
 
         # Export Excel file
         elif export_type == "excel":
-            excel_file_path = os.path.join(temp_dir, f"scrape_results_{timestamp}.xlsx")
+            excel_file_path = os.path.join(temp_dir, f"{file_prefix}_results_{timestamp}.xlsx")
             export_to_excel(
                 search_results,
                 broken_links,
@@ -246,7 +248,7 @@ def download(request):
                 excel_file_path,
                 search_type,
             )
-            file_url = f"/temp/scrape_results_{timestamp}.xlsx"
+            file_url = f"/temp/{file_prefix}_results_{timestamp}.xlsx"
 
         return JsonResponse(
             {"message": "Export successful", "file_url": file_url}, status=200
@@ -311,9 +313,12 @@ def query_results_view(request, query_id):
     )  # Using the related_name defined in the model
     search_terms = list(set(result.search_text for result in results))
 
-    urls_list = [[result.search_text, result.url] for result in results]
-
     query_type = search_query.type
+
+    if query_type == "Search":
+        urls_list = [[result.search_text, result.url] for result in results]
+    elif query_type == "Crawl":
+        urls_list = [[result.url_to, result.url] for result in results] 
 
     context = {
         "search_query": search_query,
