@@ -12,8 +12,8 @@ from django.http import (
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth import authenticate, login, logout
-
+from django.contrib.auth import logout
+from django.contrib.auth.views import LoginView
 from api.serializers import SearchTermExportSerializer, BrokenLinkExportSerializer
 from api.utils.export import export_to_excel, export_to_pdf
 from api.views import find_broken_links, find_text_string
@@ -152,42 +152,20 @@ def history(request):
 def test_view(request):
     return HttpResponse(f"Hello {request.user.username}, you are authenticated.")
 
-
-def render_login(request):
-    return render(request, "registration/login.html")
-
-
 @require_http_methods(["GET"])
 def create_user_view(request):
     return render(request, "wrt/createUser.html")
 
-
-def login_view(request):  # TODO don't know if it's necessary so look at removing?
-    if request.user.is_authenticated:
-        return JsonResponse(
-            {"message": "Already logged in, redirecting to main site"}, status=200
-        )
-
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-
-        # Authenticate the user
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            # Log the user in (this creates a session)
-            login(request, user)
-            return JsonResponse({"message": "Login successful"}, status=200)
-        else:
-            return JsonResponse({"error": "Invalid credentials"}, status=400)
-
-    return JsonResponse({"error": "Invalid request method"}, status=405)
-
+class RedirectIfAuthenticatedLoginView(LoginView):
+    def dispatch(self, request, *args, **kwargs):
+        # Redirect if the user is already authenticated
+        if request.user.is_authenticated:
+            return redirect('search_term') 
+        return super().dispatch(request, *args, **kwargs)
 
 def logout_view(request):
     logout(request)
     return redirect("/")
-
 
 @require_http_methods(["POST"])
 @login_required
