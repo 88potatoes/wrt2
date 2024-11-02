@@ -307,16 +307,21 @@
             if (selectedRadio) {
                 const selectedFormat = selectedRadio.value;
 
-                const searchResults = {{ urls_list|safe }};
+                let searchResults = [];
+                let brokenLinks = [];
                 const accessRequired = [];
-                const brokenLinks = [];
                 let searchType = "";
 
                 {% if query_type == 'Search' %}
+                    searchResults = {{ urls_list|safe }};
                     searchType = 'search_term';
-                {% else %}
-                    searchType = 'other_type';
+                {% elif query_type == 'Crawl' %}
+                    brokenLinks = {{ urls_list|safe }};
+                    searchType = 'broken_links';
                 {% endif %}
+
+                console.log(searchType);
+                console.log(searchResults);
 
                 exportResults(searchResults, brokenLinks, accessRequired, selectedFormat, searchType);
                 resetModal();
@@ -343,30 +348,5 @@
             });
         }
     });
-
-    function exportResults(searchResults, brokenLinks, accessRequired, exportType, searchType) {
-        const requestBody = {
-            search_results: searchResults,
-            broken_links: brokenLinks,
-            access_required_links: accessRequired,
-            export_type: exportType,
-            search_type: searchType
-        };
-
-        fetch("{% url 'download' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify(requestBody)
-        })
-        .then(response => response.json())
-        .then(data => {
-            const filename = data.file_url.split('/').pop();
-            window.location.href = `/download/${filename}/`;
-        })
-        .catch(error => console.error('Error:', error));
-    }
 </script>
 {% endblock %}

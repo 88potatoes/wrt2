@@ -3,17 +3,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from django.contrib.sessions.models import Session
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
 from django.shortcuts import render
-from django.utils import timezone
-from django.http import JsonResponse, FileResponse, Http404
-from datetime import datetime
 from .serializers import (
     SearchTermSerializer,
     BrokenLinksSerializer,
-    ExportResultsSerializer,
 )
 
 # from .models import PastSearch
@@ -24,8 +17,6 @@ from celery import shared_task
 """
 ================================= Search APIS =================================
 """
-
-
 # Search Text String API
 @shared_task
 def find_text_string(request_data, from_website=False):  # used by the website app
