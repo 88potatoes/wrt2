@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
+from .views import RedirectIfAuthenticatedLoginView
 
 urlpatterns = [
     # Main functionalities
@@ -20,7 +21,7 @@ urlpatterns = [
         name="broken_links_task_status",
     ),  # Broken links
     # Authentication
-    path("", auth_views.LoginView.as_view(), name="login_page"),
+    path("", RedirectIfAuthenticatedLoginView.as_view(), name="login_page"),
     path("logout", views.logout_view, name="logout"),
     path(
         "accounts/password_reset/",
