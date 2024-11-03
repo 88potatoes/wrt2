@@ -46,6 +46,75 @@
         justify-content: center;
         align-items: center;
     }
+
+    .radio-list {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .radio {
+        margin-right: 30px;
+        color: #000B34;
+    }
+
+    .radio:last-child {
+        margin-right: 0;
+    }
+
+    .modal {
+        border-radius: 10px;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .modal.is-active {
+        opacity: 1;
+    }
+
+    .modal-card {
+        background-color: #000B34;
+        border-radius: 10px;
+        max-width: 600px;
+        margin: auto;
+    }
+
+    .modal-card-title,
+    .modal-card-head,
+    .modal-card-foot,
+    .modal-card-body {
+        background-color: #000B34;
+        color: white;
+    }
+
+    .modal-card-body {
+        background-color: white;
+        color: #000B34;
+    }
+
+    .modal-card-foot .button {
+        margin-right: 10px;
+    }
+
+    .custom-export {
+        background-color: #ABC1A7;
+        color: #000B34;
+    }
+
+    .custom-export:hover {
+        background-color: #042085;
+        color: white;
+    }
+
+    .custom-cancel {
+        background-color: #D1E7DD;
+        color: #000B34;
+    }
+
+    .custom-cancel:hover {
+        background-color: #91142d;
+        color: white;
+    }
 </style>
 {% endblock %} {% block content %} {% include "partials/navbar.html" %}
 
