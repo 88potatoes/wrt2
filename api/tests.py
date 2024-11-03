@@ -9,10 +9,12 @@ from .utils.search import (
     find_prefix,
     find_suffix,
     url_encode,
-    search,
+    search_requests,
     search_without_highlighting,
 )
 from bs4 import BeautifulSoup
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+from threading import Thread
 
 # import json
 import requests
@@ -683,6 +685,7 @@ class StringMatchTest(TestCase):
     # valid input, have websites with the search term, private access link, repeated links
     @patch("requests.get")
     def test_contains_search_term(self, mock_get):
+        self.maxDiff = None
         def side_effect(url, *args, **kwargs):
             if url == "https://handbook.unimelb.edu.au/2024/courses/b-arts":
                 return Mock(
@@ -728,11 +731,13 @@ class StringMatchTest(TestCase):
                 "https://handbook.unimelb.edu.au/2024/courses/b-arts",
             ],
         )
+        fragments = search_requests("aRtS", "https://handbook.unimelb.edu.au/2024/courses/b-arts")
         self.assertCountEqual(
-            result["search_str_webpages"],
+            fragments,
             [
-                ("aRtS", "https://handbook.unimelb.edu.au/2024/courses/b-arts"),
-                ("aRtS", "https://handbook.unimelb.edu.au/2024/courses/arts-link"),
+                ':~:text=arts,-degree',
+                ':~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E',
+                ':~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,arts,-link'
             ],
         )
         self.assertCountEqual(
@@ -815,7 +820,7 @@ class SearchTest(TestCase):
         search_term = "test"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"\btest\b")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
@@ -846,7 +851,7 @@ class SearchTest(TestCase):
         search_term = "test page"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"\btest(?:\s|\r\n|\r|\n)*page\b")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
@@ -879,7 +884,7 @@ class SearchTest(TestCase):
         self.assertEqual(
             pattern, r"\bdegree(?:\s|\r\n|\r|\n)*this(?:\s|\r\n|\r|\n)*is\b"
         )
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(fragments, [":~:text=degree,this%20is"])
@@ -907,7 +912,7 @@ class SearchTest(TestCase):
         search_term = "te%"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"\bte\w*")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
@@ -918,7 +923,7 @@ class SearchTest(TestCase):
         search_term = "%ts"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"\w*ts\b")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
@@ -933,7 +938,7 @@ class SearchTest(TestCase):
         search_term = "t%t"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"\bt\w*t\b")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
@@ -964,7 +969,7 @@ class SearchTest(TestCase):
         search_term = "te?t"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"\bte.t\b")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
@@ -975,7 +980,7 @@ class SearchTest(TestCase):
         search_term = "?rt?"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"\b.rt.\b")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
@@ -1012,7 +1017,7 @@ class SearchTest(TestCase):
         search_term = "te[s|x|l]t"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"\bte(s|x|l)t\b")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
@@ -1026,7 +1031,7 @@ class SearchTest(TestCase):
         search_term = "[A|Ba]rt[s|]"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"(A|Ba)rt(s|\b)")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
@@ -1065,7 +1070,7 @@ class SearchTest(TestCase):
         search_term = "te[s|x|%]t"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"\bte(s|x|\w*)t\b")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
@@ -1080,7 +1085,7 @@ class SearchTest(TestCase):
         search_term = "te[?|%]t"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"\bte(.|\w*)t\b")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
@@ -1095,7 +1100,7 @@ class SearchTest(TestCase):
         search_term = "[?|B?]rt[?|]"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"(.|B.)rt(.|\b)")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
@@ -1111,7 +1116,7 @@ class SearchTest(TestCase):
         search_term = "[?|%]rt[?|%|]"
         pattern = create_pattern(search_term)
         self.assertEqual(pattern, r"(.|\w*)rt(.|\w*|\b)")
-        fragments = search(
+        fragments = search_requests(
             pattern, "https://handbook.unimelb.edu.au/2024/courses/b-arts"
         )
         self.assertEqual(
