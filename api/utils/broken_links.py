@@ -95,11 +95,14 @@ def crawl(starting_links: List[str], browser_info: str) -> List[str]:
                 # catch broken links
                 elif not (200 <= page.status_code <= 299):
                     if use_highlighting:
-                        fragment = search(origin[link][1], origin[link][0])[0]
-                        parsed_url = urllib.parse.urlparse(origin[link][0])
-                        updated_url = parsed_url._replace(fragment=fragment)
-                        final_url = urllib.parse.urlunparse(updated_url)
-                        broken_links.append([link, final_url])
+                        if fragment:
+                            fragment = search(origin[link][1], origin[link][0])[0]
+                            parsed_url = urllib.parse.urlparse(origin[link][0])
+                            updated_url = parsed_url._replace(fragment=fragment)
+                            final_url = urllib.parse.urlunparse(updated_url)
+                            broken_links.append([link, final_url])
+                        else:
+                            broken_links.append([link, origin[link][0]])
                     else:
                         broken_links.append([link, origin[link][0]])
                     print("new broken: ", link)
