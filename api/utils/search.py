@@ -363,7 +363,4 @@ def search_requests(pattern, url):
         # adjust index to ending index of the current match
         index = match_end
         match = re.search(pattern, text[match_end:], re.IGNORECASE)
-
-    # print(len(fragments))
-    driver.quit()
     return fragments
