@@ -73,9 +73,9 @@ def crawl(starting_links: List[str], browser_info: str) -> List[str]:
             # check if crawling abides by standard
             if not check_link_ok(robot_rules, href):
                 continue
-            to_visit.append(potential_link)
+            to_visit.append(potential_link.rstrip("/"))
             origin[potential_link] = [start_link, new_link.get_text(strip=True)]
-        visited[start_link] = True
+        visited[start_link.rstrip("/")] = True
 
         # crawling
         while to_visit:
@@ -105,18 +105,18 @@ def crawl(starting_links: List[str], browser_info: str) -> List[str]:
                             broken_links.append([link, origin[link][0]])
                     else:
                         broken_links.append([link, origin[link][0]])
-                    print("new broken: ", link)
+                    print("new broken: ", link, " origin: ", origin[link][0])
                     continue
 
                 # scraping code
                 soup = BeautifulSoup(page.text, "html.parser")
 
-                if link in visited:
+                if link.rstrip("/") in visited:
                     print(f"Link already visited: {link}")
                     continue
 
                 # mark the item as visited, i.e., add to visited list, remove from to_visit
-                visited[link] = True
+                visited[link.rstrip("/")] = True
 
                 links = soup.findAll("a")
 
@@ -142,7 +142,7 @@ def crawl(starting_links: List[str], browser_info: str) -> List[str]:
                     if (potential_link not in visited) and (
                         potential_link not in to_visit
                     ):
-                        to_visit.append(potential_link)
+                        to_visit.append(potential_link.rstrip("/"))
                         origin[potential_link] = [start_link, href]
                 pages_visited += 1
             except requests.exceptions.RequestException:
