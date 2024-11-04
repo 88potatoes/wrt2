@@ -13,8 +13,6 @@ from .utils.search import (
     search_without_highlighting,
 )
 from bs4 import BeautifulSoup
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-from threading import Thread
 
 # import json
 import requests
@@ -1109,7 +1107,7 @@ class SearchTest(TestCase):
                 ":~:text=arts,-degree",
                 ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E",
                 ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,barts,-link",
-                ":~:text=barts%20link-,bart,-link",
+                ":~:text=barts%20link-,bart%20,-link",
             ],
         )
 
@@ -1125,6 +1123,6 @@ class SearchTest(TestCase):
                 ":~:text=arts,-degree",
                 ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of-,arts,-%2E",
                 ":~:text=this%20is%20a%20test%20page%20for%20the%20bachelor%20of%20arts%2E-,barts,-link",
-                ":~:text=barts%20link-,bart,-link",
+                ":~:text=barts%20link-,bart%20,-link",
             ],
         )
