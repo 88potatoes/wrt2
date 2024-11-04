@@ -259,8 +259,8 @@ def search(pattern, url):
 
 
 # Search function with text highlighting, using requests and BeautifulSoup
-# Same functionality as search but without selenium 
 # Only for testing
+# Same functionality as search function but without selenium
 def search_requests(pattern, url):
     # Fetch the webpage content using requests
     response = requests.get(url)
@@ -272,14 +272,17 @@ def search_requests(pattern, url):
     # Parse the HTML with BeautifulSoup
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # Remove unnecessary elements like <title>
+    # print(soup.prettify())
+    # remove elements that are not on the page
     for element in soup(["title"]):
         element.decompose()
 
-    # Get the entire text of the page, case insensitive
-    text = soup.get_text(separator="\n").lower()
+    # separate each html element by the newline char
+    text = soup.get_text(separator="\n")
+    # change to lowercase to make it case insensitive
+    text = text.lower()
+    # print(show_hidden_chars(text))
 
-    # Compile the regex pattern
     regex = re.compile(pattern, re.IGNORECASE)
     match = re.search(regex, text)
     if not match:
@@ -289,14 +292,17 @@ def search_requests(pattern, url):
     fragments = []
     len_text = len(text)
     fragment_start = ":~:text="
+    # print('found a match')
 
-    # Loop through the text and find all matching strings
+    # loop through the entire HTML to find all matching strings
     while match is not None:
+        # add index of previous match to make current index relative to the entire HTML
         match_start = match.start() + index
         match_end = match.end() + index
         term = match.group(0)
+        # print('match string: ', show_hidden_chars(match.group(0)))
 
-        # Handle case where match spans multiple elements
+        # use 'start' and 'end' syntax if the term spans multiple consecutive elements
         if "\n" in term:
             elements = term.split("\n")
             frag_start = elements[0]
@@ -306,31 +312,45 @@ def search_requests(pattern, url):
                 frag_end = url_encode(frag_end)
                 fragment = fragment_start + frag_start + "," + frag_end
                 fragments.append(fragment)
+                # adjust index to ending index of the current match
                 index = match_end
                 match = re.search(pattern, text[match_end:], re.IGNORECASE)
                 continue
 
-        # Find prefix and suffix for the match
+        # find index of first character in prefix
         start = find_prefix(text, match_start)
+        # find index of last character in suffix
         end = find_suffix(text, match_end, len_text)
 
+        # check if a suffix has been found
         if end != match_end:
-            suffix = text[match_end:end]
+            # check if the suffix is in the next element of the matching string
+            if text[match_end] == "\n":
+                suffix = text[match_end + 1 : end]
+            else:
+                suffix = text[match_end:end]
             suffix = url_encode(suffix)
         else:
             suffix = ""
 
+        # check if a prefix has been found
         if start != match_start:
-            prefix = text[start:match_start]
+            # check if the prefix is in the previous element of the matching string
+            if text[match_start - 1] == "\n":
+                prefix = text[start : match_start - 1]
+            else:
+                prefix = text[start:match_start]
             prefix = url_encode(prefix)
         else:
             prefix = ""
 
-        term = urllib.parse.quote(term.strip())
+        # encode the matching string
+        term = urllib.parse.quote(term)
         term = re.sub(r"-", "%2D", term)
         term = re.sub(r"\s+", " ", term)
+        term = term.strip()
 
-        # Build the fragment
+        # build the fragment
         if prefix and suffix:
             fragment = fragment_start + prefix + "-," + term + ",-" + suffix
         elif suffix:
@@ -342,9 +362,123 @@ def search_requests(pattern, url):
 
         print("fragment: ", fragment)
         fragments.append(fragment)
-
+        # adjust index to ending index of the current match
         index = match_end
         match = re.search(pattern, text[match_end:], re.IGNORECASE)
 
+    # print(len(fragments))
+    driver.quit()
     return fragments
 
+
+# search function with text highlighting
+def search(pattern, url):
+    # open the webpage to get both Javascript and HTML content
+    options = webdriver.ChromeOptions()
+    options.add_argument("--start-maximized")
+    options.add_argument("--headless")
+    options.add_argument("--enable-logging")
+    driver = webdriver.Chrome(options=options)
+
+    driver.implicitly_wait(10)
+    driver.get(url)
+    driver.execute_script(remove_mobile_elements_js)
+    html = driver.page_source
+    soup = BeautifulSoup(html, "html.parser")
+
+    # print(soup.prettify())
+    # remove elements that are not on the page
+    for element in soup(["title"]):
+        element.decompose()
+
+    # separate each html element by the newline char
+    text = soup.get_text(separator="\n")
+    # change to lowercase to make it case insensitive
+    text = text.lower()
+    # print(show_hidden_chars(text))
+
+    regex = re.compile(pattern, re.IGNORECASE)
+    match = re.search(regex, text)
+    if not match:
+        return []
+
+    index = 0
+    fragments = []
+    len_text = len(text)
+    fragment_start = ":~:text="
+    # print('found a match')
+
+    # loop through the entire HTML to find all matching strings
+    while match is not None:
+        # add index of previous match to make current index relative to the entire HTML
+        match_start = match.start() + index
+        match_end = match.end() + index
+        term = match.group(0)
+        # print('match string: ', show_hidden_chars(match.group(0)))
+
+        # use 'start' and 'end' syntax if the term spans multiple consecutive elements
+        if "\n" in term:
+            elements = term.split("\n")
+            frag_start = elements[0]
+            frag_end = elements[-1]
+            if frag_start and frag_end:
+                frag_start = url_encode(frag_start)
+                frag_end = url_encode(frag_end)
+                fragment = fragment_start + frag_start + "," + frag_end
+                fragments.append(fragment)
+                # adjust index to ending index of the current match
+                index = match_end
+                match = re.search(pattern, text[match_end:], re.IGNORECASE)
+                continue
+
+        # find index of first character in prefix
+        start = find_prefix(text, match_start)
+        # find index of last character in suffix
+        end = find_suffix(text, match_end, len_text)
+
+        # check if a suffix has been found
+        if end != match_end:
+            # check if the suffix is in the next element of the matching string
+            if text[match_end] == "\n":
+                suffix = text[match_end + 1 : end]
+            else:
+                suffix = text[match_end:end]
+            suffix = url_encode(suffix)
+        else:
+            suffix = ""
+
+        # check if a prefix has been found
+        if start != match_start:
+            # check if the prefix is in the previous element of the matching string
+            if text[match_start - 1] == "\n":
+                prefix = text[start : match_start - 1]
+            else:
+                prefix = text[start:match_start]
+            prefix = url_encode(prefix)
+        else:
+            prefix = ""
+
+        # encode the matching string
+        term = urllib.parse.quote(term)
+        term = re.sub(r"-", "%2D", term)
+        term = re.sub(r"\s+", " ", term)
+        term = term.strip()
+
+        # build the fragment
+        if prefix and suffix:
+            fragment = fragment_start + prefix + "-," + term + ",-" + suffix
+        elif suffix:
+            fragment = fragment_start + term + ",-" + suffix
+        elif prefix:
+            fragment = fragment_start + prefix + "-," + term
+        else:
+            fragment = fragment_start + term
+
+        print("fragment: ", fragment)
+        fragments.append(fragment)
+        # adjust index to ending index of the current match
+        index = match_end
+        match = re.search(pattern, text[match_end:], re.IGNORECASE)
+
+    driver.quit()
+    return fragments
